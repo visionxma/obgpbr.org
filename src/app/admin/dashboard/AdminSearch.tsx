@@ -4,18 +4,12 @@ import { useRouter } from 'next/navigation';
 import {
   Search,
   LayoutDashboard,
-  FileText,
   Settings,
-  TrendingUp,
   Eye,
   Users,
   Clock,
   BarChart3,
-  Upload,
-  Plus,
   Moon,
-  Sun,
-  LogOut,
   Zap,
   Bell,
   Globe,
@@ -49,16 +43,6 @@ const SEARCH_INDEX: SearchItem[] = [
     category: 'Navegação',
   },
   {
-    id: 'nav-posts',
-    title: 'Postagens',
-    description: 'Criar, editar e gerenciar publicações do blog',
-    keywords: ['posts', 'blog', 'artigos', 'publicações', 'conteudo', 'escrever', 'editor', 'novo post'],
-    path: '/admin/dashboard/posts',
-    breadcrumb: 'Dashboard › Postagens',
-    icon: FileText,
-    category: 'Navegação',
-  },
-  {
     id: 'nav-settings',
     title: 'Configurações',
     description: 'Preferências do sistema, tema e conta do usuário',
@@ -69,29 +53,7 @@ const SEARCH_INDEX: SearchItem[] = [
     category: 'Navegação',
   },
 
-  // ─── Ações Rápidas ─────────────────────────
-  {
-    id: 'action-new-post',
-    title: 'Nova Postagem',
-    description: 'Criar uma nova publicação para o blog',
-    keywords: ['nova', 'criar', 'novo post', 'escrever', 'publicar', 'adicionar post'],
-    path: '/admin/dashboard/posts',
-    breadcrumb: 'Dashboard › Postagens › Nova',
-    icon: Plus,
-    category: 'Ação Rápida',
-  },
-
   // ─── Funcionalidades (Dashboard) ───────────
-  {
-    id: 'feat-kpi-posts',
-    title: 'Total de Posts',
-    description: 'Indicador de quantidade total de publicações',
-    keywords: ['total', 'posts', 'quantidade', 'indicador', 'kpi', 'contador'],
-    path: '/admin/dashboard',
-    breadcrumb: 'Dashboard › Visão Geral › KPI',
-    icon: TrendingUp,
-    category: 'Funcionalidade',
-  },
   {
     id: 'feat-kpi-views',
     title: 'Visualizações',

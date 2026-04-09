@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
   LayoutDashboard,
-  FileText,
   Settings,
   LogOut,
   ChevronRight,
@@ -14,8 +13,6 @@ import {
   User,
   Moon,
   Sun,
-  Users,
-  BookOpen,
   ShieldCheck,
   BarChart3,
   Sparkles,
@@ -31,8 +28,6 @@ import AdminSearch from './AdminSearch';
 const navItems = [
   { label: 'Visão Geral', path: '/admin/dashboard', icon: LayoutDashboard, section: 'Principal' },
   { label: 'Analytics', path: '/admin/dashboard/analytics', icon: BarChart3, section: 'Principal' },
-  { label: 'Blog / Postagens', path: '/admin/dashboard/posts', icon: FileText, section: 'Conteúdo' },
-  { label: 'Catálogo de Cursos', path: '/admin/dashboard/cursos', icon: BookOpen, section: 'Conteúdo' },
   { label: 'Nossas Experiências', path: '/admin/dashboard/experiencias', icon: Sparkles, section: 'Conteúdo' },
   { label: 'Transparência', path: '/admin/dashboard/transparencia', icon: ShieldCheck, section: 'Conteúdo' },
   { label: 'Configurações', path: '/admin/dashboard/settings', icon: Settings, section: 'Sistema' },
@@ -42,8 +37,6 @@ function getBreadcrumb(path: string) {
   const map: Record<string, string> = {
     '/admin/dashboard': 'Visão Geral',
     '/admin/dashboard/analytics': 'Analytics e Métricas',
-    '/admin/dashboard/posts': 'Blog / Postagens',
-    '/admin/dashboard/cursos': 'Catálogo de Cursos',
     '/admin/dashboard/experiencias': 'Nossas Experiências',
     '/admin/dashboard/transparencia': 'Transparência',
     '/admin/dashboard/settings': 'Configurações',

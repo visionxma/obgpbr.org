@@ -235,7 +235,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               <img src="/logo.PNG" alt="OBGP" style={{ height: 44, width: 'auto', objectFit: 'contain', filter: 'brightness(0) saturate(100%)' }} />
             </Link>
             <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.92rem', lineHeight: 1.65, maxWidth: 280 }}>
-              Formação, Inovação e Desenvolvimento Social para comunidades do Maranhão e Pará desde 2013.
+              Organização da Sociedade Civil que atua em educação, saúde e assistência social.
             </p>
           </div>
 
@@ -247,8 +247,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
                 { label: 'Início', href: '/' },
+                { label: 'Quem Somos', href: '/quem-somos' },
+                { label: 'Atuação', href: '/atuacao' },
                 { label: 'Transparência', href: '/transparencia' },
-                { label: 'Blog e Notícias', href: '/blog' },
+                { label: 'Fale Conosco', href: '/contato' },
               ].map(({ label, href }) => (
                 <li key={href}>
                   <Link href={href} style={{ color: 'var(--site-text-secondary)', fontSize: '0.93rem', textDecoration: 'none', transition: 'color 0.2s' }}
@@ -261,26 +263,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             </ul>
           </div>
 
-          {/* Educação */}
-          <div>
-            <h4 style={{ fontSize: '0.78rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--site-text-tertiary)', marginBottom: 20 }}>
-              Educação
-            </h4>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {[
-                { label: 'Cursos de Capacitação', href: '/cursos' },
-                { label: 'Consultoria', href: '/consultoria' },
-              ].map(({ label, href }) => (
-                <li key={label}>
-                  <Link href={href} style={{ color: 'var(--site-text-secondary)', fontSize: '0.93rem', textDecoration: 'none', transition: 'color 0.2s' }}
-                    onMouseEnter={e => (e.currentTarget.style.color = 'var(--site-text-primary)')}
-                    onMouseLeave={e => (e.currentTarget.style.color = 'var(--site-text-secondary)')}>
-                    {label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
         </div>
 
         {/* Bottom Bar */}
@@ -290,7 +272,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           borderTop: '1px solid var(--site-border)',
           color: 'var(--site-text-tertiary)', fontSize: '0.82rem',
         }}>
-          <p>&copy; {new Date().getFullYear()} OBGP. Educação que transforma.</p>
+          <p>&copy; {new Date().getFullYear()} OBGP. Todos os direitos reservados.</p>
           <a
             href="https://visionxma.com"
             target="_blank"

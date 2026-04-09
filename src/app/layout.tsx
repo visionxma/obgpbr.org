@@ -8,28 +8,24 @@ const siteUrl = "https://obgpbr.org";
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "OBGP | Cursos Técnicos, Pós-Técnico e Consultoria no Maranhão",
+    default: "OBGP — Organização Brasil Gestão de Parcerias",
     template: "%s | OBGP",
   },
   description:
-    "OBGP — cursos técnicos, pós-técnico, capacitação profissional e consultoria pedagógica para comunidades do Maranhão e Pará. Formação, inovação e desenvolvimento social desde 2013.",
+    "A OBGP é uma Organização da Sociedade Civil sem fins lucrativos que executa atividades, programas e projetos voltados à educação, saúde e assistência social.",
   keywords: [
     "OBGP",
-    "OBGP",
-    "cursos técnicos Maranhão",
-    "pós-técnico",
-    "educação profissional",
-    "cursos profissionalizantes",
-    "consultoria pedagógica",
-    "educação popular",
-    "agricultura familiar",
-    "agroecologia",
-    "EAD Maranhão",
-    "inclusão digital",
-    "economia solidária",
+    "Organização Brasil Gestão de Parcerias",
+    "OSC",
+    "organização da sociedade civil",
+    "educação",
+    "saúde",
+    "assistência social",
+    "projetos sociais",
     "desenvolvimento social",
-    "comunidades quilombolas",
-    "educação rural",
+    "gestão de parcerias",
+    "terceiro setor",
+    "sem fins lucrativos",
   ],
   authors: [{ name: "OBGP" }],
   creator: "OBGP",
@@ -42,29 +38,29 @@ export const metadata: Metadata = {
   alternates: {
     canonical: siteUrl,
   },
-    openGraph: {
-      type: "website",
-      locale: "pt_BR",
-      url: siteUrl,
-      siteName: "OBGP",
-      title: "OBGP | Cursos Técnicos e Formação Profissional",
-      description:
-        "Cursos técnicos, pós-técnico, capacitação e consultoria pedagógica para comunidades do Maranhão e Pará. Educação que transforma desde 2013.",
-      images: [
-        {
-          url: "/favicon.jpeg",
-          width: 800,
-          height: 800,
-          alt: "OBGP — Formação, Inovação e Desenvolvimento Social",
-          type: "image/jpeg",
-        },
-      ],
-    },
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    url: siteUrl,
+    siteName: "OBGP",
+    title: "OBGP — Organização Brasil Gestão de Parcerias",
+    description:
+      "Organização da Sociedade Civil que atua em educação, saúde e assistência social com programas e projetos de impacto.",
+    images: [
+      {
+        url: "/favicon.jpeg",
+        width: 800,
+        height: 800,
+        alt: "OBGP — Organização Brasil Gestão de Parcerias",
+        type: "image/jpeg",
+      },
+    ],
+  },
   twitter: {
     card: "summary_large_image",
-    title: "OBGP | Cursos Técnicos e Formação Profissional",
+    title: "OBGP — Organização Brasil Gestão de Parcerias",
     description:
-      "Cursos técnicos, pós-técnico, capacitação e consultoria pedagógica para comunidades do Maranhão e Pará.",
+      "Organização da Sociedade Civil que atua em educação, saúde e assistência social.",
     images: ["/favicon.jpeg"],
   },
   robots: {
@@ -75,7 +71,7 @@ export const metadata: Metadata = {
       follow: true,
       "max-video-preview": -1,
       "max-image-preview": "large",
-      "max-snippet": -1,
+      "large-snippet": -1,
     },
   },
   icons: {
@@ -96,17 +92,13 @@ export default function RootLayout({
 }>) {
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "EducationalOrganization",
-    name: "OBGP",
+    "@type": "NGO",
+    name: "Organização Brasil Gestão de Parcerias — OBGP",
+    alternateName: "OBGP",
     url: siteUrl,
     logo: `${siteUrl}/logo.PNG`,
     description:
-      "Formação, inovação e desenvolvimento social para comunidades do Maranhão e Pará desde 2013.",
-    foundingDate: "2013",
-    areaServed: [
-      { "@type": "State", name: "Maranhão" },
-      { "@type": "State", name: "Pará" },
-    ],
+      "Organização da Sociedade Civil sem fins lucrativos que executa atividades, programas e projetos voltados à educação, saúde e assistência social.",
     sameAs: [],
   };
 
