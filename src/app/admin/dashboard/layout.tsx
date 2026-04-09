@@ -24,7 +24,7 @@ import './admin.css';
 import AdminSearch from './AdminSearch';
 
 /**
- * Layout Administrativo Premium — Instituto Gênesis
+ * Layout Administrativo Premium — OBGP
  * App Shell com Sidebar Glassmorphism, Header Sticky e Micro-interações
  */
 
@@ -147,7 +147,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         <div className="sidebar-brand">
           <img
             src="/logo.PNG"
-            alt="Instituto Gênesis"
+            alt="OBGP"
             style={{ height: 36, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)', marginBottom: 4 }}
           />
           <div className="sidebar-brand-subtitle">Gestão Institucional</div>
@@ -225,7 +225,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       {session?.user?.email || 'Administrador'}
                     </div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--admin-text-tertiary)', marginTop: 2 }}>
-                      Gênesis Admin Access
+                      OBGP Admin Access
                     </div>
                   </div>
 

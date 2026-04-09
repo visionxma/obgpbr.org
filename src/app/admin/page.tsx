@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 
 /**
- * Área Administrativa Protegida - Instituto Gênesis
+ * Área Administrativa Protegida - OBGP
  * Implementação Real de Autenticação via Supabase
  */
 
@@ -92,7 +92,7 @@ export default function AdminLogin() {
           </div>
           <img
             src="/logo.PNG"
-            alt="Instituto Gênesis"
+            alt="OBGP"
             style={{ height: 50, width: 'auto', objectFit: 'contain', filter: 'brightness(0) saturate(100%)', marginBottom: 8 }}
           />
           <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.95rem' }}>
@@ -124,7 +124,7 @@ export default function AdminLogin() {
               id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@genesis.org.br"
+              placeholder="admin@obgpbr.org"
               required
               style={{ 
                 padding: '14px 16px',
@@ -216,7 +216,7 @@ export default function AdminLogin() {
         `}</style>
 
         <p style={{ textAlign: 'center', marginTop: '32px', color: 'var(--site-text-tertiary)', fontSize: '0.8rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Plataforma Gênesis — v1.5
+          Plataforma OBGP — v1.5
         </p>
       </div>
     </main>

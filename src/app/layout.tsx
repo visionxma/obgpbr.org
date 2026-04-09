@@ -3,19 +3,19 @@ import { Analytics } from "@vercel/analytics/react";
 import VisitorTracker from "@/components/VisitorTracker";
 import "./globals.css";
 
-const siteUrl = "https://genesiseducacional.com.br";
+const siteUrl = "https://obgpbr.org";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Instituto Gênesis Educacional | Cursos Técnicos, Pós-Técnico e Consultoria no Maranhão",
-    template: "%s | Instituto Gênesis Educacional",
+    default: "OBGP | Cursos Técnicos, Pós-Técnico e Consultoria no Maranhão",
+    template: "%s | OBGP",
   },
   description:
-    "Instituto Gênesis Educacional — cursos técnicos, pós-técnico, capacitação profissional e consultoria pedagógica para comunidades do Maranhão e Pará. Formação, inovação e desenvolvimento social desde 2013.",
+    "OBGP — cursos técnicos, pós-técnico, capacitação profissional e consultoria pedagógica para comunidades do Maranhão e Pará. Formação, inovação e desenvolvimento social desde 2013.",
   keywords: [
-    "Instituto Gênesis",
-    "Gênesis Educacional",
+    "OBGP",
+    "OBGP",
     "cursos técnicos Maranhão",
     "pós-técnico",
     "educação profissional",
@@ -31,9 +31,9 @@ export const metadata: Metadata = {
     "comunidades quilombolas",
     "educação rural",
   ],
-  authors: [{ name: "Instituto Gênesis Educacional" }],
-  creator: "Instituto Gênesis Educacional",
-  publisher: "Instituto Gênesis Educacional",
+  authors: [{ name: "OBGP" }],
+  creator: "OBGP",
+  publisher: "OBGP",
   formatDetection: {
     email: false,
     address: false,
@@ -46,8 +46,8 @@ export const metadata: Metadata = {
       type: "website",
       locale: "pt_BR",
       url: siteUrl,
-      siteName: "Instituto Gênesis Educacional",
-      title: "Instituto Gênesis Educacional | Cursos Técnicos e Formação Profissional",
+      siteName: "OBGP",
+      title: "OBGP | Cursos Técnicos e Formação Profissional",
       description:
         "Cursos técnicos, pós-técnico, capacitação e consultoria pedagógica para comunidades do Maranhão e Pará. Educação que transforma desde 2013.",
       images: [
@@ -55,14 +55,14 @@ export const metadata: Metadata = {
           url: "/favicon.jpeg",
           width: 800,
           height: 800,
-          alt: "Instituto Gênesis Educacional — Formação, Inovação e Desenvolvimento Social",
+          alt: "OBGP — Formação, Inovação e Desenvolvimento Social",
           type: "image/jpeg",
         },
       ],
     },
   twitter: {
     card: "summary_large_image",
-    title: "Instituto Gênesis Educacional | Cursos Técnicos e Formação Profissional",
+    title: "OBGP | Cursos Técnicos e Formação Profissional",
     description:
       "Cursos técnicos, pós-técnico, capacitação e consultoria pedagógica para comunidades do Maranhão e Pará.",
     images: ["/favicon.jpeg"],
@@ -97,7 +97,7 @@ export default function RootLayout({
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
-    name: "Instituto Gênesis Educacional",
+    name: "OBGP",
     url: siteUrl,
     logo: `${siteUrl}/logo.PNG`,
     description:

@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: 'Consultoria Estratégica Educacional',
   description: 'Consultoria pedagógica para prefeituras, OSCs e instituições. Diagnóstico, planejamento metodológico e acompanhamento técnico para projetos de impacto social.',
   openGraph: {
-    title: 'Consultoria Educacional | Instituto Gênesis Educacional',
+    title: 'Consultoria Educacional | OBGP',
     description: 'Soluções educacionais para prefeituras e instituições. Diagnóstico, planejamento e acompanhamento técnico de projetos sociais.',
     url: '/consultoria',
   },

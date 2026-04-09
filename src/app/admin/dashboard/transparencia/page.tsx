@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Gestão de Transparência — Instituto Gênesis
+ * Gestão de Transparência — OBGP
  *
  * IMPORTANTE: Execute este SQL no Supabase antes de usar esta página:
  *

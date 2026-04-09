@@ -146,7 +146,7 @@ export default function DashboardOverview() {
             Ações Rápidas
           </div>
           <p className="quick-actions-desc">
-            Publique e gerencie conteúdo direto para o portal do Instituto Gênesis.
+            Publique e gerencie conteúdo direto para o portal do OBGP.
           </p>
           <div className="quick-actions-list">
             <Link href="/admin/dashboard/posts" className="quick-action-btn primary">

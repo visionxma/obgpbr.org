@@ -24,7 +24,7 @@ import {
 /**
  * Gestão de Postagens — Editor de Conteúdo Premium
  * CRUD completo com editor inline e upload de imagem.
- * Instituto Gênesis
+ * OBGP
  */
 
 interface Post {

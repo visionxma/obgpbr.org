@@ -75,7 +75,7 @@ export default function Blog() {
           <div className="container">
             <h1 style={{ fontSize: '3rem', marginBottom: 12 }}>Notícias e Relatos</h1>
             <p style={{ fontSize: '1.1rem', color: 'var(--site-text-secondary)' }}>
-              Acompanhe os projetos, histórias e o impacto das ações do Instituto Gênesis.
+              Acompanhe os projetos, histórias e o impacto das ações do OBGP.
             </p>
           </div>
         </section>

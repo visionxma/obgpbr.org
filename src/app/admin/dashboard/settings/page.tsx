@@ -382,7 +382,7 @@ export default function SettingsAdmin() {
           fontWeight: 500,
         }}
       >
-        <span>Gênesis Admin v1.2</span>
+        <span>OBGP Admin v1.2</span>
         <span>•</span>
         <span>App Shell Pattern</span>
         <span>•</span>

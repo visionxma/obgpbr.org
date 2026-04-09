@@ -131,7 +131,7 @@ export default function Transparencia() {
               fontSize: '1.05rem', color: 'rgba(255,255,255,0.75)',
               maxWidth: 620, margin: '0 auto 40px', lineHeight: 1.7
             }}>
-              Informações sobre convênios, emendas parlamentares e prestações de contas do Instituto Gênesis, em cumprimento aos princípios da gestão pública transparente.
+              Informações sobre convênios, emendas parlamentares e prestações de contas do OBGP, em cumprimento aos princípios da gestão pública transparente.
             </p>
 
             {/* Search */}

@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 /**
- * Gestão do Catálogo de Cursos — Instituto Gênesis
+ * Gestão do Catálogo de Cursos — OBGP
  * CRUD completo com editor inline e upload de imagem.
  *
  * Tabela Supabase necessária:

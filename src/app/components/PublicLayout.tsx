@@ -31,7 +31,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           <Link href="/quem-somos" style={{ display: 'flex', alignItems: 'center' }}>
             <img
               src="/logo.PNG"
-              alt="Instituto Gênesis"
+              alt="OBGP"
               style={{ height: 40, width: 'auto', objectFit: 'contain' }}
             />
           </Link>
@@ -232,7 +232,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           {/* Brand */}
           <div>
             <Link href="/" style={{ display: 'inline-block', marginBottom: 16 }}>
-              <img src="/logo.PNG" alt="Instituto Gênesis" style={{ height: 44, width: 'auto', objectFit: 'contain', filter: 'brightness(0) saturate(100%)' }} />
+              <img src="/logo.PNG" alt="OBGP" style={{ height: 44, width: 'auto', objectFit: 'contain', filter: 'brightness(0) saturate(100%)' }} />
             </Link>
             <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.92rem', lineHeight: 1.65, maxWidth: 280 }}>
               Formação, Inovação e Desenvolvimento Social para comunidades do Maranhão e Pará desde 2013.
@@ -290,7 +290,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
           borderTop: '1px solid var(--site-border)',
           color: 'var(--site-text-tertiary)', fontSize: '0.82rem',
         }}>
-          <p>&copy; {new Date().getFullYear()} Instituto Gênesis. Educação que transforma.</p>
+          <p>&copy; {new Date().getFullYear()} OBGP. Educação que transforma.</p>
           <a
             href="https://visionxma.com"
             target="_blank"
