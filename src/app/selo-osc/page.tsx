@@ -139,7 +139,7 @@ export default function SeloOscPage() {
           <p style={{ color: 'rgba(255,255,255,.65)', maxWidth: 500, margin: '0 auto 32px', lineHeight: 1.7 }}>
             Saiba como sua OSC pode obter o Selo e se qualificar para parcerias com o poder público.
           </p>
-          <a href="/contato" className="btn btn-white">Saiba mais <ArrowRight size={17} /></a>
+          <a href="/inicio#contato" className="btn btn-white">Saiba mais <ArrowRight size={17} /></a>
         </div>
       </section>
     </PublicLayout>

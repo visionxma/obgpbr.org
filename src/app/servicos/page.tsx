@@ -84,7 +84,7 @@ export default function ServicosPage() {
           <p style={{ color: 'rgba(255,255,255,.65)', maxWidth: 480, margin: '0 auto 32px', lineHeight: 1.7 }}>
             Entre em contato para saber como podemos ajudar com a gestão de parcerias da sua OSC.
           </p>
-          <a href="/contato" className="btn btn-white">Fale conosco <ArrowRight size={17} /></a>
+          <a href="/inicio#contato" className="btn btn-white">Fale conosco <ArrowRight size={17} /></a>
         </div>
       </section>
     </PublicLayout>

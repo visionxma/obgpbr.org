@@ -6,13 +6,12 @@ import { usePathname } from 'next/navigation';
 import { Menu, X, ArrowUpRight, Mail, Phone, MapPin } from "lucide-react";
 
 const NAV_ITEMS = [
-  { label: 'Quem Somos', path: '/quem-somos' },
-  { label: 'Atuação', path: '/atuacao' },
+  { label: 'Início', path: '/inicio' },
   { label: 'Serviços', path: '/servicos' },
   { label: 'Experiências', path: '/experiencias' },
   { label: 'Selo OSC', path: '/selo-osc' },
   { label: 'Transparência', path: '/transparencia' },
-  { label: 'Contato', path: '/contato' },
+  { label: 'Contato', path: '/inicio#contato' },
 ];
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
@@ -20,7 +19,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  const isActive = (path: string) => pathname === path;
+  const isActive = (path: string) => {
+    const clean = path.split('#')[0];
+    return pathname === clean;
+  };
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 50);
@@ -38,7 +40,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       {/* ═══ HEADER ═══ */}
       <header className={`hdr ${scrolled ? 'hdr--float' : ''}`}>
         <div className="hdr-inner">
-          <Link href="/quem-somos" className="hdr-logo">
+          <Link href="/inicio" className="hdr-logo">
             <span className="hdr-logo-mark">OBGP</span>
           </Link>
 
@@ -105,8 +107,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
               <div className="ftr-col">
                 <h4 className="ftr-col-title">Institucional</h4>
                 {[
-                  { l: 'Quem Somos', h: '/quem-somos' },
-                  { l: 'Atuação', h: '/atuacao' },
+                  { l: 'Início', h: '/inicio' },
                   { l: 'Serviços', h: '/servicos' },
                   { l: 'Selo OSC', h: '/selo-osc' },
                   { l: 'Transparência', h: '/transparencia' },
