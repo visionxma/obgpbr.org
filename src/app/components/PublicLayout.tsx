@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { label: 'Início', path: '/inicio' },
   { label: 'Serviços', path: '/servicos' },
   { label: 'Experiências', path: '/experiencias' },
+  { label: 'Blog', path: '/blog' },
   { label: 'Selo OSC', path: '/selo-osc' },
   { label: 'Transparência', path: '/transparencia' },
 ];
@@ -158,6 +159,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 {[
                   { l: 'Início', h: '/inicio' },
                   { l: 'Serviços', h: '/servicos' },
+                  { l: 'Experiências', h: '/experiencias' },
+                  { l: 'Blog', h: '/blog' },
                   { l: 'Selo OSC', h: '/selo-osc' },
                   { l: 'Transparência', h: '/transparencia' },
                 ].map(({ l, h }) => (
@@ -165,7 +168,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 ))}
               </div>
               <div className="ftr-col">
-                <h4 className="ftr-col-title">Contato</h4>
+                <h4 className="ftr-col-title">Fale Conosco</h4>
+                <Link href="/contato" className="ftr-link">
+                  <Mail size={13} /> Fale Conosco
+                </Link>
                 <a href="mailto:contato.org.obgp@gmail.com" className="ftr-link">
                   <Mail size={13} /> contato.org.obgp@gmail.com
                 </a>

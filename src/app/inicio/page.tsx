@@ -15,7 +15,7 @@ const AREAS = [
   {
     icon: HeartHandshake, titulo: 'Assistência Social',
     subtitulo: 'Proteção e fortalecimento de vínculos',
-    texto: 'Executa e gerencia ações socioassistenciais alinhadas ao SUAS, com foco em proteção social e garantia de direitos.',
+    texto: 'Executa e gerencia ações socioassistenciais alinhadas ao SUAS, com foco em proteção social, fortalecimento de vínculos e garantia de direitos, atendendo indivíduos e famílias em situação de vulnerabilidade e risco.',
     img: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?w=800&h=500&fit=crop',
     bullets: ['Alinhamento integral ao SUAS', 'Proteção social básica e especial', 'Fortalecimento de vínculos comunitários', 'Atendimento a famílias vulneráveis'],
     color: 'var(--site-accent)', bgColor: 'var(--site-surface-green)',
@@ -23,7 +23,7 @@ const AREAS = [
   {
     icon: GraduationCap, titulo: 'Educação',
     subtitulo: 'Capacitação e formação continuada',
-    texto: 'Desenvolve projetos educacionais com cursos, oficinas e formação continuada, presencial ou remota, para ampliar o acesso ao conhecimento.',
+    texto: 'Desenvolve e executa projetos educacionais com cursos, oficinas, capacitação e formação continuada, em formato presencial ou remoto, para ampliar o acesso ao conhecimento e fortalecer competências para o trabalho.',
     img: 'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&h=500&fit=crop',
     bullets: ['Cursos presenciais e EAD', 'Capacitação profissional', 'Formação continuada certificada', 'Oficinas e workshops especializados'],
     color: 'var(--site-primary)', bgColor: 'var(--site-surface-blue)',
@@ -31,7 +31,7 @@ const AREAS = [
   {
     icon: Stethoscope, titulo: 'Saúde',
     subtitulo: 'Promoção e cuidado integral',
-    texto: 'Executa ações de saúde em parceria com instituições públicas e privadas, com foco em promoção, prevenção e cuidado integral.',
+    texto: 'Executa e gerencia ações e serviços de saúde, em parceria com instituições públicas e privadas, com foco em promoção, prevenção e cuidado integral, articulando-se ao SUS quando aplicável.',
     img: 'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=800&h=500&fit=crop',
     bullets: ['Articulação com o SUS', 'Promoção e prevenção em saúde', 'Parcerias público-privadas', 'Cuidado integral à comunidade'],
     color: 'var(--site-gold-dark)', bgColor: 'var(--site-surface-gold)',
@@ -217,8 +217,11 @@ export default function InicioPage() {
                 de parcerias públicas
               </h2>
 
+              <p style={{ lineHeight:1.8, color:'var(--site-text-secondary)', marginBottom:12 }}>
+                A <strong style={{ color:'var(--site-text-primary)' }}>OBGP — Organização Brasil Gestão de Parcerias</strong> é uma Organização da Sociedade Civil (OSC), pessoa jurídica de direito privado, associação privada e sem fins lucrativos.
+              </p>
               <p style={{ lineHeight:1.8, color:'var(--site-text-secondary)', marginBottom:20 }}>
-                A <strong style={{ color:'var(--site-text-primary)' }}>OBGP — Organização Brasil Gestão de Parcerias</strong> é uma OSC privada sem fins lucrativos que atua estrategicamente na qualificação de parcerias entre a sociedade civil e o poder público.
+                A OBGP executa atividades, programas, projetos ou ações voltadas ou vinculadas a serviços de educação, saúde e assistência social.
               </p>
 
               {/* Bullets escaneáveis */}

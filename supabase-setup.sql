@@ -121,3 +121,40 @@ CREATE POLICY "Authenticated write experiences"
   TO authenticated
   USING (true)
   WITH CHECK (true);
+
+-- ============================================================
+-- 6. Tabela: blog_posts (Blog)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.blog_posts (
+  id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title         text NOT NULL,
+  summary       text,
+  content       text,
+  image_url     text,
+  category      text,
+  author        text,
+  read_time     integer,
+  published_at  timestamptz,
+  is_published  boolean DEFAULT false,
+  created_at    timestamptz DEFAULT now()
+);
+
+ALTER TABLE public.blog_posts ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Public read blog_posts" ON public.blog_posts;
+CREATE POLICY "Public read blog_posts"
+  ON public.blog_posts FOR SELECT
+  USING (is_published = true);
+
+DROP POLICY IF EXISTS "Authenticated read all blog_posts" ON public.blog_posts;
+CREATE POLICY "Authenticated read all blog_posts"
+  ON public.blog_posts FOR SELECT
+  TO authenticated
+  USING (true);
+
+DROP POLICY IF EXISTS "Authenticated write blog_posts" ON public.blog_posts;
+CREATE POLICY "Authenticated write blog_posts"
+  ON public.blog_posts FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);

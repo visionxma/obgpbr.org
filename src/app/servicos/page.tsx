@@ -8,14 +8,14 @@ export const metadata = { title: 'Nossos Serviços | OBGP' };
 
 export default function ServicosPage() {
   const servicos = [
-    { icon: Coins, titulo: 'Captação de Recursos', texto: 'Identificação, prospecção e desenvolvimento de estratégias para obtenção de financiamentos junto a órgãos públicos, agências de fomento, organizações internacionais e fundações privadas.', color: 'icon-box-gold' },
-    { icon: ClipboardCheck, titulo: 'Diagnóstico de Viabilidade', texto: 'Avaliação completa da viabilidade jurídica, fiscal, trabalhista, social, econômico-financeira e técnica dos projetos a serem propostos ou executados.', color: 'icon-box-blue' },
-    { icon: FolderArchive, titulo: 'Gestão Documental', texto: 'Organização, controle e atualização da documentação institucional necessária para habilitação em processos seletivos e parcerias públicas.', color: 'icon-box-green' },
-    { icon: FileSpreadsheet, titulo: 'Elaboração Técnica de Projetos', texto: 'Propostas técnicas completas com memória de cálculo, orçamento detalhado, plano de aplicação de recursos e cronograma físico-financeiro.', color: 'icon-box-gold' },
-    { icon: Landmark, titulo: 'Representação Institucional', texto: 'Representação junto a órgãos e instâncias da Administração Pública Municipal, Estadual e Federal, conselhos e comitês deliberativos.', color: 'icon-box-blue' },
-    { icon: Briefcase, titulo: 'Gestão de Contratos e Projetos', texto: 'Coordenação e acompanhamento da execução de convênios, termos de colaboração, termos de fomento e demais instrumentos congêneres.', color: 'icon-box-green' },
-    { icon: Receipt, titulo: 'Prestação de Contas', texto: 'Relatórios técnicos e financeiros periódicos, observando os princípios da legalidade, transparência, economicidade e eficiência.', color: 'icon-box-blue' },
-    { icon: GraduationCap, titulo: 'Qualificação Profissional', texto: 'Programas de capacitação e treinamento por meio de cursos, oficinas, workshops e atividades educativas direcionadas.', color: 'icon-box-gold' },
+    { icon: Coins, titulo: 'Captação de Recursos', texto: 'Identificação, prospecção e desenvolvimento de estratégias para obtenção de financiamentos junto a órgãos públicos, agências de fomento, organizações internacionais, fundações privadas e demais fontes de recursos.', color: 'icon-box-gold' },
+    { icon: ClipboardCheck, titulo: 'Diagnóstico de Viabilidade', texto: 'Avaliação completa da viabilidade jurídica, fiscal, trabalhista, social, econômico-financeira e técnica dos projetos a serem propostos ou executados pela organização.', color: 'icon-box-blue' },
+    { icon: FolderArchive, titulo: 'Gestão Documental', texto: 'Organização, controle e atualização da documentação institucional necessária para habilitação em processos seletivos e parcerias, incluindo todas as regularidades exigidas.', color: 'icon-box-green' },
+    { icon: FileSpreadsheet, titulo: 'Elaboração Técnica de Projetos', texto: 'Elaboração de propostas técnicas completas e planos de trabalho, incluindo: memória de cálculo da folha de pagamento e encargos; orçamento detalhado e plano de aplicação de recursos; cronograma físico-financeiro e de desembolso.', color: 'icon-box-gold' },
+    { icon: Landmark, titulo: 'Representação Institucional', texto: 'Representação da organização junto a órgãos e instâncias da Administração Pública (Municipal, Estadual e Federal), conselhos, comissões e comitês deliberativos.', color: 'icon-box-blue' },
+    { icon: Briefcase, titulo: 'Gestão de Contratos e Projetos', texto: 'Coordenação e acompanhamento da execução de contratos, convênios, termos de colaboração, termos de fomento e demais instrumentos congêneres.', color: 'icon-box-green' },
+    { icon: Receipt, titulo: 'Prestação de Contas', texto: 'Organização e apresentação de relatórios técnicos e financeiros periódicos, prestação de contas de projetos e parcerias específicas, observando os princípios da legalidade, transparência, economicidade e eficiência, ressalvados os serviços exclusivos da contabilidade.', color: 'icon-box-blue' },
+    { icon: GraduationCap, titulo: 'Qualificação Profissional para o Trabalho', texto: 'Desenvolvimento e execução de programas de capacitação e treinamento profissional, visando aprimorar competências técnicas e comportamentais dos colaboradores das organizações, por meio de cursos, oficinas, workshops e atividades educativas direcionadas às necessidades específicas de cada projeto ou área de atuação.', color: 'icon-box-gold' },
   ];
 
   return (

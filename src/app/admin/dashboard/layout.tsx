@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   BarChart3,
   Sparkles,
+  BookOpen,
 } from 'lucide-react';
 import './admin.css';
 import AdminSearch from './AdminSearch';
@@ -30,6 +31,7 @@ const navItems = [
   { label: 'Analytics',          path: '/admin/dashboard/analytics',          icon: BarChart3,       section: 'Principal' },
   { label: 'Gestão de OSCs',     path: '/admin/dashboard/oscs',               icon: User,            section: 'Gestão' },
   { label: 'Nossas Experiências',path: '/admin/dashboard/experiencias',       icon: Sparkles,        section: 'Conteúdo' },
+  { label: 'Blog',               path: '/admin/dashboard/blog',               icon: BookOpen,        section: 'Conteúdo' },
   { label: 'Transparência',      path: '/admin/dashboard/transparencia',      icon: ShieldCheck,     section: 'Conteúdo' },
   { label: 'Configurações',      path: '/admin/dashboard/settings',           icon: Settings,        section: 'Sistema' },
 ];
@@ -40,6 +42,7 @@ function getBreadcrumb(path: string) {
     '/admin/dashboard/analytics':          'Analytics e Métricas',
     '/admin/dashboard/oscs':               'Gestão de OSCs',
     '/admin/dashboard/experiencias':       'Nossas Experiências',
+    '/admin/dashboard/blog':              'Blog',
     '/admin/dashboard/transparencia':      'Transparência',
     '/admin/dashboard/settings':           'Configurações',
   };
