@@ -28,7 +28,7 @@ import AdminSearch from './AdminSearch';
 const navItems = [
   { label: 'Visão Geral',        path: '/admin/dashboard',                   icon: LayoutDashboard, section: 'Principal' },
   { label: 'Analytics',          path: '/admin/dashboard/analytics',          icon: BarChart3,       section: 'Principal' },
-  { label: 'Gestão de OSCs',     path: '/admin/dashboard/oscs',               icon: Users,           section: 'Gestão' },
+  { label: 'Gestão de OSCs',     path: '/admin/dashboard/oscs',               icon: User,            section: 'Gestão' },
   { label: 'Nossas Experiências',path: '/admin/dashboard/experiencias',       icon: Sparkles,        section: 'Conteúdo' },
   { label: 'Transparência',      path: '/admin/dashboard/transparencia',      icon: ShieldCheck,     section: 'Conteúdo' },
   { label: 'Configurações',      path: '/admin/dashboard/settings',           icon: Settings,        section: 'Sistema' },
