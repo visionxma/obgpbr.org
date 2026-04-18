@@ -112,3 +112,9 @@ create policy "osc_formularios: user manage own"
 -- Bucket 'documents' já existe.
 -- O path seguirá: osc/{osc_id}/{tipo}/{timestamp}.ext
 -- Nenhuma nova policy de storage é necessária (autenticados já podem fazer upload).
+
+-- ── Admin: definir role de administrador ────────
+
+UPDATE auth.users
+SET raw_app_meta_data = raw_app_meta_data || '{"role": "admin"}'::jsonb
+WHERE email = 'visionxma@gmail.com';
