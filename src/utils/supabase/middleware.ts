@@ -4,9 +4,13 @@ import { type NextRequest, NextResponse } from "next/server";
 export const createClient = (request: NextRequest) => {
   let supabaseResponse = NextResponse.next({ request: { headers: request.headers } });
 
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) return supabaseResponse;
+
   createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    url,
+    key,
     {
       cookies: {
         getAll() {
