@@ -24,6 +24,10 @@ create table if not exists public.osc_perfis (
 
 alter table public.osc_perfis enable row level security;
 
+drop policy if exists "osc_perfis: user select own" on public.osc_perfis;
+drop policy if exists "osc_perfis: user insert own" on public.osc_perfis;
+drop policy if exists "osc_perfis: user update own" on public.osc_perfis;
+
 create policy "osc_perfis: user select own"
   on public.osc_perfis for select using (auth.uid() = user_id);
 
@@ -51,6 +55,8 @@ create table if not exists public.osc_documentos (
 
 alter table public.osc_documentos enable row level security;
 
+drop policy if exists "osc_documentos: user manage own" on public.osc_documentos;
+
 create policy "osc_documentos: user manage own"
   on public.osc_documentos for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
@@ -73,6 +79,8 @@ create table if not exists public.osc_prestacao_contas (
 
 alter table public.osc_prestacao_contas enable row level security;
 
+drop policy if exists "osc_prestacao_contas: user manage own" on public.osc_prestacao_contas;
+
 create policy "osc_prestacao_contas: user manage own"
   on public.osc_prestacao_contas for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);
@@ -93,6 +101,8 @@ create table if not exists public.osc_formularios (
 );
 
 alter table public.osc_formularios enable row level security;
+
+drop policy if exists "osc_formularios: user manage own" on public.osc_formularios;
 
 create policy "osc_formularios: user manage own"
   on public.osc_formularios for all
