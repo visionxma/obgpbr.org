@@ -11,7 +11,6 @@ import {
   Menu,
   X,
   User,
-  Users,
   Moon,
   Sun,
   ShieldCheck,
@@ -237,7 +236,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
                   <button className="user-dropdown-item" onClick={() => router.push('/admin')}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <Users size={16} />
+                      <User size={16} />
                       <span>Trocar de conta</span>
                     </div>
                   </button>
