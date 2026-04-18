@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, ArrowLeft, ArrowRight, UserPlus, AlertCircle, CheckCircle, User, Mail, Lock, Building2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -16,6 +17,7 @@ interface FormData {
 }
 
 export default function CadastroPage() {
+  const router = useRouter();
   const [step, setStep] = useState<Step>(1);
   const [form, setForm] = useState<FormData>({ nome: '', organizacao: '', email: '', senha: '', confirmarSenha: '' });
   const [showPassword, setShowPassword] = useState(false);
@@ -38,7 +40,7 @@ export default function CadastroPage() {
   const validateStep2 = () => {
     if (!form.email.trim()) { setError('Informe seu email.'); return false; }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) { setError('Email inválido.'); return false; }
-    if (form.senha.length < 8) { setError('A senha deve ter no mínimo 8 caracteres.'); return false; }
+    if (form.senha.length < 6) { setError('A senha deve ter no mínimo 6 caracteres.'); return false; }
     if (form.senha !== form.confirmarSenha) { setError('As senhas não coincidem.'); return false; }
     return true;
   };
@@ -79,7 +81,13 @@ export default function CadastroPage() {
       }
 
       if (data.user) {
-        setSuccess(true);
+        if (data.session) {
+          // Email confirmation desativado — já está logado, vai direto ao painel
+          router.push('/painel');
+        } else {
+          // Email confirmation ativado — mostra tela de sucesso
+          setSuccess(true);
+        }
       }
     } catch {
       setError('Erro de conexão. Tente novamente.');
@@ -213,7 +221,7 @@ export default function CadastroPage() {
                   id="senha"
                   type={showPassword ? 'text' : 'password'}
                   className="auth-input"
-                  placeholder="Mínimo 8 caracteres"
+                  placeholder="Mínimo 6 caracteres"
                   value={form.senha}
                   onChange={update('senha')}
                   required
