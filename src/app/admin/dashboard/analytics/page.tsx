@@ -1,5 +1,5 @@
 'use client';
-import { BarChart3, TrendingUp, Calendar, Download, Eye, Users, MousePointer2, Loader2, Info } from 'lucide-react';
+import { BarChart3, TrendingUp, Download, Eye, Users, MousePointer2, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -166,16 +166,6 @@ export default function AnalyticsPage() {
         })}
       </div>
 
-      {/* Tabela de Setup Info Temporário */}
-      {totals.views === 0 && !loading && (
-         <div className="glass-card" style={{ padding: '20px 24px', background: 'rgba(42, 62, 243, 0.05)', border: '1px solid var(--admin-primary-glow)', display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ padding: 12, background: 'var(--admin-primary)', color: '#fff', borderRadius: '50%' }}><Info size={24} /></div>
-            <div>
-              <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--admin-text-primary)', marginBottom: 4 }}>Quase lá! Para o rastreamento funcionar perfeitamente, ative a tabela.</h3>
-              <p style={{ fontSize: '0.9rem', color: 'var(--admin-text-secondary)' }}>Por favor, rode o script SQL fornecido pela IA lá no <b>Supabase SQL Editor</b> para criar a base de dados de views.</p>
-            </div>
-         </div>
-      )}
 
       {/* Gráfico Principal Expansivo */}
       <div className="glass-card admin-animate-in-delay-3" style={{ padding: 24, minHeight: 400 }}>

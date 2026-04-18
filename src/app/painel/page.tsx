@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { CheckCircle, Circle, Clock, AlertCircle, FileText, BookOpen, ClipboardList } from 'lucide-react';
+import { CheckCircle, Circle, Clock, AlertCircle, FileText, BookOpen, ClipboardList, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from './PainelContext';
@@ -169,6 +169,7 @@ export default function DashboardPage() {
           { href: '/painel/documentos', icon: FileText, label: 'Enviar Documentos', desc: 'Faça upload de arquivos' },
           { href: '/painel/prestacao-contas', icon: BookOpen, label: 'Prestação de Contas', desc: 'Registre demonstrativos' },
           { href: '/painel/formularios', icon: ClipboardList, label: 'Formulários', desc: 'Preencha os formulários obrigatórios' },
+          { href: '/painel/relatorio-conformidade', icon: ShieldCheck, label: 'Relatório de Conformidade', desc: 'Preencha e envie para certificação' },
         ].map(item => {
           const Icon = item.icon;
           return (

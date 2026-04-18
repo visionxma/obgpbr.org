@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import PublicLayout from '../components/PublicLayout';
 import { supabase } from '@/lib/supabase';
 import {
-  Calendar, Clock, Tag, Loader2, BookOpen, ArrowRight, User,
+  Calendar, Clock, Tag, Loader2, BookOpen, User,
 } from 'lucide-react';
 
 interface BlogPost {
@@ -187,11 +187,6 @@ function FeaturedPost({ post }: { post: BlogPost }) {
           </p>
         )}
         <PostMeta post={post} />
-        <div style={{ marginTop: 28 }}>
-          <span className="btn btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-sm)' }}>
-            Leia o artigo <ArrowRight size={15} />
-          </span>
-        </div>
       </div>
     </article>
   );

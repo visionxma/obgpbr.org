@@ -147,7 +147,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
           <img
-            src="/logo.PNG"
+            src="/logo.png"
             alt="OBGP"
             style={{ height: 36, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)', marginBottom: 4 }}
           />
