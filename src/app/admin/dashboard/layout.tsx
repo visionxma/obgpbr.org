@@ -146,11 +146,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* ──── Sidebar ──── */}
       <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-brand">
-          <img
-            src="/logo.png"
-            alt="OBGP"
-            style={{ height: 36, width: 'auto', objectFit: 'contain', filter: 'brightness(0) invert(1)', marginBottom: 4 }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+            <div style={{
+              width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+              background: 'rgba(255,255,255,0.10)', border: '1px solid rgba(197,171,118,0.25)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <img src="/logo.png" alt="OBGP" style={{ width: 28, height: 28, objectFit: 'contain' }} />
+            </div>
+            <span style={{
+              fontFamily: 'Outfit, sans-serif', fontSize: '1.3rem', fontWeight: 800,
+              color: '#fff', letterSpacing: '0.06em',
+            }}>
+              OBG<span style={{ color: '#C5AB76' }}>P</span>
+            </span>
+          </div>
           <div className="sidebar-brand-subtitle">Gestão Institucional</div>
         </div>
 

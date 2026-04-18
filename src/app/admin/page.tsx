@@ -87,21 +87,31 @@ export default function AdminLogin() {
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 4, background: 'var(--site-primary)' }} />
 
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <div style={{ 
-            fontSize: '0.75rem', 
-            fontWeight: 800, 
-            letterSpacing: '0.2em', 
-            color: 'var(--site-primary)', 
-            textTransform: 'uppercase', 
-            marginBottom: 16 
+          <div style={{
+            fontSize: '0.75rem',
+            fontWeight: 800,
+            letterSpacing: '0.2em',
+            color: 'var(--site-primary)',
+            textTransform: 'uppercase',
+            marginBottom: 20,
           }}>
             Acesso Restrito
           </div>
-          <img
-            src="/logo.PNG"
-            alt="OBGP"
-            style={{ height: 50, width: 'auto', objectFit: 'contain', filter: 'brightness(0) saturate(100%)', marginBottom: 8 }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: 12 }}>
+            <div style={{
+              width: 52, height: 52, borderRadius: '50%',
+              background: 'rgba(13,54,79,0.07)', border: '1px solid rgba(13,54,79,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+            }}>
+              <img src="/logo.png" alt="OBGP" style={{ width: 36, height: 36, objectFit: 'contain' }} />
+            </div>
+            <span style={{
+              fontFamily: 'var(--font-heading)', fontSize: '1.6rem', fontWeight: 800,
+              color: 'var(--site-primary)', letterSpacing: '0.06em',
+            }}>
+              OBG<span style={{ color: 'var(--site-gold, #C5AB76)' }}>P</span>
+            </span>
+          </div>
           <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.95rem' }}>
             Gerencie o conteúdo institucional com precisão.
           </p>
