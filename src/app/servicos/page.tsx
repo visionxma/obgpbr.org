@@ -66,8 +66,8 @@ export default function ServicosPage() {
                   <Icon size={22} />
                 </div>
                 <div style={{ flex: 1, position: 'relative', zIndex: 1 }}>
-                  <h3 style={{ marginBottom: 10, fontSize: '1.1rem' }}>{titulo}</h3>
-                  <p style={{ color: 'var(--site-text-secondary)', lineHeight: 1.75, fontSize: '.938rem' }}>{texto}</p>
+                  <h3 className="h3-card" style={{ marginBottom: 10 }}>{titulo}</h3>
+                  <p style={{ color: 'var(--site-text-secondary)', lineHeight: 'var(--leading-relaxed)', fontSize: 'var(--text-base)' }}>{texto}</p>
                 </div>
               </div>
             ))}

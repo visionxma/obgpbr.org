@@ -13,7 +13,7 @@ export default function SeloOscPage() {
   ];
 
   const pStyle: React.CSSProperties = {
-    fontSize: '1.05rem', lineHeight: 1.85,
+    fontSize: 'var(--text-lg)', lineHeight: 'var(--leading-relaxed)',
     color: 'var(--site-text-secondary)', marginBottom: 20,
   };
 
@@ -23,7 +23,7 @@ export default function SeloOscPage() {
       <section className="glass-section-blue page-hero">
         <div className="container">
           <div className="hero-badge"><Award size={13} /> CERTIFICAÇÃO</div>
-          <h1 style={{ maxWidth: 640, margin: '0 auto 20px', fontSize: 'clamp(2rem,4.5vw,3.25rem)' }}>
+          <h1 className="h1-display" style={{ maxWidth: 640, margin: '0 auto 20px' }}>
             Selo OSC{' '}
             <span className="hero-accent-white">Gestão de Parcerias</span>
           </h1>
@@ -77,8 +77,8 @@ export default function SeloOscPage() {
                     <Icon size={20} />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: '.93rem', marginBottom: 2 }}>{label}</div>
-                    <div style={{ fontSize: '.82rem', color: 'var(--site-text-tertiary)' }}>{desc}</div>
+                    <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 2 }}>{label}</div>
+                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--site-text-tertiary)' }}>{desc}</div>
                   </div>
                 </div>
               ))}

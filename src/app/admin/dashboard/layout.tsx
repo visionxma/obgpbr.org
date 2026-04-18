@@ -11,6 +11,7 @@ import {
   Menu,
   X,
   User,
+  Users,
   Moon,
   Sun,
   ShieldCheck,
@@ -26,21 +27,24 @@ import AdminSearch from './AdminSearch';
  */
 
 const navItems = [
-  { label: 'Visão Geral', path: '/admin/dashboard', icon: LayoutDashboard, section: 'Principal' },
-  { label: 'Analytics', path: '/admin/dashboard/analytics', icon: BarChart3, section: 'Principal' },
-  { label: 'Nossas Experiências', path: '/admin/dashboard/experiencias', icon: Sparkles, section: 'Conteúdo' },
-  { label: 'Transparência', path: '/admin/dashboard/transparencia', icon: ShieldCheck, section: 'Conteúdo' },
-  { label: 'Configurações', path: '/admin/dashboard/settings', icon: Settings, section: 'Sistema' },
+  { label: 'Visão Geral',        path: '/admin/dashboard',                   icon: LayoutDashboard, section: 'Principal' },
+  { label: 'Analytics',          path: '/admin/dashboard/analytics',          icon: BarChart3,       section: 'Principal' },
+  { label: 'Gestão de OSCs',     path: '/admin/dashboard/oscs',               icon: Users,           section: 'Gestão' },
+  { label: 'Nossas Experiências',path: '/admin/dashboard/experiencias',       icon: Sparkles,        section: 'Conteúdo' },
+  { label: 'Transparência',      path: '/admin/dashboard/transparencia',      icon: ShieldCheck,     section: 'Conteúdo' },
+  { label: 'Configurações',      path: '/admin/dashboard/settings',           icon: Settings,        section: 'Sistema' },
 ];
 
 function getBreadcrumb(path: string) {
   const map: Record<string, string> = {
-    '/admin/dashboard': 'Visão Geral',
-    '/admin/dashboard/analytics': 'Analytics e Métricas',
-    '/admin/dashboard/experiencias': 'Nossas Experiências',
-    '/admin/dashboard/transparencia': 'Transparência',
-    '/admin/dashboard/settings': 'Configurações',
+    '/admin/dashboard':                    'Visão Geral',
+    '/admin/dashboard/analytics':          'Analytics e Métricas',
+    '/admin/dashboard/oscs':               'Gestão de OSCs',
+    '/admin/dashboard/experiencias':       'Nossas Experiências',
+    '/admin/dashboard/transparencia':      'Transparência',
+    '/admin/dashboard/settings':           'Configurações',
   };
+  if (path.startsWith('/admin/dashboard/oscs/')) return 'Detalhe da OSC';
   return map[path] || 'Dashboard';
 }
 
@@ -55,20 +59,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [currentTime, setCurrentTime] = useState('');
 
   useEffect(() => {
-    // 1. Verifica a sessão inicial e bloqueia o acesso instantaneamente se não houver
+    const savedTheme = localStorage.getItem('admin-theme') as 'light' | 'dark' | null;
+    if (savedTheme) {
+      setTheme(savedTheme);
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+  }, []);
+
+  useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }: any) => {
       if (!session) {
-        router.replace('/admin'); // Redireciona para o login de forma segura
+        router.replace('/admin');
+      } else if (session.user?.app_metadata?.role !== 'admin') {
+        supabase.auth.signOut().then(() => router.replace('/admin'));
       } else {
         setSession(session);
         setIsLoadingAuth(false);
       }
     });
 
-    // 2. Protege ativamente contra deslogar enquanto ainda na página
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, authSession: any) => {
       if (!authSession) {
         router.replace('/admin');
+      } else if (authSession.user?.app_metadata?.role !== 'admin') {
+        supabase.auth.signOut().then(() => router.replace('/admin'));
       } else {
         setSession(authSession);
         setIsLoadingAuth(false);
@@ -76,14 +90,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     });
 
     return () => subscription.unsubscribe();
-
-
-    // Check system preference or saved theme
-    const savedTheme = localStorage.getItem('admin-theme') as 'light' | 'dark';
-    if (savedTheme) {
-      setTheme(savedTheme);
-      document.documentElement.setAttribute('data-theme', savedTheme);
-    }
   }, [router]);
 
   const toggleTheme = () => {

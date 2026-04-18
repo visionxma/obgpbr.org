@@ -37,6 +37,13 @@ export default function AdminLogin() {
         setErrorMessage("Credenciais inválidas. Verifique seu email e senha.");
         setLoading(false);
       } else if (data.user) {
+        const isAdmin = data.user.app_metadata?.role === 'admin';
+        if (!isAdmin) {
+          await supabase.auth.signOut();
+          setErrorMessage("Acesso não autorizado. Esta área é restrita a administradores.");
+          setLoading(false);
+          return;
+        }
         setSuccessMessage("Autenticação aprovada! Preparando ambiente...");
         setTimeout(() => {
           window.location.href = '/admin/dashboard';

@@ -67,7 +67,7 @@ export default function Transparencia() {
   const sel: React.CSSProperties = {
     padding: '10px 14px', border: '1px solid var(--site-border)',
     borderRadius: 'var(--site-radius-full)', background: 'var(--site-surface)',
-    fontSize: '.85rem', color: 'var(--site-text-primary)', cursor: 'pointer', outline: 'none', minWidth: 150,
+    fontSize: 'var(--text-sm)', color: 'var(--site-text-primary)', cursor: 'pointer', outline: 'none', minWidth: 150,
   };
 
   return (
@@ -173,21 +173,21 @@ export default function Transparencia() {
                         <div style={{ padding: '22px 24px 16px', borderBottom: '1px solid var(--site-border)' }}>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
                             {r.modalidade && (
-                              <span style={{ padding: '5px 12px', fontSize: '.7rem', fontWeight: 700, letterSpacing: '.04em', textTransform: 'uppercase', background: 'var(--site-surface-blue)', color: 'var(--site-primary)', borderRadius: 'var(--site-radius-full)' }}>
+                              <span className="overline" style={{ padding: '5px 12px', background: 'var(--site-surface-blue)', color: 'var(--site-primary)', borderRadius: 'var(--site-radius-full)' }}>
                                 {r.modalidade}
                               </span>
                             )}
                             {r.ano_emenda && (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 12px', fontSize: '.7rem', fontWeight: 600, background: 'var(--site-bg)', color: 'var(--site-text-secondary)', borderRadius: 'var(--site-radius-full)' }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '5px 12px', fontSize: 'var(--text-xs)', fontWeight: 600, background: 'var(--site-bg)', color: 'var(--site-text-secondary)', borderRadius: 'var(--site-radius-full)' }}>
                                 <Calendar size={11} /> {r.ano_emenda}
                               </span>
                             )}
                           </div>
-                          <h3 style={{ fontSize: '1rem', fontWeight: 700, lineHeight: 1.4, marginBottom: 10, display: '-webkit-box', WebkitLineClamp: open ? 999 : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                          <h3 className="h4-label" style={{ marginBottom: 10, display: '-webkit-box', WebkitLineClamp: open ? 999 : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                             {r.objeto || 'Sem descrição'}
                           </h3>
                           {r.proponente && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '.85rem', color: 'var(--site-text-secondary)' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-sm)', color: 'var(--site-text-secondary)' }}>
                               <Building2 size={14} style={{ color: 'var(--site-primary)' }} />
                               <span style={{ fontWeight: 500 }}>{r.proponente}</span>
                             </div>
@@ -197,18 +197,18 @@ export default function Transparencia() {
                         <div style={{ padding: '16px 24px' }}>
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px 20px' }}>
                             <div>
-                              <div style={{ fontSize: '.68rem', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--site-text-tertiary)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <div className="overline" style={{ color: 'var(--site-text-tertiary)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <DollarSign size={10} /> Valor
                               </div>
-                              <div style={{ fontSize: '1.05rem', fontWeight: 700, color: r.valor ? 'var(--site-accent)' : 'var(--site-text-tertiary)', fontFamily: 'var(--font-heading)' }}>
+                              <div className="h4-label" style={{ color: r.valor ? 'var(--site-accent)' : 'var(--site-text-tertiary)', fontFamily: 'var(--font-heading)' }}>
                                 {formatCurrency(r.valor)}
                               </div>
                             </div>
                             <div>
-                              <div style={{ fontSize: '.68rem', fontWeight: 600, letterSpacing: '.06em', textTransform: 'uppercase', color: 'var(--site-text-tertiary)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <div className="overline" style={{ color: 'var(--site-text-tertiary)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <DollarSign size={10} /> Emenda
                               </div>
-                              <div style={{ fontSize: '1.05rem', fontWeight: 700, color: r.valor_emenda ? 'var(--site-primary)' : 'var(--site-text-tertiary)', fontFamily: 'var(--font-heading)' }}>
+                              <div className="h4-label" style={{ color: r.valor_emenda ? 'var(--site-primary)' : 'var(--site-text-tertiary)', fontFamily: 'var(--font-heading)' }}>
                                 {formatCurrency(r.valor_emenda)}
                               </div>
                             </div>
@@ -224,8 +224,8 @@ export default function Transparencia() {
                                 <div key={l} style={{ display: 'flex', gap: 10 }}>
                                   <Ic size={14} style={{ color: 'var(--site-text-tertiary)', marginTop: 3 }} />
                                   <div>
-                                    <div style={{ fontSize: '.68rem', fontWeight: 600, letterSpacing: '.04em', textTransform: 'uppercase', color: 'var(--site-text-tertiary)', marginBottom: 2 }}>{l}</div>
-                                    <div style={{ fontSize: '.9rem', fontWeight: 500, color: v ? 'var(--site-text-primary)' : 'var(--site-text-tertiary)' }}>{v || '—'}</div>
+                                    <div className="overline" style={{ color: 'var(--site-text-tertiary)', marginBottom: 2 }}>{l}</div>
+                                    <div style={{ fontSize: 'var(--text-sm-plus)', fontWeight: 500, color: v ? 'var(--site-text-primary)' : 'var(--site-text-tertiary)' }}>{v || '—'}</div>
                                   </div>
                                 </div>
                               ))}

@@ -1,10 +1,19 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,500;1,600;1,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 /* ═══════════════════════════════════════════════
    OBGP — Design System v2
+   Regra 60-30-10:
+     60% → Navy #0D364F  (header, hero, stats, footer, CTA sections)
+     30% → Off-white #FAFBFC / #FFFFFF  (conteúdo, cards, seções de descanso)
+     10% → Gold #C5AB76  (badges, labels, divisores, btn-gold, cursivas de destaque)
    ═══════════════════════════════════════════════ */
 
 :root {
+  /* ── Paleta institucional (60-30-10) ── */
+  --color-60: #0D364F;   /* Navy dominante  — 60% */
+  --color-30: #FAFBFC;   /* Off-white base   — 30% */
+  --color-10: #C5AB76;   /* Gold accent       — 10% */
+
   /* Paleta institucional */
   --site-primary: #0D364F;
   --site-primary-hover: #164766;
@@ -52,11 +61,38 @@
   /* Fontes */
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-heading: 'Outfit', -apple-system, sans-serif;
-  --font-cursive: 'Playfair Display', Georgia, serif;
+  --font-cursive: var(--font-heading);
 
   /* Transições */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ── Escala tipográfica ── */
+  --text-2xs:  0.68rem;   /* micro, badges internos */
+  --text-xs:   0.75rem;   /* labels, captions, overlines */
+  --text-sm:   0.875rem;  /* corpo secundário, cards */
+  --text-sm-plus: 0.9rem; /* intermediário sm/base */
+  --text-base: 0.9375rem; /* corpo padrão */
+  --text-lg:   1.0625rem; /* lead, subtítulos */
+  --text-xl:   1.125rem;  /* corpo grande */
+  --text-2xl:  1.25rem;   /* destaque, badge grande */
+  --text-3xl:  1.5rem;    /* número/destaque mediano */
+
+  /* ── Rastreamento tipográfico ── */
+  --tracking-tighter: -0.035em;
+  --tracking-tight:   -0.025em;
+  --tracking-normal:  0;
+  --tracking-wide:    0.06em;
+  --tracking-wider:   0.10em;
+  --tracking-widest:  0.14em;
+
+  /* ── Altura de linha ── */
+  --leading-tight:   1.1;
+  --leading-snug:    1.25;
+  --leading-normal:  1.5;
+  --leading-base:    1.6;
+  --leading-relaxed: 1.75;
+  --leading-loose:   1.9;
 }
 
 /* ── Reset ─────────────────────────────────────── */
@@ -68,7 +104,7 @@ body {
   color: var(--site-text-primary);
   font-family: var(--font-body);
   font-size: 16px;
-  line-height: 1.6;
+  line-height: var(--leading-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -83,33 +119,141 @@ h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   color: var(--site-text-primary);
   font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.025em;
+  letter-spacing: var(--tracking-tight);
 }
-h1 { font-size: clamp(2.5rem, 5.5vw, 4rem); font-weight: 800; letter-spacing: -0.03em; }
-h2 { font-size: clamp(1.85rem, 4vw, 2.75rem); }
-h3 { font-size: clamp(1.2rem, 2.5vw, 1.45rem); font-weight: 600; }
-p { line-height: 1.75; }
 
-/* Cursiva / Script */
+h1 {
+  font-size: clamp(2.5rem, 5.5vw, 4rem);
+  font-weight: 800;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);       /* 1.1 — impacto máximo */
+}
+h2 {
+  font-size: clamp(1.85rem, 4vw, 2.75rem);
+  line-height: 1.2;                        /* respira mais que h1 */
+}
+h3 {
+  font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+h4 {
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.45;
+}
+p {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+}
+
+/* ── Classes tipográficas reutilizáveis ── */
 .font-cursive {
-  font-family: var(--font-cursive);
-  font-style: italic;
+  font-family: var(--font-heading);
   font-weight: 400;
 }
 
 .hero-accent {
-  font-family: var(--font-cursive);
-  font-style: italic;
-  font-weight: 500;
+  font-weight: 400;
   color: var(--site-gold);
 }
 
 .hero-accent-white {
-  font-family: var(--font-cursive);
-  font-style: italic;
-  font-weight: 500;
-  color: rgba(255,255,255,0.95);
+  font-weight: 400;
+  color: rgba(255,255,255,0.88);
+}
+
+/* label overline — overline uppercase padrão do design system */
+.section-label {
+  display: block;
+  font-family: var(--font-heading);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--site-gold-dark);
+  margin-bottom: 12px;
+}
+
+/* lead — primeiro parágrafo, entrada de seção */
+.lead {
+  font-size: var(--text-lg);
+  color: var(--site-text-secondary);
+  line-height: var(--leading-relaxed);
+  max-width: 640px;
+}
+
+/* caption — metadado, rodapé de card */
+.caption {
+  font-size: var(--text-xs);
+  color: var(--site-text-tertiary);
+  line-height: var(--leading-normal);
+  letter-spacing: 0.01em;
+}
+
+/* ── Tipografia: utilitários de heading ───────────────────
+   Aplicar nas páginas para garantir hierarquia consistente.
+   Substitui clamp() hardcoded espalhado pelos pages.
+────────────────────────────────────────────────────────── */
+.h1-display {
+  font-family: var(--font-heading);
+  font-size: clamp(2.5rem, 5.5vw, 4rem);
+  font-weight: 800;
+  letter-spacing: var(--tracking-tighter);
+  line-height: var(--leading-tight);
+}
+.h2-section {
+  font-family: var(--font-heading);
+  font-size: clamp(1.85rem, 4vw, 2.75rem);
+  font-weight: 700;
+  letter-spacing: var(--tracking-tight);
+  line-height: 1.2;
+}
+.h3-card {
+  font-family: var(--font-heading);
+  font-size: clamp(1.05rem, 2.2vw, 1.3rem);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+}
+.h4-label {
+  font-family: var(--font-heading);
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.45;
+}
+
+/* ── Tipografia: overline / meta ── */
+.overline {
+  font-family: var(--font-heading);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+}
+.overline-sm {
+  font-family: var(--font-heading);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+}
+
+/* ── Tipografia: corpo ── */
+.body-sm  { font-size: var(--text-sm);  line-height: var(--leading-relaxed); }
+.body-base{ font-size: var(--text-base);line-height: var(--leading-relaxed); }
+.body-lg  { font-size: var(--text-lg);  line-height: var(--leading-relaxed); }
+
+/* ── Tipografia: número stat grande ── */
+.stat-num-xl {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4vw, 3.25rem);
+  font-weight: 900;
+  letter-spacing: var(--tracking-tighter);
+  line-height: 1;
 }
 
 /* ── Container ─────────────────────────────────── */
@@ -123,9 +267,9 @@ p { line-height: 1.75; }
 @media (min-width: 1024px) { .container { padding: 0 48px; } }
 
 /* ── Seções ────────────────────────────────────── */
-.section-padding { padding: 72px 0; }
-@media (min-width: 768px) { .section-padding { padding: 100px 0; } }
-@media (min-width: 1024px) { .section-padding { padding: 128px 0; } }
+.section-padding { padding: 48px 0; }
+@media (min-width: 768px) { .section-padding { padding: 64px 0; } }
+@media (min-width: 1024px) { .section-padding { padding: 80px 0; } }
 
 /* ── Botões ────────────────────────────────────── */
 .btn {
@@ -204,7 +348,14 @@ p { line-height: 1.75; }
   background-size: 300px;
 }
 
+/* ── Marca d'água da logo — seções escuras ───────────────────
+   Logo aparece como fantasma branco sutil atrás do conteúdo.
+   brightness(12) + saturate(0) = shape branca sem cor.
+   opacity(0.048) = quase invisível mas perceptível.
+────────────────────────────────────────────────────────────── */
 .glass-section-blue {
+  position: relative;
+  overflow: hidden;
   background-color: var(--site-primary);
   background-image:
     url('/texture-dark.svg'),
@@ -212,6 +363,69 @@ p { line-height: 1.75; }
     radial-gradient(ellipse at 80% 100%, rgba(38, 102, 47, 0.08), transparent 50%);
   background-repeat: repeat, no-repeat, no-repeat;
   background-size: 300px 300px, auto, auto;
+}
+/* :not(.page-hero) evita conflito com as páginas internas que usam ambas as classes
+   e já têm seus próprios ::before / ::after decorativos no .page-hero */
+.glass-section-blue:not(.page-hero)::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: clamp(320px, 44vw, 580px);
+  height: clamp(320px, 44vw, 580px);
+  background: url('/logo.png') center / contain no-repeat;
+  filter: brightness(12) saturate(0) opacity(0.022);
+  pointer-events: none;
+  z-index: 0;
+}
+.glass-section-blue > .container {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Hero início — full-screen ─────────────────── */
+.hero-fs {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+/* Logo watermark do hero: centralizada, grande, conteúdo sobrepõe */
+.glass-section-blue.hero-inicio::before {
+  width: clamp(500px, 68vw, 900px);
+  height: clamp(500px, 68vw, 900px);
+  top: 50%;
+  left: 50%;
+  right: auto;
+  transform: translate(-50%, -50%);
+  filter: brightness(12) saturate(0) opacity(0.10);
+}
+
+/* ── Marca d'água da logo — seções claras ────────────────────
+   Classe opt-in: adicione .section-watermark a seções brancas
+   que se beneficiam da presença sutil da marca.
+   brightness(0) = shape preta; opacity(0.035) = fantasma leve.
+────────────────────────────────────────────────────────────── */
+.section-watermark {
+  position: relative;
+  overflow: hidden;
+}
+.section-watermark::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  right: -3%;
+  transform: translateY(-50%);
+  width: clamp(260px, 36vw, 460px);
+  height: clamp(260px, 36vw, 460px);
+  background: url('/logo.png') center / contain no-repeat;
+  filter: brightness(0) opacity(0.032);
+  pointer-events: none;
+  z-index: 0;
+}
+.section-watermark > .container {
+  position: relative;
+  z-index: 1;
 }
 
 /* ── Page Hero ─────────────────────────────────── */
@@ -249,7 +463,7 @@ p { line-height: 1.75; }
   max-width: 640px;
   margin: 0 auto;
   color: rgba(255,255,255,0.75);
-  font-size: 1.1rem;
+  font-size: var(--text-xl);
   line-height: 1.75;
 }
 .page-hero .hero-badge {
@@ -289,21 +503,13 @@ p { line-height: 1.75; }
 
 /* ── Section header ────────────────────────────── */
 .section-header { text-align: center; margin-bottom: 56px; }
-.section-header .section-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--site-gold-dark);
-  margin-bottom: 14px;
-  display: block;
-}
+.section-header .section-label { margin-bottom: 14px; }
 .section-header h2 { margin-bottom: 16px; }
 .section-header p {
   max-width: 580px;
   margin: 0 auto;
   color: var(--site-text-secondary);
-  font-size: 1.05rem;
+  font-size: var(--text-lg);
 }
 .section-header .section-line {
   width: 48px;
@@ -416,6 +622,32 @@ p { line-height: 1.75; }
 .img-cover { width: 100%; height: 100%; object-fit: cover; display: block; }
 .text-balance { text-wrap: balance; }
 
+/* ── Badge dourado — pill reutilizável em seções claras e escuras ── */
+.badge-gold {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 18px;
+  font-family: var(--font-heading);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--site-gold);
+  background: rgba(197, 171, 118, 0.12);
+  border: 1px solid rgba(197, 171, 118, 0.20);
+  border-radius: var(--site-radius-full);
+}
+
+/* ── Logo utilities (60-30-10: logo é âncora da identidade, usa accent gold) ── */
+.logo-glow {
+  filter: drop-shadow(0 0 12px rgba(197, 171, 118, 0.35));
+  transition: filter 0.3s ease;
+}
+.logo-glow:hover {
+  filter: drop-shadow(0 0 18px rgba(197, 171, 118, 0.55));
+}
+
 /* ── Ticker ────────────────────────────────────── */
 .ticker-wrap {
   width: 100%;
@@ -438,7 +670,7 @@ p { line-height: 1.75; }
   color: rgba(255,255,255,0.9);
 }
 .ticker-item-label {
-  font-size: 0.72rem;
+  font-size: var(--text-xs);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -450,13 +682,138 @@ p { line-height: 1.75; }
   font-family: var(--font-heading);
 }
 
+/* ── Landing Page Hero ─────────────────────────── */
+.lp-hero {
+  padding: 136px 0 80px;
+  position: relative;
+  text-align: center;
+  overflow: hidden;
+}
+.lp-hero .hero-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 22px;
+  margin-bottom: 24px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--site-gold);
+  background: rgba(197, 171, 118, 0.12);
+  border: 1px solid rgba(197, 171, 118, 0.2);
+  border-radius: var(--site-radius-full);
+}
+.lp-hero .hero-divider {
+  width: 48px;
+  height: 2px;
+  background: var(--site-gold);
+  margin: 24px auto 0;
+  border-radius: 4px;
+  opacity: 0.6;
+}
+.lp-hero-logo-ring {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(197,171,118,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 48px rgba(197,171,118,0.12);
+  animation: pulseGlow 3s ease-in-out infinite;
+  margin: 0 auto 28px;
+}
+.lp-trust-bar {
+  display: flex;
+  gap: 28px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 48px;
+  padding-top: 36px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.lp-trust-item {
+  text-align: center;
+  min-width: 80px;
+}
+.lp-trust-num {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1.5rem;
+  color: white;
+  line-height: 1;
+  display: block;
+}
+.lp-trust-sub {
+  font-size: var(--text-xs);
+  color: rgba(255,255,255,0.4);
+  margin-top: 4px;
+  font-weight: 500;
+  display: block;
+}
+.lp-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+}
+.lp-stats-cell {
+  padding: 44px 24px;
+  text-align: center;
+}
+.lp-stats-num {
+  font-family: var(--font-heading);
+  font-weight: 900;
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  color: white;
+  line-height: 1;
+  letter-spacing: -0.04em;
+  margin-bottom: 6px;
+}
+.lp-stats-label {
+  font-weight: 700;
+  font-size: var(--text-base);
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 6px;
+}
+.lp-stats-sub {
+  font-size: var(--text-xs);
+  color: rgba(255,255,255,0.4);
+  line-height: 1.5;
+}
+
 /* ── Responsividade ────────────────────────────── */
 @media (max-width: 640px) {
   .hide-mobile { display: none !important; }
-  .page-hero { padding: 130px 0 70px; }
-  .page-hero h1 { font-size: 2.1rem; }
+  .page-hero { padding: 120px 0 60px; }
+  .page-hero h1 { font-size: 2rem; }
   .page-hero .hero-subtitle { font-size: 1rem; }
   .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  /* LP Hero mobile */
+  .lp-hero { padding: 100px 0 60px; }
+  .lp-hero-logo-ring { width: 80px; height: 80px; margin-bottom: 20px; }
+  .lp-trust-bar { gap: 16px; margin-top: 32px; padding-top: 24px; }
+  .lp-trust-num { font-size: 1.2rem; }
+  .lp-trust-sub { font-size: .65rem; }
+  .lp-stats-cell { padding: 32px 16px; }
+  .lp-stats-num { font-size: 2.5rem; }
+}
+@media (min-width: 641px) and (max-width: 1023px) {
+  /* LP Hero tablet */
+  .lp-hero { padding: 116px 0 72px; }
+  .lp-hero-logo-ring { width: 90px; height: 90px; }
+  .lp-trust-num { font-size: 1.35rem; }
+}
+@media (min-width: 768px) {
+  .lp-stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .lp-stats-cell {
+    padding: 56px 32px;
+    border-right: 1px solid rgba(255,255,255,0.06);
+    border-bottom: none !important;
+  }
+  .lp-stats-cell:last-child { border-right: none; }
 }
 
 @media (min-width: 1024px) {
@@ -470,4 +827,6 @@ p { line-height: 1.75; }
 ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.12); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.2); }
 
-input::placeholder { color: rgba(255,255,255,0.4) !important; }
+/* Only override placeholder in dark-context inputs (hero search, etc.) */
+.page-hero input::placeholder,
+.lp-hero input::placeholder { color: rgba(255,255,255,0.4); }

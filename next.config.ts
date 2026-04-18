@@ -3,12 +3,12 @@ import type { NextConfig } from "next";
 // Define a Política de Segurança de Conteúdo (CSP) Nível Enterprise
 const ContentSecurityPolicy = `
   default-src 'self';
-  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://izhatyrzmxzbhvjifspn.supabase.co;
+  script-src 'self' 'unsafe-eval' 'unsafe-inline' https://kyhvqydnvaselautwcrm.supabase.co;
   child-src 'self';
   style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
-  img-src 'self' blob: data: https://izhatyrzmxzbhvjifspn.supabase.co https://images.unsplash.com;
+  img-src 'self' blob: data: https://kyhvqydnvaselautwcrm.supabase.co https://images.unsplash.com;
   media-src 'none';
-  connect-src 'self' https://izhatyrzmxzbhvjifspn.supabase.co;
+  connect-src 'self' https://kyhvqydnvaselautwcrm.supabase.co;
   font-src 'self' https://fonts.gstatic.com;
   frame-ancestors 'none';
 `;

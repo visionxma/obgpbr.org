@@ -87,15 +87,15 @@ export default function ExperienciasPage() {
                     </div>
                   )}
                   <div style={{ padding: '24px 24px 28px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                    <h3 style={{ marginBottom: 10, fontSize: '1.1rem' }}>{it.title}</h3>
+                    <h3 className="h3-card" style={{ marginBottom: 10 }}>{it.title}</h3>
                     {it.description && (
-                      <p style={{ color: 'var(--site-text-secondary)', lineHeight: 1.7, fontSize: '.93rem', marginBottom: 16, flex: 1 }}>
+                      <p style={{ color: 'var(--site-text-secondary)', lineHeight: 'var(--leading-relaxed)', fontSize: 'var(--text-sm)', marginBottom: 16, flex: 1 }}>
                         {it.description}
                       </p>
                     )}
                     {(it.location || it.date) && (
                       <div style={{
-                        display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: '.82rem',
+                        display: 'flex', gap: 16, flexWrap: 'wrap', fontSize: 'var(--text-xs)',
                         color: 'var(--site-text-tertiary)', borderTop: '1px solid var(--site-border)',
                         paddingTop: 14, marginTop: 'auto',
                       }}>
