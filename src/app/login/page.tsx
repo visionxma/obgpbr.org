@@ -37,8 +37,9 @@ export default function LoginPage() {
       }
 
       if (data.user) {
+        const isAdmin = data.user.app_metadata?.role === 'admin';
         setSuccess('Login realizado! Redirecionando...');
-        setTimeout(() => router.push('/painel'), 800);
+        setTimeout(() => router.push(isAdmin ? '/admin/dashboard' : '/painel'), 800);
       }
     } catch {
       setError('Erro de conexão. Tente novamente.');
