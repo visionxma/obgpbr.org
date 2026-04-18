@@ -65,17 +65,12 @@ export default function CadastroPage() {
           data: {
             nome: form.nome.trim(),
             organizacao: form.organizacao.trim(),
-            role: 'user',
           },
         },
       });
 
       if (signUpError) {
-        if (signUpError.message.includes('already registered') || signUpError.message.includes('already been registered')) {
-          setError('Este email já está cadastrado. Tente fazer login.');
-        } else {
-          setError('Erro ao criar conta. Tente novamente.');
-        }
+        setError('Não foi possível criar a conta. Verifique os dados e tente novamente.');
         setLoading(false);
         return;
       }
@@ -128,8 +123,10 @@ export default function CadastroPage() {
         </Link>
 
         <div className="auth-header">
-          <Image src="/logo.png" alt="OBGP" width={52} height={52} style={{ objectFit: 'contain' }} />
-          <h1 className="auth-title">Criar conta</h1>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+            <Image src="/logo.png" alt="OBGP" width={88} height={88} style={{ objectFit: 'contain' }} />
+          </div>
+          <h1 className="auth-title" style={{ marginTop: 0 }}>Criar conta</h1>
           <p className="auth-subtitle">Cadastre-se gratuitamente na plataforma</p>
         </div>
 

@@ -2,14 +2,14 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient } from '@/utils/supabase/middleware';
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // === 1. WAF: XSS / SQL Injection Protection ===
   const urlParams = request.nextUrl.searchParams.toString();
 
   const maliciousPatterns = [
     /<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi,
     /javascript:/gi,
-    /(\%27)|(\')|(\-\-)|(\%23)|(#)/gi,
+    /(\%27)|(\')|(\-\-)|(\%23)/gi,
     /union\s+select/gi,
     /drop\s+table/gi,
   ];
@@ -31,12 +31,24 @@ export function middleware(request: NextRequest) {
     return new NextResponse('Method Not Allowed', { status: 405 });
   }
 
-  // === 3. Supabase session refresh + headers ===
-  const response = createClient(request);
+  // === 3. Supabase session + proteção de rotas ===
+  const { response, user } = await createClient(request);
+  const path = request.nextUrl.pathname;
 
-  if (request.nextUrl.pathname.startsWith('/admin')) {
+  // /admin/dashboard — exige role 'admin'; redireciona para /admin se não autenticado ou sem permissão
+  if (path.startsWith('/admin/dashboard')) {
+    if (!user || user.app_metadata?.role !== 'admin') {
+      return NextResponse.redirect(new URL('/admin', request.url));
+    }
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     response.headers.set('Pragma', 'no-cache');
+  }
+
+  // /painel — exige autenticação; redireciona para /login se não autenticado
+  if (path.startsWith('/painel')) {
+    if (!user) {
+      return NextResponse.redirect(new URL('/login', request.url));
+    }
   }
 
   return response;

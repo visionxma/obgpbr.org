@@ -22,6 +22,11 @@ interface BlogPost {
 
 const BUCKET_NAME = 'images';
 
+const ALLOWED_IMG_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
+const MAX_IMG_BYTES = 5 * 1024 * 1024;
+const IMG_MIME_TO_EXT: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
+function safeImgExt(file: File): string { return IMG_MIME_TO_EXT[file.type] ?? 'bin'; }
+
 const CATEGORIES = [
   'Gestão de Parcerias',
   'MROSC',
@@ -104,17 +109,19 @@ export default function BlogAdmin() {
   };
 
   const handleUpload = async (file: File) => {
+    if (file.size > MAX_IMG_BYTES) { showNotification('error', 'Imagem muito grande. Máximo 5 MB.'); return; }
+    if (!ALLOWED_IMG_MIME.has(file.type)) { showNotification('error', 'Tipo não permitido. Use JPG, PNG, WebP ou GIF.'); return; }
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
-      const path = `blog/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-      const { error } = await supabase.storage.from(BUCKET_NAME).upload(path, file);
+      const ext = safeImgExt(file);
+      const path = `blog/${Date.now()}-${crypto.randomUUID().replace(/-/g, '')}.${ext}`;
+      const { error } = await supabase.storage.from(BUCKET_NAME).upload(path, file, { contentType: file.type });
       if (error) throw error;
       const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
       setFormImageUrl(data.publicUrl);
       showNotification('success', 'Imagem enviada!');
-    } catch (e: any) {
-      showNotification('error', 'Falha no upload: ' + e.message);
+    } catch {
+      showNotification('error', 'Falha no upload. Tente novamente.');
     } finally {
       setUploading(false);
     }

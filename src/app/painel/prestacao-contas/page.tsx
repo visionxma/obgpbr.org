@@ -15,9 +15,27 @@ interface Prestacao {
   created_at: string;
 }
 
+const ALLOWED_MIME_PC = new Set([
+  'application/pdf',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+]);
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+
 const STATUS_LABELS: Record<string, string> = {
   pendente: 'Pendente', em_analise: 'Em Análise', aprovada: 'Aprovada', rejeitada: 'Rejeitada',
 };
+
+const MIME_TO_EXT_PC: Record<string, string> = {
+  'application/pdf': 'pdf',
+  'application/vnd.ms-excel': 'xls',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+};
+function safeExtPc(file: File): string { return MIME_TO_EXT_PC[file.type] ?? 'bin'; }
 
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -68,7 +86,9 @@ export default function PrestacaoContasPage() {
       let arquivoUrl: string | null = null;
 
       if (file) {
-        const ext = file.name.split('.').pop() ?? 'bin';
+        if (file.size > MAX_FILE_BYTES) { setError('Arquivo muito grande. Tamanho máximo: 10 MB.'); setSaving(false); return; }
+        if (!ALLOWED_MIME_PC.has(file.type)) { setError('Tipo não permitido. Use PDF, XLS, XLSX, DOC ou DOCX.'); setSaving(false); return; }
+        const ext = safeExtPc(file);
         const path = `osc/${perfil.osc_id}/prestacao-contas/${Date.now()}.${ext}`;
         const { error: upErr } = await supabase.storage.from('documents').upload(path, file, { contentType: file.type });
         if (upErr) throw upErr;
@@ -94,8 +114,8 @@ export default function PrestacaoContasPage() {
       setSuccess('Prestação de contas registrada!');
       await fetchData();
       setTimeout(() => { setShowModal(false); resetForm(); }, 1400);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Erro ao enviar. Tente novamente.');
+    } catch {
+      setError('Erro ao enviar. Tente novamente.');
     } finally {
       setSaving(false);
     }
@@ -103,7 +123,8 @@ export default function PrestacaoContasPage() {
 
   const handleDelete = async (p: Prestacao) => {
     if (!confirm(`Excluir "${p.titulo}"?`)) return;
-    await supabase.from('osc_prestacao_contas').delete().eq('id', p.id);
+    if (!user) return;
+    await supabase.from('osc_prestacao_contas').delete().eq('id', p.id).eq('user_id', user.id);
     setPrestacoes(prev => prev.filter(x => x.id !== p.id));
   };
 

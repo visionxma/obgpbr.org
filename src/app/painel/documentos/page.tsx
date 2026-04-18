@@ -15,6 +15,15 @@ interface Documento {
   created_at: string;
 }
 
+const ALLOWED_MIME = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/png',
+]);
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+
 const TIPOS = [
   { value: 'estatuto',   label: 'Estatuto Social' },
   { value: 'ata',        label: 'Ata de Eleição da Diretoria' },
@@ -28,6 +37,15 @@ const TIPOS = [
 const STATUS_LABELS: Record<string, string> = {
   enviado: 'Enviado', aprovado: 'Aprovado', rejeitado: 'Rejeitado', pendente: 'Pendente',
 };
+
+const MIME_TO_EXT_DOC: Record<string, string> = {
+  'application/pdf': 'pdf',
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+};
+function safeExtDoc(file: File): string { return MIME_TO_EXT_DOC[file.type] ?? 'bin'; }
 
 function fmtBytes(b: number | null): string {
   if (!b) return '—';
@@ -78,10 +96,12 @@ export default function DocumentosPage() {
   const handleUpload = async () => {
     if (!perfil || !user) return;
     if (!file) { setError('Selecione um arquivo.'); return; }
+    if (file.size > MAX_FILE_BYTES) { setError('Arquivo muito grande. Tamanho máximo: 10 MB.'); return; }
+    if (!ALLOWED_MIME.has(file.type)) { setError('Tipo de arquivo não permitido. Use PDF, DOC, DOCX, JPG ou PNG.'); return; }
     setError(''); setUploading(true);
 
     try {
-      const ext = file.name.split('.').pop() ?? 'bin';
+      const ext = safeExtDoc(file);
       const path = `osc/${perfil.osc_id}/${tipo}/${Date.now()}.${ext}`;
 
       const { error: upErr } = await supabase.storage
@@ -105,8 +125,8 @@ export default function DocumentosPage() {
       setSuccess('Documento enviado com sucesso!');
       await fetchDocs();
       setTimeout(() => { setShowModal(false); resetModal(); }, 1400);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Erro ao enviar documento.');
+    } catch {
+      setError('Erro ao enviar documento. Tente novamente.');
     } finally {
       setUploading(false);
     }
@@ -114,7 +134,8 @@ export default function DocumentosPage() {
 
   const handleDelete = async (doc: Documento) => {
     if (!confirm(`Excluir "${doc.nome}"?`)) return;
-    await supabase.from('osc_documentos').delete().eq('id', doc.id);
+    if (!user) return;
+    await supabase.from('osc_documentos').delete().eq('id', doc.id).eq('user_id', user.id);
     setDocs(prev => prev.filter(d => d.id !== doc.id));
   };
 

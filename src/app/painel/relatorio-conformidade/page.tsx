@@ -114,7 +114,7 @@ function generateNumero(): string {
   const dd = String(d.getDate()).padStart(2, '0');
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const yyyy = d.getFullYear();
-  const rand = Math.floor(Math.random() * 900) + 100;
+  const rand = parseInt(crypto.randomUUID().replace(/-/g, '').substring(0, 3), 16) % 900 + 100;
   return `N.º ${rand}-${dd}.${mm}.${yyyy}/OBGP`;
 }
 
@@ -259,6 +259,29 @@ function ChecklistSection({
   );
 }
 
+const ALLOWED_MIME_REL = new Set([
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/jpeg',
+  'image/png',
+]);
+const MAX_FILE_REL = 10 * 1024 * 1024;
+
+const MIME_TO_EXT: Record<string, string> = {
+  'application/pdf': 'pdf',
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'application/vnd.ms-excel': 'xls',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+};
+
+function safeExt(file: File): string {
+  return MIME_TO_EXT[file.type] ?? 'bin';
+}
+
 /* ── Main Component ─────────────────────────────────────────── */
 export default function RelatorioConformidadePage() {
   const { perfil } = usePainel();
@@ -397,10 +420,12 @@ export default function RelatorioConformidadePage() {
   /* ── File Upload ── */
   const handleUpload = async (itemId: string, file: File) => {
     if (!perfil || !relatorio) return;
+    if (file.size > MAX_FILE_REL) { showMsg('error', 'Arquivo muito grande. Tamanho máximo: 10 MB.'); return; }
+    if (!ALLOWED_MIME_REL.has(file.type)) { showMsg('error', 'Tipo não permitido. Use PDF, DOC, DOCX, JPG ou PNG.'); return; }
     setUploading(itemId);
-    const ext = file.name.split('.').pop();
+    const ext = safeExt(file);
     const path = `osc/${perfil.osc_id}/relatorio/${itemId}/${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from('documents').upload(path, file, { upsert: true });
+    const { error: upErr } = await supabase.storage.from('documents').upload(path, file, { upsert: true, contentType: file.type });
     if (upErr) { showMsg('error', 'Erro ao fazer upload do arquivo.'); setUploading(null); return; }
     const { data: { publicUrl } } = supabase.storage.from('documents').getPublicUrl(path);
 

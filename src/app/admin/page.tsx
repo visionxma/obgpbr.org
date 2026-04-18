@@ -233,7 +233,7 @@ export default function AdminLogin() {
         `}</style>
 
         <p style={{ textAlign: 'center', marginTop: '32px', color: 'var(--site-text-tertiary)', fontSize: '0.8rem', fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Plataforma OBGP — v1.5
+          Plataforma OBGP
         </p>
       </div>
     </main>

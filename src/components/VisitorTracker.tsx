@@ -12,7 +12,7 @@ export default function VisitorTracker() {
 
     let sessionId = sessionStorage.getItem('gn_session_id');
     if (!sessionId) {
-      sessionId = Math.random().toString(36).substring(2, 15);
+      sessionId = crypto.randomUUID();
       sessionStorage.setItem('gn_session_id', sessionId);
     }
 

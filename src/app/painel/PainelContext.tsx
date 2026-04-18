@@ -42,7 +42,7 @@ const PainelContext = createContext<PainelContextType>({
 
 function generateOscId(): string {
   const year = new Date().getFullYear();
-  const rand = Math.random().toString(36).substring(2, 8).toUpperCase();
+  const rand = crypto.randomUUID().replace(/-/g, '').substring(0, 8).toUpperCase();
   return `OSC-${year}-${rand}`;
 }
 

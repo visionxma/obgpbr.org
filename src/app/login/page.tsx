@@ -58,8 +58,10 @@ export default function LoginPage() {
         </Link>
 
         <div className="auth-header">
-          <Image src="/logo.png" alt="OBGP" width={52} height={52} style={{ objectFit: 'contain' }} />
-          <h1 className="auth-title">Entrar na plataforma</h1>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+            <Image src="/logo.png" alt="OBGP" width={88} height={88} style={{ objectFit: 'contain' }} />
+          </div>
+          <h1 className="auth-title" style={{ marginTop: 0 }}>Entrar na plataforma</h1>
           <p className="auth-subtitle">Acesse sua conta para continuar</p>
         </div>
 
