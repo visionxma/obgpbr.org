@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import {
   ArrowLeft, CheckCircle, XCircle, Clock, ExternalLink,
   FileText, BookOpen, ClipboardList, AlertCircle, Save,
-  User, Building2, Phone, MapPin, Hash,
+  User, Building2, Phone, MapPin, Hash, ShieldCheck, ChevronDown, ChevronUp,
 } from 'lucide-react';
 
 /* ── Types ──────────────────────────────────────── */
@@ -30,6 +30,22 @@ interface Prestacao {
 }
 interface Formulario {
   id: string; titulo: string; tipo: string; status: string; updated_at: string;
+}
+interface ChecklistItem {
+  id: string; label: string; checked: boolean; doc_url: string | null; doc_nome: string | null;
+}
+interface Relatorio {
+  id: string; osc_id: string; numero: string | null;
+  status: 'em_preenchimento' | 'em_analise' | 'aprovado' | 'reprovado';
+  dados_entidade: Record<string, string>;
+  habilitacao_juridica: ChecklistItem[];
+  regularidade_fiscal: ChecklistItem[];
+  qualificacao_economica: ChecklistItem[];
+  qualificacao_tecnica: ChecklistItem[];
+  observacao_admin: string | null;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+  created_at: string;
 }
 
 /* ── Helpers ────────────────────────────────────── */
@@ -67,8 +83,16 @@ export default function OscDetailPage() {
   const [docs, setDocs] = useState<Documento[]>([]);
   const [prestacoes, setPrestacoes] = useState<Prestacao[]>([]);
   const [formularios, setFormularios] = useState<Formulario[]>([]);
+  const [relatorio, setRelatorio] = useState<Relatorio | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+
+  // Relatório de conformidade admin controls
+  const [relStatus, setRelStatus] = useState('');
+  const [relObs, setRelObs] = useState('');
+  const [savingRel, setSavingRel] = useState(false);
+  const [relMsg, setRelMsg] = useState('');
+  const [openRelSection, setOpenRelSection] = useState<number>(0);
 
   // Status edit state
   const [newStatus, setNewStatus] = useState('');
@@ -92,15 +116,22 @@ export default function OscDetailPage() {
       setNewStatus(pf.status_selo);
       setObservacao(pf.observacao_selo ?? '');
 
-      const [docsRes, prestRes, formRes] = await Promise.all([
+      const [docsRes, prestRes, formRes, relRes] = await Promise.all([
         supabase.from('osc_documentos').select('*').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }),
         supabase.from('osc_prestacao_contas').select('id, titulo, periodo, valor_total, status, created_at').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }),
         supabase.from('osc_formularios').select('id, titulo, tipo, status, updated_at').eq('osc_id', pf.osc_id),
+        supabase.from('relatorios_conformidade').select('*').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }).limit(1).single(),
       ]);
 
       setDocs((docsRes.data ?? []) as Documento[]);
       setPrestacoes((prestRes.data ?? []) as Prestacao[]);
       setFormularios((formRes.data ?? []) as Formulario[]);
+      if (relRes.data) {
+        const r = relRes.data as Relatorio;
+        setRelatorio(r);
+        setRelStatus(r.status);
+        setRelObs(r.observacao_admin ?? '');
+      }
       setLoading(false);
     };
     load();
@@ -126,6 +157,25 @@ export default function OscDetailPage() {
       setTimeout(() => setStatusMsg(''), 3000);
     }
     setSavingStatus(false);
+  };
+
+  const handleSaveRelatorio = async () => {
+    if (!relatorio) return;
+    if (relStatus === 'reprovado' && !relObs.trim()) {
+      setRelMsg('error:Informe o motivo da reprovação.');
+      return;
+    }
+    setSavingRel(true); setRelMsg('');
+    const { error } = await supabase.from('relatorios_conformidade').update({
+      status: relStatus,
+      observacao_admin: relObs.trim() || null,
+      reviewed_at: new Date().toISOString(),
+    }).eq('id', relatorio.id);
+    setSavingRel(false);
+    if (error) { setRelMsg('error:Erro ao salvar decisão.'); return; }
+    setRelatorio(prev => prev ? { ...prev, status: relStatus as Relatorio['status'], observacao_admin: relObs.trim() || null } : prev);
+    setRelMsg('ok:Decisão registrada com sucesso!');
+    setTimeout(() => setRelMsg(''), 3000);
   };
 
   const handleDocAction = async (docId: string, status: 'aprovado' | 'rejeitado') => {
@@ -471,6 +521,171 @@ export default function OscDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* ══ Relatório de Conformidade ══ */}
+      {relatorio && (() => {
+        const [relMsgType, relMsgText] = relMsg.startsWith('error:')
+          ? ['error', relMsg.slice(6)]
+          : relMsg.startsWith('ok:')
+          ? ['ok', relMsg.slice(3)]
+          : ['', ''];
+
+        const REL_STATUS_LABELS: Record<string, string> = {
+          em_preenchimento: 'Em Preenchimento', em_analise: 'Em Análise',
+          aprovado: 'Aprovado', reprovado: 'Reprovado',
+        };
+
+        const DADOS_LABELS: Record<string, string> = {
+          razao_social: 'Razão Social', cnpj: 'CNPJ', natureza_juridica: 'Natureza Jurídica',
+          responsavel: 'Responsável', telefone: 'Telefone', email_osc: 'E-mail',
+          logradouro: 'Logradouro', numero_endereco: 'Nº', bairro: 'Bairro',
+          municipio: 'Município', estado: 'UF', cep: 'CEP',
+          data_abertura_cnpj: 'Data Abertura CNPJ',
+        };
+
+        const secoes = [
+          { num: 2, label: 'Habilitação Jurídica', items: relatorio.habilitacao_juridica ?? [] },
+          { num: 3, label: 'Regularidade Fiscal, Social e Trabalhista', items: relatorio.regularidade_fiscal ?? [] },
+          { num: 4, label: 'Qualificação Econômico-financeira', items: relatorio.qualificacao_economica ?? [] },
+          { num: 5, label: 'Qualificação Técnica', items: relatorio.qualificacao_tecnica ?? [] },
+        ];
+
+        return (
+          <div className="glass-card" style={{ marginTop: 24 }}>
+            <div className="glass-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span className="glass-card-title">
+                <span className="glass-card-title-icon"><ShieldCheck size={15} /></span>
+                Relatório de Conformidade
+                <span style={{ marginLeft: 10 }}>
+                  <span className={`adm-badge ${relatorio.status === 'aprovado' ? 'aprovado' : relatorio.status === 'reprovado' ? 'rejeitado' : relatorio.status === 'em_analise' ? 'enviado' : 'pendente'}`}
+                    style={{ fontSize: '0.7rem' }}>
+                    {REL_STATUS_LABELS[relatorio.status]}
+                  </span>
+                </span>
+              </span>
+              <span style={{ fontSize: '0.78rem', color: 'var(--admin-text-tertiary)', fontFamily: 'monospace' }}>
+                {relatorio.numero ?? '—'}
+              </span>
+            </div>
+
+            <div className="glass-card-body">
+              {relMsg && relMsgText && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
+                  borderRadius: 8, marginBottom: 16, fontSize: '0.82rem', fontWeight: 500,
+                  background: relMsgType === 'ok' ? 'var(--admin-success-bg)' : 'var(--admin-danger-bg)',
+                  color: relMsgType === 'ok' ? 'var(--admin-success)' : 'var(--admin-danger)',
+                  border: `1px solid ${relMsgType === 'ok' ? 'rgba(38,102,47,.2)' : 'rgba(220,38,38,.2)'}`,
+                }}>
+                  {relMsgType === 'ok' ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
+                  {relMsgText}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 24 }}>
+                <div style={{ flex: '0 0 180px' }}>
+                  <label className="admin-form-label">Decisão</label>
+                  <select className="admin-input" value={relStatus} onChange={e => setRelStatus(e.target.value)}>
+                    <option value="em_preenchimento">Em Preenchimento</option>
+                    <option value="em_analise">Em Análise</option>
+                    <option value="aprovado">Aprovado</option>
+                    <option value="reprovado">Reprovado</option>
+                  </select>
+                </div>
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <label className="admin-form-label">
+                    Observação {relStatus === 'reprovado' && <span style={{ color: 'var(--admin-danger)' }}>*</span>}
+                  </label>
+                  <input type="text" className="admin-input"
+                    placeholder={relStatus === 'reprovado' ? 'Motivo da reprovação...' : 'Observação para a OSC (opcional)...'}
+                    value={relObs} onChange={e => setRelObs(e.target.value)} />
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <button className="adm-btn-approve" onClick={() => { setRelStatus('aprovado'); setRelObs(''); }}>
+                    <CheckCircle size={13} /> Aprovar
+                  </button>
+                  <button className="adm-btn-reject" onClick={() => setRelStatus('reprovado')}>
+                    <XCircle size={13} /> Reprovar
+                  </button>
+                  <button
+                    className="admin-btn admin-btn-primary"
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '7px 16px', fontSize: '0.82rem' }}
+                    onClick={handleSaveRelatorio}
+                    disabled={savingRel}
+                  >
+                    {savingRel ? '...' : <><Save size={13} /> Salvar</>}
+                  </button>
+                </div>
+              </div>
+
+              {relatorio.dados_entidade && Object.keys(relatorio.dados_entidade).length > 0 && (
+                <div style={{ marginBottom: 10, border: '1px solid var(--admin-border)', borderRadius: 10, overflow: 'hidden' }}>
+                  <button
+                    onClick={() => setOpenRelSection(openRelSection === 1 ? 0 : 1)}
+                    style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', color: 'var(--admin-text-primary)' }}
+                  >
+                    <span>1 — Dados da Entidade</span>
+                    {openRelSection === 1 ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                  </button>
+                  {openRelSection === 1 && (
+                    <div style={{ padding: '12px 16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px 20px', borderTop: '1px solid var(--admin-border)' }}>
+                      {Object.entries(relatorio.dados_entidade).filter(([, v]) => v).map(([k, v]) => (
+                        <div key={k}>
+                          <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--admin-text-tertiary)', marginBottom: 2 }}>
+                            {DADOS_LABELS[k] ?? k}
+                          </div>
+                          <div style={{ fontSize: '0.82rem', color: 'var(--admin-text-primary)', fontWeight: 500 }}>{String(v)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {secoes.map(({ num, label, items }) => (
+                <div key={num} style={{ marginBottom: 10, border: '1px solid var(--admin-border)', borderRadius: 10, overflow: 'hidden' }}>
+                  <button
+                    onClick={() => setOpenRelSection(openRelSection === num ? 0 : num)}
+                    style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', color: 'var(--admin-text-primary)' }}
+                  >
+                    <span>{num} — {label}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--admin-text-tertiary)' }}>
+                        {items.filter((i: ChecklistItem) => i.checked).length}/{items.length} marcados
+                      </span>
+                      {openRelSection === num ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </span>
+                  </button>
+                  {openRelSection === num && (
+                    <div style={{ borderTop: '1px solid var(--admin-border)' }}>
+                      {items.map((item: ChecklistItem, i: number) => (
+                        <div key={item.id} style={{
+                          display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 16px',
+                          borderBottom: i < items.length - 1 ? '1px solid var(--admin-border)' : 'none',
+                          background: item.checked ? 'rgba(22,163,74,.04)' : 'transparent',
+                        }}>
+                          <span style={{ marginTop: 3, color: item.checked ? '#16a34a' : 'var(--admin-text-tertiary)', flexShrink: 0 }}>
+                            {item.checked
+                              ? <CheckCircle size={14} />
+                              : <div style={{ width: 14, height: 14, border: '2px solid var(--admin-border)', borderRadius: 3 }} />}
+                          </span>
+                          <span style={{ flex: 1, fontSize: '0.82rem', color: 'var(--admin-text-primary)', lineHeight: 1.5 }}>{item.label}</span>
+                          {item.doc_url && (
+                            <a href={item.doc_url} target="_blank" rel="noopener noreferrer"
+                              style={{ flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', color: 'var(--admin-primary)', fontWeight: 600, textDecoration: 'none' }}>
+                              <ExternalLink size={11} /> {item.doc_nome ?? 'Ver'}
+                            </a>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
       <style>{`@keyframes spin{100%{transform:rotate(360deg)}}`}</style>
     </div>

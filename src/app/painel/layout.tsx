@@ -5,24 +5,26 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   LayoutDashboard, FileText, BookOpen,
-  ClipboardList, LogOut, Menu, X, ChevronRight,
+  ClipboardList, LogOut, Menu, X, ChevronRight, ShieldCheck,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { PainelProvider, usePainel } from './PainelContext';
 import './painel.css';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard',           path: '/painel',                  icon: LayoutDashboard },
-  { label: 'Documentos',          path: '/painel/documentos',       icon: FileText },
-  { label: 'Prestação de Contas', path: '/painel/prestacao-contas', icon: BookOpen },
-  { label: 'Formulários',         path: '/painel/formularios',      icon: ClipboardList },
+  { label: 'Dashboard',               path: '/painel',                          icon: LayoutDashboard },
+  { label: 'Documentos',              path: '/painel/documentos',               icon: FileText },
+  { label: 'Prestação de Contas',     path: '/painel/prestacao-contas',         icon: BookOpen },
+  { label: 'Formulários',             path: '/painel/formularios',              icon: ClipboardList },
+  { label: 'Relatório de Conformidade', path: '/painel/relatorio-conformidade', icon: ShieldCheck },
 ];
 
 const BREADCRUMB: Record<string, string> = {
-  '/painel':                  'Visão Geral',
-  '/painel/documentos':       'Documentos',
-  '/painel/prestacao-contas': 'Prestação de Contas',
-  '/painel/formularios':      'Formulários',
+  '/painel':                            'Visão Geral',
+  '/painel/documentos':                 'Documentos',
+  '/painel/prestacao-contas':           'Prestação de Contas',
+  '/painel/formularios':                'Formulários',
+  '/painel/relatorio-conformidade':     'Relatório de Conformidade',
 };
 
 function PainelShell({ children }: { children: React.ReactNode }) {

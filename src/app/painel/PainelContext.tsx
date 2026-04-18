@@ -9,10 +9,17 @@ export interface OscPerfil {
   osc_id: string;
   razao_social: string | null;
   cnpj: string | null;
+  natureza_juridica: string | null;
   responsavel: string | null;
   telefone: string | null;
+  email_osc: string | null;
+  logradouro: string | null;
+  numero_endereco: string | null;
+  bairro: string | null;
   municipio: string | null;
   estado: string | null;
+  cep: string | null;
+  data_abertura_cnpj: string | null;
   status_selo: 'pendente' | 'em_analise' | 'aprovado' | 'rejeitado';
   observacao_selo: string | null;
   created_at: string;
