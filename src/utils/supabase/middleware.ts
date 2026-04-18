@@ -5,7 +5,7 @@ export const createClient = async (request: NextRequest) => {
   let supabaseResponse = NextResponse.next({ request: { headers: request.headers } });
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!url || !key) return { response: supabaseResponse, user: null };
 
   const supabase = createServerClient(url, key, {
