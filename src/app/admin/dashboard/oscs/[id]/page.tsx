@@ -1,20 +1,26 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import {
   ArrowLeft, CheckCircle, XCircle, Clock, ExternalLink,
   FileText, BookOpen, ClipboardList, AlertCircle, Save,
-  User, Building2, Phone, MapPin, Hash, ShieldCheck, ChevronDown, ChevronUp,
+  Building2, Phone, MapPin, Hash, ShieldCheck, ChevronDown, ChevronUp,
+  Edit2, X, Mail, Home, User,
 } from 'lucide-react';
 
 /* ── Types ──────────────────────────────────────── */
 interface OscPerfil {
   id: string; user_id: string; osc_id: string;
   razao_social: string | null; cnpj: string | null;
+  natureza_juridica: string | null;
   responsavel: string | null; telefone: string | null;
-  municipio: string | null; estado: string | null;
+  email_osc: string | null;
+  logradouro: string | null; numero_endereco: string | null;
+  bairro: string | null; municipio: string | null;
+  estado: string | null; cep: string | null;
+  data_abertura_cnpj: string | null;
   status_selo: 'pendente' | 'em_analise' | 'aprovado' | 'rejeitado';
   observacao_selo: string | null;
   created_at: string; updated_at: string;
@@ -26,7 +32,8 @@ interface Documento {
 }
 interface Prestacao {
   id: string; titulo: string; periodo: string | null;
-  valor_total: number | null; status: string; created_at: string;
+  valor_total: number | null; arquivo_url: string | null;
+  status: string; created_at: string;
 }
 interface Formulario {
   id: string; titulo: string; tipo: string; status: string; updated_at: string;
@@ -60,6 +67,10 @@ const DOC_STATUS_LABELS: Record<string, string> = {
 const FORM_STATUS_LABELS: Record<string, string> = {
   nao_iniciado: 'Não iniciado', em_andamento: 'Em andamento', concluido: 'Concluído',
 };
+const PRST_STATUS_LABELS: Record<string, string> = {
+  pendente: 'Pendente', em_analise: 'Em Análise', aprovada: 'Aprovada', rejeitada: 'Rejeitada',
+};
+
 function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
@@ -73,10 +84,34 @@ function fmtCurrency(v: number | null) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
+type EditForm = {
+  razao_social: string; cnpj: string; natureza_juridica: string;
+  responsavel: string; telefone: string; email_osc: string;
+  logradouro: string; numero_endereco: string; bairro: string;
+  municipio: string; estado: string; cep: string; data_abertura_cnpj: string;
+};
+
+function perfilToForm(p: OscPerfil): EditForm {
+  return {
+    razao_social: p.razao_social ?? '',
+    cnpj: p.cnpj ?? '',
+    natureza_juridica: p.natureza_juridica ?? '',
+    responsavel: p.responsavel ?? '',
+    telefone: p.telefone ?? '',
+    email_osc: p.email_osc ?? '',
+    logradouro: p.logradouro ?? '',
+    numero_endereco: p.numero_endereco ?? '',
+    bairro: p.bairro ?? '',
+    municipio: p.municipio ?? '',
+    estado: p.estado ?? '',
+    cep: p.cep ?? '',
+    data_abertura_cnpj: p.data_abertura_cnpj ?? '',
+  };
+}
+
 /* ── Component ──────────────────────────────────── */
 export default function OscDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const id = params.id as string;
 
   const [perfil, setPerfil] = useState<OscPerfil | null>(null);
@@ -87,7 +122,13 @@ export default function OscDetailPage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
 
-  // Relatório de conformidade admin controls
+  // Edit OSC data
+  const [editMode, setEditMode] = useState(false);
+  const [editForm, setEditForm] = useState<EditForm | null>(null);
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [editMsg, setEditMsg] = useState('');
+
+  // Relatório admin controls
   const [relStatus, setRelStatus] = useState('');
   const [relObs, setRelObs] = useState('');
   const [savingRel, setSavingRel] = useState(false);
@@ -104,6 +145,9 @@ export default function OscDetailPage() {
   const [docObs, setDocObs] = useState<Record<string, string>>({});
   const [docSaving, setDocSaving] = useState<string | null>(null);
 
+  // Per-prestacao review
+  const [prstSaving, setPrstSaving] = useState<string | null>(null);
+
   useEffect(() => {
     const load = async () => {
       const { data: p, error } = await supabase
@@ -118,9 +162,9 @@ export default function OscDetailPage() {
 
       const [docsRes, prestRes, formRes, relRes] = await Promise.all([
         supabase.from('osc_documentos').select('*').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }),
-        supabase.from('osc_prestacao_contas').select('id, titulo, periodo, valor_total, status, created_at').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }),
+        supabase.from('osc_prestacao_contas').select('id, titulo, periodo, valor_total, arquivo_url, status, created_at').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }),
         supabase.from('osc_formularios').select('id, titulo, tipo, status, updated_at').eq('osc_id', pf.osc_id),
-        supabase.from('relatorios_conformidade').select('*').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }).limit(1).single(),
+        supabase.from('relatorios_conformidade').select('*').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       ]);
 
       setDocs((docsRes.data ?? []) as Documento[]);
@@ -137,6 +181,35 @@ export default function OscDetailPage() {
     load();
   }, [id]);
 
+  /* ── Save OSC data ── */
+  const handleSaveEdit = async () => {
+    if (!perfil || !editForm) return;
+    setSavingEdit(true); setEditMsg('');
+    const { error } = await supabase.from('osc_perfis').update({
+      razao_social: editForm.razao_social.trim() || null,
+      cnpj: editForm.cnpj.trim() || null,
+      natureza_juridica: editForm.natureza_juridica.trim() || null,
+      responsavel: editForm.responsavel.trim() || null,
+      telefone: editForm.telefone.trim() || null,
+      email_osc: editForm.email_osc.trim() || null,
+      logradouro: editForm.logradouro.trim() || null,
+      numero_endereco: editForm.numero_endereco.trim() || null,
+      bairro: editForm.bairro.trim() || null,
+      municipio: editForm.municipio.trim() || null,
+      estado: editForm.estado.trim() || null,
+      cep: editForm.cep.trim() || null,
+      data_abertura_cnpj: editForm.data_abertura_cnpj.trim() || null,
+      updated_at: new Date().toISOString(),
+    }).eq('id', perfil.id);
+    setSavingEdit(false);
+    if (error) { setEditMsg('error:Erro ao salvar. Tente novamente.'); return; }
+    setPerfil(prev => prev ? { ...prev, ...Object.fromEntries(Object.entries(editForm).map(([k, v]) => [k, v.trim() || null])) } as OscPerfil : prev);
+    setEditMsg('ok:Dados atualizados com sucesso!');
+    setEditMode(false);
+    setTimeout(() => setEditMsg(''), 3000);
+  };
+
+  /* ── Save Selo status ── */
   const handleSaveStatus = async () => {
     if (!perfil) return;
     if (newStatus === 'rejeitado' && !observacao.trim()) {
@@ -149,7 +222,6 @@ export default function OscDetailPage() {
       observacao_selo: observacao.trim() || null,
       updated_at: new Date().toISOString(),
     }).eq('id', perfil.id);
-
     if (error) { setStatusMsg('error:Erro ao salvar. Tente novamente.'); }
     else {
       setPerfil(prev => prev ? { ...prev, status_selo: newStatus as OscPerfil['status_selo'], observacao_selo: observacao.trim() || null } : prev);
@@ -159,6 +231,7 @@ export default function OscDetailPage() {
     setSavingStatus(false);
   };
 
+  /* ── Save Relatório decision ── */
   const handleSaveRelatorio = async () => {
     if (!relatorio) return;
     if (relStatus === 'reprovado' && !relObs.trim()) {
@@ -178,6 +251,7 @@ export default function OscDetailPage() {
     setTimeout(() => setRelMsg(''), 3000);
   };
 
+  /* ── Doc approve/reject ── */
   const handleDocAction = async (docId: string, status: 'aprovado' | 'rejeitado') => {
     setDocSaving(docId);
     const obs = docObs[docId]?.trim() || null;
@@ -186,7 +260,39 @@ export default function OscDetailPage() {
     setDocSaving(null);
   };
 
-  /* ── Render ── */
+  /* ── Prestação approve/reject ── */
+  const handlePrestacaoAction = async (pId: string, status: 'aprovada' | 'rejeitada' | 'em_analise') => {
+    setPrstSaving(pId);
+    const { error } = await supabase.from('osc_prestacao_contas').update({ status }).eq('id', pId);
+    if (!error) setPrestacoes(prev => prev.map(p => p.id === pId ? { ...p, status } : p));
+    setPrstSaving(null);
+  };
+
+  /* ── Render helpers ── */
+  function msgParts(msg: string): ['ok' | 'error' | '', string] {
+    if (msg.startsWith('ok:')) return ['ok', msg.slice(3)];
+    if (msg.startsWith('error:')) return ['error', msg.slice(6)];
+    return ['', ''];
+  }
+
+  function MsgBanner({ msg }: { msg: string }) {
+    const [type, text] = msgParts(msg);
+    if (!text) return null;
+    return (
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
+        borderRadius: 8, marginBottom: 16, fontSize: '0.82rem', fontWeight: 500,
+        background: type === 'ok' ? 'var(--admin-success-bg)' : 'var(--admin-danger-bg)',
+        color: type === 'ok' ? 'var(--admin-success)' : 'var(--admin-danger)',
+        border: `1px solid ${type === 'ok' ? 'rgba(38,102,47,.2)' : 'rgba(220,38,38,.2)'}`,
+      }}>
+        {type === 'ok' ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
+        {text}
+      </div>
+    );
+  }
+
+  /* ── Loading / not found ── */
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
       <div style={{ width: 36, height: 36, border: '3px solid var(--admin-border)', borderTopColor: 'var(--admin-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
@@ -206,11 +312,15 @@ export default function OscDetailPage() {
 
   if (!perfil) return null;
 
-  const [statusMsgType, statusMsgText] = statusMsg.startsWith('error:')
-    ? ['error', statusMsg.slice(6)]
-    : statusMsg.startsWith('ok:')
-    ? ['ok', statusMsg.slice(3)]
-    : ['', ''];
+  const ef = editForm ?? perfilToForm(perfil);
+
+  const fieldStyle: React.CSSProperties = {
+    display: 'flex', flexDirection: 'column', gap: 4,
+  };
+  const labelStyle: React.CSSProperties = {
+    fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase',
+    letterSpacing: '.06em', color: 'var(--admin-text-tertiary)', marginBottom: 2,
+  };
 
   return (
     <div>
@@ -250,43 +360,145 @@ export default function OscDetailPage() {
       {/* Two-column: profile info + status management */}
       <div className="content-grid cols-2" style={{ marginBottom: 28, alignItems: 'start' }}>
 
-        {/* Profile info */}
+        {/* ── Profile info card ── */}
         <div className="glass-card">
-          <div className="glass-card-header">
+          <div className="glass-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span className="glass-card-title">
-              <span className="glass-card-title-icon"><User size={15} /></span>
+              <span className="glass-card-title-icon"><Building2 size={15} /></span>
               Dados da OSC
             </span>
+            {!editMode ? (
+              <button
+                onClick={() => { setEditForm(perfilToForm(perfil)); setEditMode(true); setEditMsg(''); }}
+                className="admin-btn admin-btn-secondary"
+                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 12px', fontSize: '0.75rem', borderRadius: 8 }}
+              >
+                <Edit2 size={13} /> Editar
+              </button>
+            ) : (
+              <button
+                onClick={() => { setEditMode(false); setEditMsg(''); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--admin-text-secondary)', display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.75rem' }}
+              >
+                <X size={14} /> Cancelar
+              </button>
+            )}
           </div>
           <div className="glass-card-body">
-            {[
-              { icon: Hash,      label: 'ID OSC',       value: perfil.osc_id },
-              { icon: User,      label: 'Responsável',  value: perfil.responsavel },
-              { icon: Building2, label: 'Organização',  value: perfil.razao_social },
-              { icon: FileText,  label: 'CNPJ',         value: perfil.cnpj },
-              { icon: Phone,     label: 'Telefone',     value: perfil.telefone },
-              { icon: MapPin,    label: 'Localidade',   value: [perfil.municipio, perfil.estado].filter(Boolean).join(' / ') || null },
-            ].map(({ icon: Icon, label, value }) => (
-              <div key={label} style={{ display: 'flex', gap: 12, padding: '10px 0', borderBottom: '1px solid var(--admin-border)' }}>
-                <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--admin-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--admin-primary)', flexShrink: 0 }}>
-                  <Icon size={14} />
+            <MsgBanner msg={editMsg} />
+
+            {!editMode ? (
+              /* View mode */
+              <>
+                {[
+                  { icon: Hash,      label: 'ID OSC',              value: perfil.osc_id },
+                  { icon: User,      label: 'Responsável',         value: perfil.responsavel },
+                  { icon: Building2, label: 'Razão Social',        value: perfil.razao_social },
+                  { icon: FileText,  label: 'CNPJ',                value: perfil.cnpj },
+                  { icon: Building2, label: 'Natureza Jurídica',   value: perfil.natureza_juridica },
+                  { icon: Phone,     label: 'Telefone',            value: perfil.telefone },
+                  { icon: Mail,      label: 'E-mail',              value: perfil.email_osc },
+                  { icon: Home,      label: 'Endereço',            value: [perfil.logradouro, perfil.numero_endereco].filter(Boolean).join(', ') || null },
+                  { icon: MapPin,    label: 'Bairro',              value: perfil.bairro },
+                  { icon: MapPin,    label: 'Cidade / UF',         value: [perfil.municipio, perfil.estado].filter(Boolean).join(' / ') || null },
+                  { icon: Hash,      label: 'CEP',                 value: perfil.cep },
+                  { icon: FileText,  label: 'Abertura CNPJ',       value: perfil.data_abertura_cnpj },
+                ].map(({ icon: Icon, label, value }) => (
+                  <div key={label} style={{ display: 'flex', gap: 12, padding: '9px 0', borderBottom: '1px solid var(--admin-border)' }}>
+                    <div style={{ width: 30, height: 30, borderRadius: 7, background: 'var(--admin-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--admin-primary)', flexShrink: 0 }}>
+                      <Icon size={13} />
+                    </div>
+                    <div>
+                      <div style={labelStyle}>{label}</div>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 500, color: value ? 'var(--admin-text-primary)' : 'var(--admin-text-tertiary)' }}>
+                        {value || 'Não informado'}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                <div style={{ paddingTop: 10 }}>
+                  <div style={labelStyle}>Cadastro</div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--admin-text-secondary)' }}>{fmtDate(perfil.created_at)}</div>
                 </div>
-                <div>
-                  <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--admin-text-tertiary)', marginBottom: 2 }}>{label}</div>
-                  <div style={{ fontSize: '0.875rem', fontWeight: 500, color: value ? 'var(--admin-text-primary)' : 'var(--admin-text-tertiary)' }}>
-                    {value ?? 'Não informado'}
+              </>
+            ) : (
+              /* Edit mode */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  {([
+                    { key: 'razao_social',       label: 'Razão Social',       placeholder: 'Nome da organização' },
+                    { key: 'cnpj',               label: 'CNPJ',               placeholder: '00.000.000/0001-00' },
+                    { key: 'natureza_juridica',  label: 'Natureza Jurídica',  placeholder: 'Ex: Associação' },
+                    { key: 'responsavel',        label: 'Responsável',        placeholder: 'Nome completo' },
+                    { key: 'telefone',           label: 'Telefone',           placeholder: '(00) 00000-0000' },
+                    { key: 'email_osc',          label: 'E-mail',             placeholder: 'contato@osc.org' },
+                    { key: 'cep',                label: 'CEP',                placeholder: '00000-000' },
+                    { key: 'data_abertura_cnpj', label: 'Data Abertura CNPJ', placeholder: 'DD/MM/AAAA' },
+                  ] as { key: keyof EditForm; label: string; placeholder: string }[]).map(({ key, label, placeholder }) => (
+                    <div key={key} style={fieldStyle}>
+                      <label style={labelStyle}>{label}</label>
+                      <input
+                        type="text"
+                        className="admin-input"
+                        style={{ padding: '8px 10px', fontSize: '0.82rem' }}
+                        placeholder={placeholder}
+                        value={ef[key]}
+                        onChange={e => setEditForm(prev => ({ ...(prev ?? ef), [key]: e.target.value }))}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
+                  <div style={fieldStyle}>
+                    <label style={labelStyle}>Logradouro</label>
+                    <input type="text" className="admin-input" style={{ padding: '8px 10px', fontSize: '0.82rem' }}
+                      placeholder="Rua, Av., etc." value={ef.logradouro}
+                      onChange={e => setEditForm(prev => ({ ...(prev ?? ef), logradouro: e.target.value }))} />
+                  </div>
+                  <div style={fieldStyle}>
+                    <label style={labelStyle}>Número</label>
+                    <input type="text" className="admin-input" style={{ padding: '8px 10px', fontSize: '0.82rem' }}
+                      placeholder="Nº" value={ef.numero_endereco}
+                      onChange={e => setEditForm(prev => ({ ...(prev ?? ef), numero_endereco: e.target.value }))} />
                   </div>
                 </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+                  <div style={fieldStyle}>
+                    <label style={labelStyle}>Bairro</label>
+                    <input type="text" className="admin-input" style={{ padding: '8px 10px', fontSize: '0.82rem' }}
+                      placeholder="Bairro" value={ef.bairro}
+                      onChange={e => setEditForm(prev => ({ ...(prev ?? ef), bairro: e.target.value }))} />
+                  </div>
+                  <div style={fieldStyle}>
+                    <label style={labelStyle}>Município</label>
+                    <input type="text" className="admin-input" style={{ padding: '8px 10px', fontSize: '0.82rem' }}
+                      placeholder="Cidade" value={ef.municipio}
+                      onChange={e => setEditForm(prev => ({ ...(prev ?? ef), municipio: e.target.value }))} />
+                  </div>
+                  <div style={fieldStyle}>
+                    <label style={labelStyle}>UF</label>
+                    <input type="text" className="admin-input" style={{ padding: '8px 10px', fontSize: '0.82rem' }}
+                      placeholder="SP" maxLength={2} value={ef.estado}
+                      onChange={e => setEditForm(prev => ({ ...(prev ?? ef), estado: e.target.value.toUpperCase() }))} />
+                  </div>
+                </div>
+
+                <button
+                  className="admin-btn admin-btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: 7, borderRadius: 10, justifyContent: 'center', marginTop: 4 }}
+                  onClick={handleSaveEdit}
+                  disabled={savingEdit}
+                >
+                  {savingEdit ? 'Salvando...' : <><Save size={14} /> Salvar Dados</>}
+                </button>
               </div>
-            ))}
-            <div style={{ paddingTop: 10 }}>
-              <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--admin-text-tertiary)', marginBottom: 4 }}>Cadastro</div>
-              <div style={{ fontSize: '0.82rem', color: 'var(--admin-text-secondary)' }}>{fmtDate(perfil.created_at)}</div>
-            </div>
+            )}
           </div>
         </div>
 
-        {/* Status management */}
+        {/* ── Status management ── */}
         <div className="glass-card">
           <div className="glass-card-header">
             <span className="glass-card-title">
@@ -295,48 +507,28 @@ export default function OscDetailPage() {
             </span>
           </div>
           <div className="glass-card-body">
-            {statusMsgText && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
-                borderRadius: 8, marginBottom: 16, fontSize: '0.82rem', fontWeight: 500,
-                background: statusMsgType === 'ok' ? 'var(--admin-success-bg)' : 'var(--admin-danger-bg)',
-                color: statusMsgType === 'ok' ? 'var(--admin-success)' : 'var(--admin-danger)',
-                border: `1px solid ${statusMsgType === 'ok' ? 'rgba(38,102,47,.2)' : 'rgba(220,38,38,.2)'}`,
-              }}>
-                {statusMsgType === 'ok' ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
-                {statusMsgText}
-              </div>
-            )}
-
+            <MsgBanner msg={statusMsg} />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
                 <label className="admin-form-label">Status do Processo</label>
-                <select
-                  className="admin-input"
-                  value={newStatus}
-                  onChange={e => setNewStatus(e.target.value)}
-                >
+                <select className="admin-input" value={newStatus} onChange={e => setNewStatus(e.target.value)}>
                   <option value="pendente">Pendente</option>
                   <option value="em_analise">Em Análise</option>
                   <option value="aprovado">Aprovado</option>
                   <option value="rejeitado">Rejeitado</option>
                 </select>
               </div>
-
               <div>
                 <label className="admin-form-label">
                   Observação {newStatus === 'rejeitado' && <span style={{ color: 'var(--admin-danger)' }}>*</span>}
                 </label>
                 <textarea
-                  className="admin-input"
-                  rows={3}
+                  className="admin-input" rows={3}
                   placeholder={newStatus === 'rejeitado' ? 'Informe o motivo da reprovação...' : 'Observação para o usuário (opcional)...'}
-                  value={observacao}
-                  onChange={e => setObservacao(e.target.value)}
+                  value={observacao} onChange={e => setObservacao(e.target.value)}
                   style={{ resize: 'vertical' }}
                 />
               </div>
-
               <div className="adm-action-row">
                 <button className="adm-btn-approve" onClick={() => { setNewStatus('aprovado'); setObservacao(''); }}>
                   <CheckCircle size={14} /> Aprovar
@@ -348,12 +540,10 @@ export default function OscDetailPage() {
                   <XCircle size={14} /> Reprovar
                 </button>
               </div>
-
               <button
                 className="admin-btn admin-btn-primary"
                 style={{ display: 'flex', alignItems: 'center', gap: 7, borderRadius: 10, justifyContent: 'center' }}
-                onClick={handleSaveStatus}
-                disabled={savingStatus}
+                onClick={handleSaveStatus} disabled={savingStatus}
               >
                 {savingStatus ? '...' : <><Save size={14} /> Salvar Decisão</>}
               </button>
@@ -362,7 +552,7 @@ export default function OscDetailPage() {
         </div>
       </div>
 
-      {/* Documents section */}
+      {/* ── Documents section ── */}
       <div className="glass-card" style={{ marginBottom: 24 }}>
         <div className="glass-card-header">
           <span className="glass-card-title">
@@ -382,60 +572,40 @@ export default function OscDetailPage() {
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>Nome</th>
-                    <th>Tipo</th>
-                    <th>Tamanho</th>
-                    <th>Status</th>
-                    <th>Data</th>
-                    <th>Observação</th>
-                    <th>Ações</th>
+                    <th>Nome</th><th>Tipo</th><th>Tamanho</th><th>Status</th><th>Data</th><th>Observação</th><th>Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {docs.map(doc => (
                     <tr key={doc.id}>
-                      <td>
-                        <div className="cell-primary">{doc.nome}</div>
-                      </td>
+                      <td><div className="cell-primary">{doc.nome}</div></td>
                       <td style={{ color: 'var(--admin-text-secondary)', fontSize: '0.8rem' }}>{TIPO_LABELS[doc.tipo] ?? doc.tipo}</td>
                       <td style={{ color: 'var(--admin-text-tertiary)', fontSize: '0.8rem' }}>{fmtBytes(doc.tamanho_bytes)}</td>
                       <td><span className={`adm-badge ${doc.status}`}>{DOC_STATUS_LABELS[doc.status] ?? doc.status}</span></td>
                       <td style={{ color: 'var(--admin-text-tertiary)', fontSize: '0.8rem' }}>{fmtDate(doc.created_at)}</td>
                       <td style={{ minWidth: 180 }}>
-                        <input
-                          type="text"
-                          className="admin-input"
-                          style={{ padding: '6px 10px', fontSize: '0.78rem' }}
+                        <input type="text" className="admin-input" style={{ padding: '6px 10px', fontSize: '0.78rem' }}
                           placeholder="Observação..."
                           value={docObs[doc.id] ?? (doc.observacao ?? '')}
-                          onChange={e => setDocObs(prev => ({ ...prev, [doc.id]: e.target.value }))}
-                        />
+                          onChange={e => setDocObs(prev => ({ ...prev, [doc.id]: e.target.value }))} />
                       </td>
                       <td>
                         <div className="cell-action">
                           {doc.arquivo_url && (
                             <a href={doc.arquivo_url} target="_blank" rel="noopener noreferrer"
                               className="admin-btn-icon admin-btn"
-                              style={{ border: '1px solid var(--admin-border)', borderRadius: 8 }}
-                              title="Visualizar"
-                            >
+                              style={{ border: '1px solid var(--admin-border)', borderRadius: 8 }} title="Visualizar">
                               <ExternalLink size={14} />
                             </a>
                           )}
-                          <button
-                            className="adm-btn-approve"
-                            style={{ padding: '5px 10px', fontSize: '0.75rem' }}
+                          <button className="adm-btn-approve" style={{ padding: '5px 10px', fontSize: '0.75rem' }}
                             onClick={() => handleDocAction(doc.id, 'aprovado')}
-                            disabled={docSaving === doc.id || doc.status === 'aprovado'}
-                          >
+                            disabled={docSaving === doc.id || doc.status === 'aprovado'}>
                             {docSaving === doc.id ? '...' : <CheckCircle size={12} />}
                           </button>
-                          <button
-                            className="adm-btn-reject"
-                            style={{ padding: '5px 10px', fontSize: '0.75rem' }}
+                          <button className="adm-btn-reject" style={{ padding: '5px 10px', fontSize: '0.75rem' }}
                             onClick={() => handleDocAction(doc.id, 'rejeitado')}
-                            disabled={docSaving === doc.id || doc.status === 'rejeitado'}
-                          >
+                            disabled={docSaving === doc.id || doc.status === 'rejeitado'}>
                             {docSaving === doc.id ? '...' : <XCircle size={12} />}
                           </button>
                         </div>
@@ -449,7 +619,7 @@ export default function OscDetailPage() {
         </div>
       </div>
 
-      {/* Bottom grid: prestações + formulários */}
+      {/* ── Bottom grid: prestações + formulários ── */}
       <div className="content-grid cols-equal" style={{ alignItems: 'start' }}>
 
         {/* Prestações */}
@@ -461,27 +631,56 @@ export default function OscDetailPage() {
               <span style={{ marginLeft: 8, fontSize: '0.75rem', fontWeight: 600, color: 'var(--admin-text-tertiary)' }}>({prestacoes.length})</span>
             </span>
           </div>
-          <div className="glass-card-body" style={{ padding: '8px 28px 24px' }}>
+          <div>
             {prestacoes.length === 0 ? (
-              <div className="admin-empty-state" style={{ padding: '28px 0' }}>
+              <div className="admin-empty-state" style={{ padding: '36px 0' }}>
                 <div className="admin-empty-state-icon"><BookOpen size={20} /></div>
                 <div className="admin-empty-state-text" style={{ fontSize: '0.82rem' }}>Nenhuma prestação registrada</div>
               </div>
             ) : (
-              <div className="activity-feed">
-                {prestacoes.map(p => (
-                  <div key={p.id} className="activity-item">
-                    <div className={`activity-dot ${p.status === 'aprovada' ? 'success' : p.status === 'pendente' ? 'warning' : 'primary'}`} />
-                    <div className="activity-content">
-                      <div className="activity-title">{p.titulo}</div>
-                      <div className="activity-meta">
-                        {p.periodo && `${p.periodo} · `}
-                        {fmtCurrency(p.valor_total)} · {fmtDate(p.created_at)}
-                      </div>
-                    </div>
-                    <span className={`adm-badge ${p.status}`}>{p.status === 'aprovada' ? 'Aprovada' : p.status === 'pendente' ? 'Pendente' : p.status === 'em_analise' ? 'Em Análise' : 'Rejeitada'}</span>
-                  </div>
-                ))}
+              <div style={{ overflowX: 'auto' }}>
+                <table className="admin-table">
+                  <thead>
+                    <tr><th>Título</th><th>Período</th><th>Valor</th><th>Status</th><th>Data</th><th>Ações</th></tr>
+                  </thead>
+                  <tbody>
+                    {prestacoes.map(p => (
+                      <tr key={p.id}>
+                        <td><div className="cell-primary">{p.titulo}</div></td>
+                        <td style={{ color: 'var(--admin-text-secondary)', fontSize: '0.8rem' }}>{p.periodo ?? '—'}</td>
+                        <td style={{ color: 'var(--admin-text-secondary)', fontSize: '0.8rem' }}>{fmtCurrency(p.valor_total)}</td>
+                        <td><span className={`adm-badge ${p.status === 'aprovada' ? 'aprovado' : p.status === 'rejeitada' ? 'rejeitado' : p.status === 'em_analise' ? 'enviado' : 'pendente'}`}>{PRST_STATUS_LABELS[p.status] ?? p.status}</span></td>
+                        <td style={{ color: 'var(--admin-text-tertiary)', fontSize: '0.8rem' }}>{fmtDate(p.created_at)}</td>
+                        <td>
+                          <div className="cell-action">
+                            {p.arquivo_url && (
+                              <a href={p.arquivo_url} target="_blank" rel="noopener noreferrer"
+                                className="admin-btn-icon admin-btn"
+                                style={{ border: '1px solid var(--admin-border)', borderRadius: 8 }} title="Ver arquivo">
+                                <ExternalLink size={13} />
+                              </a>
+                            )}
+                            <button className="adm-btn-review" style={{ padding: '5px 10px', fontSize: '0.75rem' }}
+                              onClick={() => handlePrestacaoAction(p.id, 'em_analise')}
+                              disabled={prstSaving === p.id || p.status === 'em_analise'} title="Em Análise">
+                              <Clock size={12} />
+                            </button>
+                            <button className="adm-btn-approve" style={{ padding: '5px 10px', fontSize: '0.75rem' }}
+                              onClick={() => handlePrestacaoAction(p.id, 'aprovada')}
+                              disabled={prstSaving === p.id || p.status === 'aprovada'} title="Aprovar">
+                              {prstSaving === p.id ? '...' : <CheckCircle size={12} />}
+                            </button>
+                            <button className="adm-btn-reject" style={{ padding: '5px 10px', fontSize: '0.75rem' }}
+                              onClick={() => handlePrestacaoAction(p.id, 'rejeitada')}
+                              disabled={prstSaving === p.id || p.status === 'rejeitada'} title="Rejeitar">
+                              {prstSaving === p.id ? '...' : <XCircle size={12} />}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
@@ -524,32 +723,22 @@ export default function OscDetailPage() {
 
       {/* ══ Relatório de Conformidade ══ */}
       {relatorio && (() => {
-        const [relMsgType, relMsgText] = relMsg.startsWith('error:')
-          ? ['error', relMsg.slice(6)]
-          : relMsg.startsWith('ok:')
-          ? ['ok', relMsg.slice(3)]
-          : ['', ''];
-
         const REL_STATUS_LABELS: Record<string, string> = {
           em_preenchimento: 'Em Preenchimento', em_analise: 'Em Análise',
           aprovado: 'Aprovado', reprovado: 'Reprovado',
         };
-
         const DADOS_LABELS: Record<string, string> = {
           razao_social: 'Razão Social', cnpj: 'CNPJ', natureza_juridica: 'Natureza Jurídica',
           responsavel: 'Responsável', telefone: 'Telefone', email_osc: 'E-mail',
           logradouro: 'Logradouro', numero_endereco: 'Nº', bairro: 'Bairro',
-          municipio: 'Município', estado: 'UF', cep: 'CEP',
-          data_abertura_cnpj: 'Data Abertura CNPJ',
+          municipio: 'Município', estado: 'UF', cep: 'CEP', data_abertura_cnpj: 'Data Abertura CNPJ',
         };
-
         const secoes = [
           { num: 2, label: 'Habilitação Jurídica', items: relatorio.habilitacao_juridica ?? [] },
           { num: 3, label: 'Regularidade Fiscal, Social e Trabalhista', items: relatorio.regularidade_fiscal ?? [] },
           { num: 4, label: 'Qualificação Econômico-financeira', items: relatorio.qualificacao_economica ?? [] },
           { num: 5, label: 'Qualificação Técnica', items: relatorio.qualificacao_tecnica ?? [] },
         ];
-
         return (
           <div className="glass-card" style={{ marginTop: 24 }}>
             <div className="glass-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -557,8 +746,7 @@ export default function OscDetailPage() {
                 <span className="glass-card-title-icon"><ShieldCheck size={15} /></span>
                 Relatório de Conformidade
                 <span style={{ marginLeft: 10 }}>
-                  <span className={`adm-badge ${relatorio.status === 'aprovado' ? 'aprovado' : relatorio.status === 'reprovado' ? 'rejeitado' : relatorio.status === 'em_analise' ? 'enviado' : 'pendente'}`}
-                    style={{ fontSize: '0.7rem' }}>
+                  <span className={`adm-badge ${relatorio.status === 'aprovado' ? 'aprovado' : relatorio.status === 'reprovado' ? 'rejeitado' : relatorio.status === 'em_analise' ? 'enviado' : 'pendente'}`} style={{ fontSize: '0.7rem' }}>
                     {REL_STATUS_LABELS[relatorio.status]}
                   </span>
                 </span>
@@ -567,21 +755,8 @@ export default function OscDetailPage() {
                 {relatorio.numero ?? '—'}
               </span>
             </div>
-
             <div className="glass-card-body">
-              {relMsg && relMsgText && (
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
-                  borderRadius: 8, marginBottom: 16, fontSize: '0.82rem', fontWeight: 500,
-                  background: relMsgType === 'ok' ? 'var(--admin-success-bg)' : 'var(--admin-danger-bg)',
-                  color: relMsgType === 'ok' ? 'var(--admin-success)' : 'var(--admin-danger)',
-                  border: `1px solid ${relMsgType === 'ok' ? 'rgba(38,102,47,.2)' : 'rgba(220,38,38,.2)'}`,
-                }}>
-                  {relMsgType === 'ok' ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
-                  {relMsgText}
-                </div>
-              )}
-
+              <MsgBanner msg={relMsg} />
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'flex-end', marginBottom: 24 }}>
                 <div style={{ flex: '0 0 180px' }}>
                   <label className="admin-form-label">Decisão</label>
@@ -607,12 +782,9 @@ export default function OscDetailPage() {
                   <button className="adm-btn-reject" onClick={() => setRelStatus('reprovado')}>
                     <XCircle size={13} /> Reprovar
                   </button>
-                  <button
-                    className="admin-btn admin-btn-primary"
+                  <button className="admin-btn admin-btn-primary"
                     style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '7px 16px', fontSize: '0.82rem' }}
-                    onClick={handleSaveRelatorio}
-                    disabled={savingRel}
-                  >
+                    onClick={handleSaveRelatorio} disabled={savingRel}>
                     {savingRel ? '...' : <><Save size={13} /> Salvar</>}
                   </button>
                 </div>
@@ -620,10 +792,8 @@ export default function OscDetailPage() {
 
               {relatorio.dados_entidade && Object.keys(relatorio.dados_entidade).length > 0 && (
                 <div style={{ marginBottom: 10, border: '1px solid var(--admin-border)', borderRadius: 10, overflow: 'hidden' }}>
-                  <button
-                    onClick={() => setOpenRelSection(openRelSection === 1 ? 0 : 1)}
-                    style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', color: 'var(--admin-text-primary)' }}
-                  >
+                  <button onClick={() => setOpenRelSection(openRelSection === 1 ? 0 : 1)}
+                    style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', color: 'var(--admin-text-primary)' }}>
                     <span>1 — Dados da Entidade</span>
                     {openRelSection === 1 ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                   </button>
@@ -644,10 +814,8 @@ export default function OscDetailPage() {
 
               {secoes.map(({ num, label, items }) => (
                 <div key={num} style={{ marginBottom: 10, border: '1px solid var(--admin-border)', borderRadius: 10, overflow: 'hidden' }}>
-                  <button
-                    onClick={() => setOpenRelSection(openRelSection === num ? 0 : num)}
-                    style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', color: 'var(--admin-text-primary)' }}
-                  >
+                  <button onClick={() => setOpenRelSection(openRelSection === num ? 0 : num)}
+                    style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', color: 'var(--admin-text-primary)' }}>
                     <span>{num} — {label}</span>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: '0.72rem', color: 'var(--admin-text-tertiary)' }}>
