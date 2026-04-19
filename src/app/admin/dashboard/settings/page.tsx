@@ -201,7 +201,7 @@ export default function SettingsAdmin() {
                         color: 'var(--admin-success)',
                       }}
                     >
-                      {session.user?.role || 'authenticated'}
+                      {session.user?.role === 'admin' ? 'Administrador' : session.user?.role === 'authenticated' ? 'Autenticado' : session.user?.role || 'Autenticado'}
                     </span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
@@ -384,9 +384,9 @@ export default function SettingsAdmin() {
       >
         <span>OBGP Admin v1.2</span>
         <span>•</span>
-        <span>App Shell Pattern</span>
+        <span>Padrão App Shell</span>
         <span>•</span>
-        <span>Supabase Auth</span>
+        <span>Autenticação Supabase</span>
       </div>
     </div>
   );

@@ -364,7 +364,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                       {session?.user?.email || 'Administrador'}
                     </div>
                     <div style={{ fontSize: '0.7rem', color: 'var(--admin-text-tertiary)', marginTop: 2 }}>
-                      OBGP Admin Access
+                      Acesso Administrativo OBGP
                     </div>
                   </div>
 
