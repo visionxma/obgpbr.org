@@ -1,6 +1,7 @@
 'use client';
 import { supabase } from '@/lib/supabase';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import {
@@ -40,19 +41,64 @@ const navItems = [
   { label: 'Configurações',      path: '/admin/dashboard/settings',            icon: Settings,        section: 'Sistema' },
 ];
 
-function getBreadcrumb(path: string) {
+function getBreadcrumb(path: string, isLixeira: boolean) {
   const map: Record<string, string> = {
-    '/admin/dashboard':                    'Visão Geral',
-    '/admin/dashboard/analytics':          'Analytics e Métricas',
-    '/admin/dashboard/oscs':               'Gestão de OSCs',
-    '/admin/dashboard/experiencias':       'Nossas Experiências',
-    '/admin/dashboard/blog':              'Blog',
-    '/admin/dashboard/transparencia':      'Transparência',
-    '/admin/dashboard/settings':           'Configurações',
+    '/admin/dashboard':                'Visão Geral',
+    '/admin/dashboard/analytics':      'Analytics e Métricas',
+    '/admin/dashboard/oscs':           'Gestão de OSCs',
+    '/admin/dashboard/experiencias':   'Nossas Experiências',
+    '/admin/dashboard/blog':           'Blog',
+    '/admin/dashboard/transparencia':  'Transparência',
+    '/admin/dashboard/settings':       'Configurações',
   };
   if (path.startsWith('/admin/dashboard/oscs/')) return 'Detalhe da OSC';
-  if (typeof window !== 'undefined' && window.location.search.includes('lixeira=1')) return 'Lixeira';
+  if (path === '/admin/dashboard/oscs' && isLixeira) return 'Lixeira';
   return map[path] || 'Dashboard';
+}
+
+/* Sub-componente isolado para usar useSearchParams sem quebrar o build */
+function SidebarNav({ sections, onNavigate }: {
+  sections: Record<string, typeof navItems>;
+  onNavigate: () => void;
+}) {
+  const currentPath = usePathname();
+  const searchParams = useSearchParams();
+  const isLixeira = searchParams.get('lixeira') === '1';
+
+  return (
+    <nav className="sidebar-nav">
+      {Object.entries(sections).map(([section, items]) => (
+        <div key={section} className="sidebar-nav-section">
+          <div className="sidebar-nav-label">{section}</div>
+          {items.map((item) => {
+            const Icon = item.icon;
+            const [itemPath, itemQuery] = item.path.split('?');
+            const isActive = itemQuery
+              ? currentPath === itemPath && isLixeira
+              : currentPath === itemPath && !isLixeira;
+            return (
+              <Link
+                key={item.path}
+                href={item.path}
+                className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
+                onClick={onNavigate}
+              >
+                <Icon className="sidebar-nav-icon" size={20} strokeWidth={isActive ? 2.2 : 1.8} />
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
+      ))}
+    </nav>
+  );
+}
+
+function BreadcrumbTitle() {
+  const currentPath = usePathname();
+  const searchParams = useSearchParams();
+  const isLixeira = searchParams.get('lixeira') === '1';
+  return <>{getBreadcrumb(currentPath, isLixeira)}</>;
 }
 
 interface Notificacao {
@@ -195,28 +241,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="sidebar-brand-subtitle">Gestão Institucional</div>
         </div>
 
-        <nav className="sidebar-nav">
-          {Object.entries(sections).map(([section, items]) => (
-            <div key={section} className="sidebar-nav-section">
-              <div className="sidebar-nav-label">{section}</div>
-              {items.map((item) => {
-                const Icon = item.icon;
-                const isActive = currentPath === item.path;
-                return (
-                  <Link
-                    key={item.path}
-                    href={item.path}
-                    className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <Icon className="sidebar-nav-icon" size={20} strokeWidth={isActive ? 2.2 : 1.8} />
-                    {item.label}
-                  </Link>
-                );
-              })}
-            </div>
-          ))}
-        </nav>
+        <Suspense fallback={<nav className="sidebar-nav" />}>
+          <SidebarNav sections={sections} onNavigate={() => setSidebarOpen(false)} />
+        </Suspense>
 
         <div className="sidebar-footer">
           <button onClick={handleLogout} className="sidebar-logout-btn">
@@ -242,7 +269,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="admin-header-breadcrumb">
               <span>Dashboard</span>
               <ChevronRight size={14} className="admin-header-breadcrumb-separator" />
-              <span className="admin-header-breadcrumb-active">{getBreadcrumb(currentPath)}</span>
+              <span className="admin-header-breadcrumb-active">
+                <Suspense fallback="..."><BreadcrumbTitle /></Suspense>
+              </span>
             </div>
           </div>
 
@@ -379,7 +408,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           {/* Page Title Row (dynamic per page via children) */}
           <div className="admin-page-title-row">
             <div>
-              <h1 className="admin-page-title">{getBreadcrumb(currentPath)}</h1>
+              <h1 className="admin-page-title">
+                <Suspense fallback="..."><BreadcrumbTitle /></Suspense>
+              </h1>
               <p className="admin-page-subtitle">
                 {currentTime && (
                   <span style={{ textTransform: 'capitalize' }}>{currentTime}</span>
