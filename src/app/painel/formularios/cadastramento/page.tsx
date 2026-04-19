@@ -1,23 +1,28 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, CheckCircle, Loader2 } from 'lucide-react';
+import { ArrowLeft, Save, CheckCircle, Loader2, MapPin } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../../PainelContext';
+import {
+  maskCPF, maskCNPJ, maskTelefone, maskCEP,
+  validateCPF, validateCNPJ, validateEmail, validateTelefone, validateCEP,
+  digits,
+} from '@/lib/brasil-masks';
 
 const AREAS = [
-  'Assistência Social','Educação','Saúde','Cultura e Arte','Meio Ambiente',
-  'Direitos Humanos','Habitação','Geração de Renda','Esporte e Lazer',
-  'Segurança Alimentar','Infância e Juventude','Idosos','Mulheres','Pessoas com Deficiência',
+  'Assistência Social', 'Educação', 'Saúde', 'Cultura e Arte', 'Meio Ambiente',
+  'Direitos Humanos', 'Habitação', 'Geração de Renda', 'Esporte e Lazer',
+  'Segurança Alimentar', 'Infância e Juventude', 'Idosos', 'Mulheres', 'Pessoas com Deficiência',
 ];
 
 const ESTADOS = [
-  'AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG',
-  'PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO',
+  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG',
+  'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
 ];
 
 const NATUREZAS = [
-  'Associação','Fundação','Organização Religiosa','Cooperativa','Outro',
+  'Associação', 'Fundação', 'Organização Religiosa', 'Cooperativa', 'Outro',
 ];
 
 type Dados = {
@@ -28,14 +33,29 @@ type Dados = {
   areas?: string[]; missao?: string; atividades?: string;
 };
 
+type Erros = Partial<Record<keyof Dados, string>>;
+
+// Normaliza dados carregados do banco aplicando as máscaras
+function normalizeDados(d: Dados): Dados {
+  return {
+    ...d,
+    cnpj: d.cnpj ? maskCNPJ(d.cnpj) : d.cnpj,
+    cep: d.cep ? maskCEP(d.cep) : d.cep,
+    responsavel_cpf: d.responsavel_cpf ? maskCPF(d.responsavel_cpf) : d.responsavel_cpf,
+    responsavel_telefone: d.responsavel_telefone ? maskTelefone(d.responsavel_telefone) : d.responsavel_telefone,
+  };
+}
+
 export default function FormCadastramento() {
   const { user, perfil } = usePainel();
   const router = useRouter();
   const [recordId, setRecordId] = useState<string | null>(null);
   const [dados, setDados] = useState<Dados>({});
+  const [erros, setErros] = useState<Erros>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [cepLoading, setCepLoading] = useState(false);
 
   useEffect(() => {
     if (!perfil) { setLoading(false); return; }
@@ -48,7 +68,7 @@ export default function FormCadastramento() {
         .maybeSingle();
       if (data) {
         setRecordId(data.id);
-        setDados((data.dados as Dados) ?? {});
+        setDados(normalizeDados((data.dados as Dados) ?? {}));
       }
       setLoading(false);
     })();
@@ -57,14 +77,87 @@ export default function FormCadastramento() {
   const set = (field: keyof Dados, value: string) =>
     setDados(prev => ({ ...prev, [field]: value }));
 
+  const setErro = (field: keyof Dados, msg: string) =>
+    setErros(prev => ({ ...prev, [field]: msg }));
+
+  const clearErro = (field: keyof Dados) =>
+    setErros(prev => { const n = { ...prev }; delete n[field]; return n; });
+
+  // Handler genérico para campos com máscara
+  const handleMasked = (field: keyof Dados, maskFn: (v: string) => string) =>
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      set(field, maskFn(e.target.value));
+      clearErro(field);
+    };
+
+  // Handler de blur para validação
+  const handleBlur = (
+    field: keyof Dados,
+    validateFn: (v: string) => boolean,
+    msg: string,
+    required = false,
+  ) => () => {
+    const val = (dados[field] as string) ?? '';
+    if (required && !val.trim()) { setErro(field, 'Campo obrigatório'); return; }
+    if (val && !validateFn(val)) setErro(field, msg);
+  };
+
+  // CEP com busca automática via ViaCEP
+  const handleCEPChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const masked = maskCEP(e.target.value);
+    set('cep', masked);
+    clearErro('cep');
+    if (digits(masked).length === 8) fetchCEP(digits(masked));
+  };
+
+  const fetchCEP = async (cep: string) => {
+    setCepLoading(true);
+    try {
+      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const json = await res.json();
+      if (!json.erro) {
+        setDados(prev => ({
+          ...prev,
+          logradouro: json.logradouro || prev.logradouro,
+          bairro: json.bairro || prev.bairro,
+          cidade: json.localidade || prev.cidade,
+          estado: json.uf || prev.estado,
+        }));
+      } else {
+        setErro('cep', 'CEP não encontrado');
+      }
+    } catch {
+      setErro('cep', 'Erro ao buscar CEP');
+    }
+    setCepLoading(false);
+  };
+
   const toggleArea = (area: string) =>
     setDados(prev => {
       const areas = prev.areas ?? [];
       return { ...prev, areas: areas.includes(area) ? areas.filter(a => a !== area) : [...areas, area] };
     });
 
+  const validarTudo = (): boolean => {
+    const novos: Erros = {};
+    if (!dados.nome?.trim()) novos.nome = 'Campo obrigatório';
+    if (dados.cnpj && !validateCNPJ(dados.cnpj)) novos.cnpj = 'CNPJ inválido';
+    if (dados.cep && !validateCEP(dados.cep)) novos.cep = 'CEP inválido';
+    if (!dados.logradouro?.trim()) novos.logradouro = 'Campo obrigatório';
+    if (!dados.cidade?.trim()) novos.cidade = 'Campo obrigatório';
+    if (!dados.responsavel_nome?.trim()) novos.responsavel_nome = 'Campo obrigatório';
+    if (dados.responsavel_cpf && !validateCPF(dados.responsavel_cpf)) novos.responsavel_cpf = 'CPF inválido';
+    if (!dados.responsavel_telefone?.trim()) novos.responsavel_telefone = 'Campo obrigatório';
+    else if (!validateTelefone(dados.responsavel_telefone)) novos.responsavel_telefone = 'Telefone inválido';
+    if (!dados.responsavel_email?.trim()) novos.responsavel_email = 'Campo obrigatório';
+    else if (!validateEmail(dados.responsavel_email)) novos.responsavel_email = 'E-mail inválido';
+    setErros(novos);
+    return Object.keys(novos).length === 0;
+  };
+
   const handleSave = async (marcarConcluido = false) => {
     if (!perfil || !user) return;
+    if (marcarConcluido && !validarTudo()) return;
     setSaving(true);
     const payload = {
       user_id: user.id,
@@ -95,6 +188,8 @@ export default function FormCadastramento() {
     </div>
   );
 
+  const temErros = Object.keys(erros).length > 0;
+
   return (
     <>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
@@ -113,18 +208,42 @@ export default function FormCadastramento() {
         <div className="panel-card">
           <div className="panel-card-header"><h2 className="panel-card-title">1. Identificação</h2></div>
           <div className="panel-card-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+
             <div className="panel-field" style={{ gridColumn: '1 / -1' }}>
               <label className="panel-label">Nome da Organização *</label>
-              <input className="panel-input" value={dados.nome ?? ''} onChange={e => set('nome', e.target.value)} placeholder="Nome completo da OSC" />
+              <input
+                className={`panel-input${erros.nome ? ' input-error' : ''}`}
+                value={dados.nome ?? ''}
+                onChange={e => { set('nome', e.target.value); clearErro('nome'); }}
+                onBlur={() => { if (!dados.nome?.trim()) setErro('nome', 'Campo obrigatório'); }}
+                placeholder="Nome completo da OSC"
+              />
+              {erros.nome && <span className="field-error">{erros.nome}</span>}
             </div>
+
             <div className="panel-field">
               <label className="panel-label">CNPJ *</label>
-              <input className="panel-input" value={dados.cnpj ?? ''} onChange={e => set('cnpj', e.target.value)} placeholder="00.000.000/0001-00" />
+              <input
+                className={`panel-input${erros.cnpj ? ' input-error' : ''}`}
+                value={dados.cnpj ?? ''}
+                onChange={handleMasked('cnpj', maskCNPJ)}
+                onBlur={handleBlur('cnpj', validateCNPJ, 'CNPJ inválido')}
+                placeholder="00.000.000/0001-00"
+                inputMode="numeric"
+              />
+              {erros.cnpj && <span className="field-error">{erros.cnpj}</span>}
             </div>
+
             <div className="panel-field">
               <label className="panel-label">Data de Fundação</label>
-              <input className="panel-input" type="date" value={dados.data_fundacao ?? ''} onChange={e => set('data_fundacao', e.target.value)} />
+              <input
+                className="panel-input"
+                type="date"
+                value={dados.data_fundacao ?? ''}
+                onChange={e => set('data_fundacao', e.target.value)}
+              />
             </div>
+
             <div className="panel-field" style={{ gridColumn: '1 / -1' }}>
               <label className="panel-label">Natureza Jurídica</label>
               <select className="panel-select" value={dados.natureza ?? ''} onChange={e => set('natureza', e.target.value)}>
@@ -139,26 +258,81 @@ export default function FormCadastramento() {
         <div className="panel-card">
           <div className="panel-card-header"><h2 className="panel-card-title">2. Endereço</h2></div>
           <div className="panel-card-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+
             <div className="panel-field">
               <label className="panel-label">CEP</label>
-              <input className="panel-input" value={dados.cep ?? ''} onChange={e => set('cep', e.target.value)} placeholder="00000-000" />
+              <div style={{ position: 'relative' }}>
+                <input
+                  className={`panel-input${erros.cep ? ' input-error' : ''}`}
+                  value={dados.cep ?? ''}
+                  onChange={handleCEPChange}
+                  onBlur={handleBlur('cep', validateCEP, 'CEP inválido')}
+                  placeholder="00000-000"
+                  inputMode="numeric"
+                  style={{ paddingRight: cepLoading ? 36 : undefined }}
+                />
+                {cepLoading && (
+                  <Loader2
+                    size={15}
+                    style={{
+                      position: 'absolute', right: 10, top: '50%',
+                      transform: 'translateY(-50%)',
+                      animation: 'spin 1s linear infinite',
+                      color: 'var(--site-text-secondary)',
+                    }}
+                  />
+                )}
+              </div>
+              {erros.cep
+                ? <span className="field-error">{erros.cep}</span>
+                : <span className="field-hint"><MapPin size={11} /> Endereço preenchido automaticamente</span>
+              }
             </div>
+
             <div className="panel-field">
               <label className="panel-label">Número</label>
-              <input className="panel-input" value={dados.numero ?? ''} onChange={e => set('numero', e.target.value)} placeholder="Nº" />
+              <input
+                className="panel-input"
+                value={dados.numero ?? ''}
+                onChange={e => set('numero', e.target.value)}
+                placeholder="Nº"
+              />
             </div>
+
             <div className="panel-field" style={{ gridColumn: '1 / -1' }}>
               <label className="panel-label">Logradouro *</label>
-              <input className="panel-input" value={dados.logradouro ?? ''} onChange={e => set('logradouro', e.target.value)} placeholder="Rua, Avenida..." />
+              <input
+                className={`panel-input${erros.logradouro ? ' input-error' : ''}`}
+                value={dados.logradouro ?? ''}
+                onChange={e => { set('logradouro', e.target.value); clearErro('logradouro'); }}
+                onBlur={() => { if (!dados.logradouro?.trim()) setErro('logradouro', 'Campo obrigatório'); }}
+                placeholder="Rua, Avenida..."
+              />
+              {erros.logradouro && <span className="field-error">{erros.logradouro}</span>}
             </div>
+
             <div className="panel-field">
               <label className="panel-label">Bairro</label>
-              <input className="panel-input" value={dados.bairro ?? ''} onChange={e => set('bairro', e.target.value)} placeholder="Bairro" />
+              <input
+                className="panel-input"
+                value={dados.bairro ?? ''}
+                onChange={e => set('bairro', e.target.value)}
+                placeholder="Bairro"
+              />
             </div>
+
             <div className="panel-field">
               <label className="panel-label">Cidade *</label>
-              <input className="panel-input" value={dados.cidade ?? ''} onChange={e => set('cidade', e.target.value)} placeholder="Cidade" />
+              <input
+                className={`panel-input${erros.cidade ? ' input-error' : ''}`}
+                value={dados.cidade ?? ''}
+                onChange={e => { set('cidade', e.target.value); clearErro('cidade'); }}
+                onBlur={() => { if (!dados.cidade?.trim()) setErro('cidade', 'Campo obrigatório'); }}
+                placeholder="Cidade"
+              />
+              {erros.cidade && <span className="field-error">{erros.cidade}</span>}
             </div>
+
             <div className="panel-field">
               <label className="panel-label">Estado</label>
               <select className="panel-select" value={dados.estado ?? ''} onChange={e => set('estado', e.target.value)}>
@@ -173,25 +347,67 @@ export default function FormCadastramento() {
         <div className="panel-card">
           <div className="panel-card-header"><h2 className="panel-card-title">3. Responsável Legal</h2></div>
           <div className="panel-card-body" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+
             <div className="panel-field" style={{ gridColumn: '1 / -1' }}>
               <label className="panel-label">Nome Completo *</label>
-              <input className="panel-input" value={dados.responsavel_nome ?? ''} onChange={e => set('responsavel_nome', e.target.value)} placeholder="Nome do responsável" />
+              <input
+                className={`panel-input${erros.responsavel_nome ? ' input-error' : ''}`}
+                value={dados.responsavel_nome ?? ''}
+                onChange={e => { set('responsavel_nome', e.target.value); clearErro('responsavel_nome'); }}
+                onBlur={() => { if (!dados.responsavel_nome?.trim()) setErro('responsavel_nome', 'Campo obrigatório'); }}
+                placeholder="Nome do responsável"
+              />
+              {erros.responsavel_nome && <span className="field-error">{erros.responsavel_nome}</span>}
             </div>
+
             <div className="panel-field">
               <label className="panel-label">CPF</label>
-              <input className="panel-input" value={dados.responsavel_cpf ?? ''} onChange={e => set('responsavel_cpf', e.target.value)} placeholder="000.000.000-00" />
+              <input
+                className={`panel-input${erros.responsavel_cpf ? ' input-error' : ''}`}
+                value={dados.responsavel_cpf ?? ''}
+                onChange={handleMasked('responsavel_cpf', maskCPF)}
+                onBlur={handleBlur('responsavel_cpf', validateCPF, 'CPF inválido')}
+                placeholder="000.000.000-00"
+                inputMode="numeric"
+              />
+              {erros.responsavel_cpf && <span className="field-error">{erros.responsavel_cpf}</span>}
             </div>
+
             <div className="panel-field">
               <label className="panel-label">Cargo</label>
-              <input className="panel-input" value={dados.responsavel_cargo ?? ''} onChange={e => set('responsavel_cargo', e.target.value)} placeholder="Presidente, Diretor..." />
+              <input
+                className="panel-input"
+                value={dados.responsavel_cargo ?? ''}
+                onChange={e => set('responsavel_cargo', e.target.value)}
+                placeholder="Presidente, Diretor..."
+              />
             </div>
+
             <div className="panel-field">
               <label className="panel-label">Telefone *</label>
-              <input className="panel-input" value={dados.responsavel_telefone ?? ''} onChange={e => set('responsavel_telefone', e.target.value)} placeholder="(00) 00000-0000" />
+              <input
+                className={`panel-input${erros.responsavel_telefone ? ' input-error' : ''}`}
+                value={dados.responsavel_telefone ?? ''}
+                onChange={handleMasked('responsavel_telefone', maskTelefone)}
+                onBlur={handleBlur('responsavel_telefone', validateTelefone, 'Telefone inválido', true)}
+                placeholder="(00) 00000-0000"
+                inputMode="numeric"
+              />
+              {erros.responsavel_telefone && <span className="field-error">{erros.responsavel_telefone}</span>}
             </div>
+
             <div className="panel-field">
               <label className="panel-label">E-mail *</label>
-              <input className="panel-input" type="email" value={dados.responsavel_email ?? ''} onChange={e => set('responsavel_email', e.target.value)} placeholder="email@osc.org" />
+              <input
+                className={`panel-input${erros.responsavel_email ? ' input-error' : ''}`}
+                value={dados.responsavel_email ?? ''}
+                onChange={e => { set('responsavel_email', e.target.value); clearErro('responsavel_email'); }}
+                onBlur={handleBlur('responsavel_email', validateEmail, 'E-mail inválido', true)}
+                placeholder="email@osc.org"
+                inputMode="email"
+                type="email"
+              />
+              {erros.responsavel_email && <span className="field-error">{erros.responsavel_email}</span>}
             </div>
           </div>
         </div>
@@ -232,6 +448,19 @@ export default function FormCadastramento() {
           </div>
         </div>
 
+        {/* Aviso de erros */}
+        {temErros && (
+          <div style={{
+            padding: '10px 16px', borderRadius: 'var(--site-radius)',
+            background: 'var(--site-error-bg, #fff5f5)',
+            border: '1px solid var(--site-error, #e53e3e)',
+            color: 'var(--site-error, #e53e3e)',
+            fontSize: 'var(--text-sm)', fontWeight: 500,
+          }}>
+            Corrija os campos em destaque antes de concluir o formulário.
+          </div>
+        )}
+
         {/* Ações */}
         <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', paddingBottom: 32 }}>
           {saved && (
@@ -249,7 +478,31 @@ export default function FormCadastramento() {
         </div>
       </div>
 
-      <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .field-error {
+          display: block;
+          margin-top: 4px;
+          font-size: var(--text-xs, 11px);
+          color: var(--site-error, #e53e3e);
+          font-weight: 500;
+        }
+        .field-hint {
+          display: flex;
+          align-items: center;
+          gap: 4px;
+          margin-top: 4px;
+          font-size: var(--text-xs, 11px);
+          color: var(--site-text-secondary);
+        }
+        .input-error {
+          border-color: var(--site-error, #e53e3e) !important;
+          box-shadow: 0 0 0 2px rgba(229, 62, 62, 0.15);
+        }
+        .input-error:focus {
+          outline-color: var(--site-error, #e53e3e);
+        }
+      `}</style>
     </>
   );
 }
