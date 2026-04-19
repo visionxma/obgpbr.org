@@ -50,34 +50,47 @@ interface Relatorio {
   updated_at: string;
 }
 
-/* ── Item Templates ──────────────────────────────────────────── */
+/* ── Item Templates (estrutura fiel ao Relatório de Conformidade OBGP) ── */
 const HABILITACAO_TPL: Omit<ChecklistItem, 'checked' | 'doc_url' | 'doc_nome'>[] = [
-  { id: 'estatuto_social',      label: 'Cópia do estatuto social devidamente registrado em cartório' },
-  { id: 'ata_eleicao',          label: 'Cópia da ata de eleição e posse da atual diretoria registrada' },
-  { id: 'comprovante_cnpj',     label: 'Comprovante de inscrição e situação cadastral do CNPJ' },
-  { id: 'comprovante_endereco', label: 'Comprovante de endereço da sede da organização' },
-  { id: 'inscricao_estadual',   label: 'Inscrição estadual ou declaração de isenção, se aplicável' },
+  { id: '2_1_cartao_cnpj',           label: '2.1. Cartão CNPJ — comprovante de inscrição e situação cadastral' },
+  { id: '2_2_qsa_cnpj',              label: '2.2. QSA Cartão CNPJ — Quadro de Sócios e Administradores' },
+  { id: '2_3_alvara',                label: '2.3. Alvará de licença e funcionamento' },
+  { id: '2_4_estatuto_social',       label: '2.4. Estatuto Social registrado em cartório competente' },
+  { id: '2_5_ata_constituicao',      label: '2.5. Ata de Constituição / Fundação registrada' },
+  { id: '2_6_ata_eleicao',           label: '2.6. Ata de Eleição e Posse da diretoria atual registrada' },
+  { id: '2_7_relacao_membros',       label: '2.7. Relação de Membros atual da diretoria e conselho fiscal' },
+  { id: '2_8_comp_end_entidade',     label: '2.8. Comprovante de endereço da entidade (em nome da Razão Social)' },
+  { id: '2_9_rg_cpf_representante',  label: '2.9. RG/CPF do representante legal (documento de identidade vigente)' },
+  { id: '2_10_comp_end_representante', label: '2.10. Comprovante de endereço do representante legal' },
 ];
+
 const REGULARIDADE_TPL: Omit<ChecklistItem, 'checked' | 'doc_url' | 'doc_nome'>[] = [
-  { id: 'cert_rfb_pgfn',       label: 'Certidão negativa de débitos relativos a tributos federais e à Dívida Ativa da União (RFB/PGFN)' },
-  { id: 'cert_estadual',       label: 'Certidão negativa de débitos estaduais' },
-  { id: 'cert_municipal',      label: 'Certidão negativa de débitos municipais' },
-  { id: 'cert_fgts',           label: 'Certificado de Regularidade do FGTS (CRF) — Caixa Econômica Federal' },
-  { id: 'cert_trabalhista',    label: 'Certidão Negativa de Débitos Trabalhistas (CNDT) — TST' },
-  { id: 'cert_inss',           label: 'Certidão Negativa de Débitos previdenciários — INSS' },
+  { id: '3_1_cnd_federal',       label: '3.1. CND Federal — Certidão Negativa de Débitos Federais (RFB/PGFN)' },
+  { id: '3_2_cnd_estadual',      label: '3.2. CND Estadual — Certidão Negativa de Débitos Estaduais (SEFAZ)' },
+  { id: '3_3_cnda_estadual',     label: '3.3. CNDA Estadual — Certidão Negativa de Débito em Dívida Ativa Estadual' },
+  { id: '3_4_cnd_municipal',     label: '3.4. CND Municipal — Certidão Negativa de Débitos Municipais' },
+  { id: '3_5_cr_fgts',           label: '3.5. CR FGTS — Certificado de Regularidade do FGTS (Caixa Econômica Federal)' },
+  { id: '3_6_cnd_trabalhista',   label: '3.6. CND Trabalhista — Certidão Negativa de Débitos Trabalhistas (CNDT/TST)' },
+  { id: '3_7_cnd_concessionaria', label: '3.7. CND de Concessionária local (água/saneamento/energia) — se houver exigência' },
 ];
+
 const ECONOMICA_TPL: Omit<ChecklistItem, 'checked' | 'doc_url' | 'doc_nome'>[] = [
-  { id: 'balanco_patrimonial',     label: 'Balanço patrimonial do último exercício social, assinado por contador habilitado' },
-  { id: 'demonstracao_resultado',  label: 'Demonstração de Resultado do Exercício (DRE)' },
-  { id: 'declaracao_capacidade',   label: 'Declaração de capacidade econômico-financeira subscrita pelo representante legal' },
-  { id: 'declaracao_transparencia',label: 'Declaração de compromisso com a transparência e publicação de informações' },
+  { id: '4_1_cert_falencia',         label: '4.1. Certidão Negativa de Falência e Concordata' },
+  { id: '4_2_reg_contador',          label: '4.2. Registro e regularidade do Contador / CRC vigente' },
+  { id: '4_3_1_termo_abertura',      label: '4.3.1. Balanço Social — Termo de Abertura (últimos 2 exercícios, ITG 2002)' },
+  { id: '4_3_2_balanco_patrimonial', label: '4.3.2. Balanço Patrimonial' },
+  { id: '4_3_3_superavit_deficit',   label: '4.3.3. Demonstração do Superávit e Déficit' },
+  { id: '4_3_4_mutacoes_pl',         label: '4.3.4. Demonstração das Mutações do Patrimônio Líquido' },
+  { id: '4_3_5_fluxo_caixa',         label: '4.3.5. Demonstração dos Fluxos de Caixa' },
+  { id: '4_3_6_notas_explicativas',  label: '4.3.6. Notas Explicativas dos dois últimos exercícios sociais' },
+  { id: '4_3_7_termo_encerramento',  label: '4.3.7. Termo de Encerramento' },
+  { id: '4_4_ata_prestacao',         label: '4.4. Ata aprovando Prestação de Contas com parecer do Conselho Fiscal (últimos 2 exercícios)' },
 ];
+
 const TECNICA_TPL: Omit<ChecklistItem, 'checked' | 'doc_url' | 'doc_nome'>[] = [
-  { id: 'atestado_capacidade',  label: 'Atestado de capacidade técnica emitido por pessoa jurídica de direito público ou privado' },
-  { id: 'certidao_ract',        label: 'Certidão de Registro de Atestado de Capacidade Técnica em Conselho de Classe Profissional competente' },
-  { id: 'curriculo_equipe',     label: 'Currículo e comprovação de qualificação da equipe técnica responsável' },
-  { id: 'plano_trabalho',       label: 'Plano de trabalho ou projeto correlato já executado (caso existente)' },
-  { id: 'relatorio_atividades', label: 'Relatório de atividades desenvolvidas nos últimos 3 anos (se aplicável)' },
+  { id: '5_1_experiencia_tecnica',   label: '5.1. Comprovação de experiência técnica: contratos, termos de parceria ou acordos de cooperação com órgãos públicos ou privados' },
+  { id: '5_2_conselho_entidade',     label: '5.2. Registro e regularidade da entidade em Conselho de Classe (se houver)' },
+  { id: '5_3_conselho_rt',           label: '5.3. Registro e regularidade do profissional RT da entidade em Conselho de Classe (se houver)' },
 ];
 
 function initChecklist(
@@ -288,6 +301,7 @@ export default function RelatorioConformidadePage() {
 
   const [relatorio, setRelatorio] = useState<Relatorio | null>(null);
   const [loading, setLoading] = useState(true);
+  const [certificacaoLiberada, setCertificacaoLiberada] = useState(false);
   const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -307,6 +321,16 @@ export default function RelatorioConformidadePage() {
   useEffect(() => {
     if (!perfil) return;
     (async () => {
+      // Verificar se certificação está liberada
+      const { data: perfilData } = await supabase
+        .from('osc_perfis')
+        .select('certificacao_liberada')
+        .eq('osc_id', perfil.osc_id)
+        .single();
+      const liberada = perfilData?.certificacao_liberada === true;
+      setCertificacaoLiberada(liberada);
+      if (!liberada) { setLoading(false); return; }
+
       const { data } = await supabase
         .from('relatorios_conformidade')
         .select('*')
@@ -445,6 +469,26 @@ export default function RelatorioConformidadePage() {
     <div style={{ display: 'flex', justifyContent: 'center', padding: '80px 0' }}>
       <Loader2 size={28} style={{ animation: 'spin 1s linear infinite', color: 'var(--site-primary)' }} />
       <style>{`@keyframes spin{100%{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
+
+  /* ── Gate: pagamento obrigatório ── */
+  if (!certificacaoLiberada) return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '60px 24px', textAlign: 'center' }}>
+      <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(13,54,79,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20 }}>
+        <ShieldCheck size={36} style={{ color: 'var(--site-primary)' }} />
+      </div>
+      <h2 style={{ fontFamily: 'var(--font-heading)', fontSize: '1.4rem', fontWeight: 800, color: 'var(--site-primary)', marginBottom: 10 }}>
+        Acesso Bloqueado
+      </h2>
+      <p style={{ color: 'var(--site-text-secondary)', maxWidth: 420, lineHeight: 1.7, marginBottom: 28 }}>
+        O Relatório de Conformidade é liberado após a confirmação do pagamento da certificação. Acesse a página de <strong>Certificação</strong> para solicitar e pagar.
+      </p>
+      <a href="/painel/certificacao"
+        className="btn btn-primary"
+        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none', borderRadius: 'var(--site-radius-full)', padding: '13px 28px' }}>
+        Solicitar Certificação → R$ 350,00
+      </a>
     </div>
   );
 

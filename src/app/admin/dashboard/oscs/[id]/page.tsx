@@ -7,7 +7,7 @@ import {
   ArrowLeft, CheckCircle, XCircle, Clock, ExternalLink,
   FileText, BookOpen, ClipboardList, AlertCircle, Save,
   Building2, Phone, MapPin, Hash, ShieldCheck, ChevronDown, ChevronUp,
-  Edit2, X, Mail, Home, User,
+  Edit2, X, Mail, Home, User, Award, CreditCard,
 } from 'lucide-react';
 
 /* ── Types ──────────────────────────────────────── */
@@ -37,6 +37,10 @@ interface Prestacao {
 }
 interface Formulario {
   id: string; titulo: string; tipo: string; status: string; updated_at: string;
+}
+interface Pagamento {
+  id: string; status: string; valor: number;
+  metodo_pagamento: string | null; paid_at: string | null; created_at: string;
 }
 interface ChecklistItem {
   id: string; label: string; checked: boolean; doc_url: string | null; doc_nome: string | null;
@@ -148,6 +152,13 @@ export default function OscDetailPage() {
   // Per-prestacao review
   const [prstSaving, setPrstSaving] = useState<string | null>(null);
 
+  // Certification payment
+  const [pagamento, setPagamento] = useState<Pagamento | null>(null);
+  const [certLiberada, setCertLiberada] = useState(false);
+  const [certNumero, setCertNumero] = useState<string | null>(null);
+  const [certEmitidaAt, setCertEmitidaAt] = useState<string | null>(null);
+  const [togglingLiberar, setTogglingLiberar] = useState(false);
+
   useEffect(() => {
     const load = async () => {
       const { data: p, error } = await supabase
@@ -159,12 +170,16 @@ export default function OscDetailPage() {
       setPerfil(pf);
       setNewStatus(pf.status_selo);
       setObservacao(pf.observacao_selo ?? '');
+      setCertLiberada(!!(pf as OscPerfil & { certificacao_liberada?: boolean }).certificacao_liberada);
+      setCertNumero((pf as OscPerfil & { certificado_numero?: string | null }).certificado_numero ?? null);
+      setCertEmitidaAt((pf as OscPerfil & { certificado_emitido_at?: string | null }).certificado_emitido_at ?? null);
 
-      const [docsRes, prestRes, formRes, relRes] = await Promise.all([
+      const [docsRes, prestRes, formRes, relRes, pagRes] = await Promise.all([
         supabase.from('osc_documentos').select('*').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }),
         supabase.from('osc_prestacao_contas').select('id, titulo, periodo, valor_total, arquivo_url, status, created_at').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }),
         supabase.from('osc_formularios').select('id, titulo, tipo, status, updated_at').eq('osc_id', pf.osc_id),
         supabase.from('relatorios_conformidade').select('*').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('certificacao_pagamentos').select('id, status, valor, metodo_pagamento, paid_at, created_at').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       ]);
 
       setDocs((docsRes.data ?? []) as Documento[]);
@@ -176,10 +191,20 @@ export default function OscDetailPage() {
         setRelStatus(r.status);
         setRelObs(r.observacao_admin ?? '');
       }
+      if (pagRes.data) setPagamento(pagRes.data as Pagamento);
       setLoading(false);
     };
     load();
   }, [id]);
+
+  const handleToggleLiberar = async () => {
+    if (!perfil) return;
+    setTogglingLiberar(true);
+    const next = !certLiberada;
+    const { error } = await supabase.from('osc_perfis').update({ certificacao_liberada: next }).eq('id', perfil.id);
+    if (!error) setCertLiberada(next);
+    setTogglingLiberar(false);
+  };
 
   /* ── Save OSC data ── */
   const handleSaveEdit = async () => {
@@ -356,6 +381,83 @@ export default function OscDetailPage() {
           )}
         </div>
       </div>
+
+      {/* ── Certification payment card ── */}
+      {(pagamento || certLiberada || certNumero) && (
+        <div className="glass-card" style={{ marginBottom: 24 }}>
+          <div className="glass-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="glass-card-title">
+              <span className="glass-card-title-icon"><Award size={15} /></span>
+              Certificação — Selo OSC Gestão de Parcerias
+            </span>
+            {certNumero && (
+              <span style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: 'var(--admin-text-tertiary)' }}>{certNumero}</span>
+            )}
+          </div>
+          <div className="glass-card-body">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px 28px', alignItems: 'start' }}>
+
+              {/* Payment status */}
+              {pagamento && (
+                <div>
+                  <div style={labelStyle}>Pagamento</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                    <span className={`adm-badge ${pagamento.status === 'pago' ? 'aprovado' : pagamento.status === 'cancelado' ? 'rejeitado' : 'enviado'}`} style={{ fontSize: '0.72rem' }}>
+                      <CreditCard size={11} />
+                      {pagamento.status === 'pago' ? 'Pago' : pagamento.status === 'cancelado' ? 'Cancelado' : 'Pendente'}
+                    </span>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--admin-text-secondary)', fontWeight: 600 }}>
+                      {fmtCurrency(pagamento.valor)}
+                    </span>
+                  </div>
+                  {pagamento.paid_at && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)', marginTop: 4 }}>Pago em {fmtDate(pagamento.paid_at)}</div>
+                  )}
+                  {pagamento.metodo_pagamento && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Via {pagamento.metodo_pagamento}</div>
+                  )}
+                </div>
+              )}
+
+              {/* Liberada toggle */}
+              <div>
+                <div style={labelStyle}>Acesso ao Relatório</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+                  <button
+                    onClick={handleToggleLiberar}
+                    disabled={togglingLiberar}
+                    style={{
+                      padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700,
+                      background: certLiberada ? 'rgba(22,163,74,.12)' : 'rgba(220,38,38,.08)',
+                      color: certLiberada ? '#15803d' : '#dc2626',
+                    }}
+                  >
+                    {togglingLiberar ? '...' : certLiberada ? '✓ Liberado' : '✗ Bloqueado'}
+                  </button>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--admin-text-tertiary)' }}>
+                    {certLiberada ? 'OSC pode preencher o relatório' : 'Clique para liberar'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Certificate info */}
+              {certNumero && (
+                <div>
+                  <div style={labelStyle}>Certificado Emitido</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, fontFamily: 'monospace', color: 'var(--admin-primary)', marginTop: 4 }}>{certNumero}</div>
+                  {certEmitidaAt && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)', marginTop: 2 }}>em {fmtDate(certEmitidaAt)}</div>
+                  )}
+                  <a href={`/verificar?codigo=${certNumero}`} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', color: 'var(--admin-primary)', fontWeight: 600, textDecoration: 'none', marginTop: 6 }}>
+                    <ExternalLink size={11} /> Verificar publicamente
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Two-column: profile info + status management */}
       <div className="content-grid cols-2" style={{ marginBottom: 28, alignItems: 'start' }}>
