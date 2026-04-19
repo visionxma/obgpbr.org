@@ -9,8 +9,7 @@ import './painel.css';
 
 // Destino do botão voltar para cada rota
 const BACK_NAV: Record<string, { href: string; label: string }> = {
-  '/painel/processo':                         { href: '/painel',             label: 'Início' },
-  '/painel/certificacao':                     { href: '/painel',             label: 'Início' },
+  '/painel/certificacao':                     { href: '/painel/processo',    label: 'Processo' },
   '/painel/documentos':                       { href: '/painel/processo',    label: 'Processo' },
   '/painel/prestacao-contas':                 { href: '/painel/processo',    label: 'Processo' },
   '/painel/formularios':                      { href: '/painel/processo',    label: 'Processo' },
@@ -61,7 +60,7 @@ function PainelShell({ children }: { children: React.ReactNode }) {
 
   const backNav  = resolve(BACK_NAV, pathname);
   const title    = resolve(PAGE_TITLE, pathname) ?? 'Painel';
-  const isRoot   = pathname === '/painel';
+  const isRoot   = pathname === '/painel/processo';
 
   return (
     <div className="pv2-shell">
@@ -70,8 +69,8 @@ function PainelShell({ children }: { children: React.ReactNode }) {
       <header className="pv2-header">
         <div className="pv2-header-left">
 
-          {/* Logo — sempre leva ao Início */}
-          <Link href="/painel" className="pv2-logo">
+          {/* Logo — leva ao Processo */}
+          <Link href="/painel/processo" className="pv2-logo">
             <Image src="/logo.png" alt="OBGP" width={28} height={28} style={{ objectFit: 'contain' }} />
             <span className="pv2-logo-text">OBG<span style={{ color: 'var(--site-gold)' }}>P</span></span>
           </Link>
