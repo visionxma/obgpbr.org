@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { label: 'Blog', path: '/blog' },
   { label: 'Selo OSC', path: '/selo-osc' },
   { label: 'Transparência', path: '/transparencia' },
+  { label: 'Painel OSC', path: '/painel' },
 ];
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
