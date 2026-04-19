@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { CheckCircle, Circle, Clock, AlertCircle, FileText, BookOpen, ClipboardList, ShieldCheck } from 'lucide-react';
+import { CheckCircle, Circle, Clock, AlertCircle, Award, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from './PainelContext';
@@ -8,15 +8,14 @@ import { usePainel } from './PainelContext';
 interface Stats {
   docs: number;
   prestacoes: number;
-  formsFeitos: number;
   formsConcluidos: number;
 }
 
 const SELO_MAP = {
-  pendente:   { label: 'Aguardando Documentação', desc: 'Envie os documentos necessários para iniciar o processo de certificação.', progress: 10 },
-  em_analise: { label: 'Em Análise',               desc: 'Sua documentação está sendo avaliada pela equipe OBGP. Em breve você terá uma resposta.', progress: 60 },
+  pendente:   { label: 'Aguardando Documentação', desc: 'Envie os documentos e preencha os formulários para iniciar o processo.', progress: 10 },
+  em_analise: { label: 'Em Análise',               desc: 'Sua documentação está sendo avaliada pela equipe OBGP.',              progress: 60 },
   aprovado:   { label: 'Selo OSC Aprovado',         desc: 'Parabéns! Sua organização foi certificada com o Selo de Qualidade OSC.', progress: 100 },
-  rejeitado:  { label: 'Revisão Necessária',        desc: 'Sua documentação requer ajustes. Verifique a observação e reenvie os documentos.', progress: 30 },
+  rejeitado:  { label: 'Revisão Necessária',        desc: 'Sua documentação requer ajustes. Verifique as observações.',          progress: 30 },
 };
 
 const REQUIRED_DOCS = [
@@ -34,74 +33,62 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!perfil) return;
-
-    const load = async () => {
+    (async () => {
       const [docsRes, prestRes, formRes] = await Promise.all([
         supabase.from('osc_documentos').select('tipo', { count: 'exact' }).eq('osc_id', perfil.osc_id),
         supabase.from('osc_prestacao_contas').select('id', { count: 'exact' }).eq('osc_id', perfil.osc_id),
         supabase.from('osc_formularios').select('status').eq('osc_id', perfil.osc_id),
       ]);
-
       setStats({
         docs: docsRes.count ?? 0,
         prestacoes: prestRes.count ?? 0,
-        formsFeitos: formRes.data?.length ?? 0,
         formsConcluidos: formRes.data?.filter((f: { status: string }) => f.status === 'concluido').length ?? 0,
       });
       setUploadedTipos((docsRes.data ?? []).map((d: { tipo: string }) => d.tipo));
-    };
-
-    load();
+    })();
   }, [perfil]);
 
+  // Sem perfil (primeiro acesso)
   if (!perfil) return (
     <>
       <div style={{ marginBottom: 28 }}>
         <h1 className="panel-page-title">Painel de Certificação OSC</h1>
         <p className="panel-page-subtitle">Gestão de Parcerias — OBGP</p>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
-        {[
-          { href: '/painel/formularios',           icon: ClipboardList, label: 'Formulários',               desc: 'Preencha os formulários obrigatórios' },
-          { href: '/painel/documentos',             icon: FileText,      label: 'Enviar Documentos',          desc: 'Faça upload de arquivos' },
-          { href: '/painel/prestacao-contas',       icon: BookOpen,      label: 'Prestação de Contas',        desc: 'Registre demonstrativos financeiros' },
-          { href: '/painel/certificacao',           icon: ShieldCheck,   label: 'Certificação',               desc: 'Inicie o processo de certificação' },
-        ].map(item => {
-          const Icon = item.icon;
-          return (
-            <a key={item.href} href={item.href} style={{ background: '#fff', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-lg)', padding: '18px 20px', display: 'flex', gap: 14, alignItems: 'center', textDecoration: 'none', boxShadow: 'var(--site-shadow-sm)' }}>
-              <div style={{ width: 38, height: 38, borderRadius: 'var(--site-radius-md)', background: 'var(--site-surface-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--site-primary)', flexShrink: 0 }}>
-                <Icon size={18} />
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--site-text-primary)', marginBottom: 2 }}>{item.label}</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--site-text-secondary)' }}>{item.desc}</div>
-              </div>
-            </a>
-          );
-        })}
-      </div>
+      <Link href="/painel/processo" style={{
+        display: 'flex', alignItems: 'center', gap: 16,
+        background: '#fff', border: '1px solid var(--site-border)',
+        borderRadius: 'var(--site-radius-lg)', padding: '20px 24px',
+        textDecoration: 'none', boxShadow: 'var(--site-shadow-sm)',
+      }}>
+        <div style={{ width: 42, height: 42, borderRadius: 'var(--site-radius-md)', background: 'var(--site-surface-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--site-primary)', flexShrink: 0 }}>
+          <Award size={20} />
+        </div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--site-text-primary)', marginBottom: 2 }}>Iniciar Processo de Certificação</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--site-text-secondary)' }}>Preencha formulários, envie documentos e obtenha o Selo OSC Gestão de Parcerias</div>
+        </div>
+        <ChevronRight size={18} style={{ color: 'var(--site-text-secondary)', flexShrink: 0 }} />
+      </Link>
     </>
   );
 
-  const seloInfo = SELO_MAP[perfil.status_selo as keyof typeof SELO_MAP];
+  const seloInfo = SELO_MAP[perfil.status_selo as keyof typeof SELO_MAP] ?? SELO_MAP.pendente;
   const firstName = (perfil.responsavel || user?.user_metadata?.nome || 'Usuário').split(' ')[0];
 
   const SeloIcon = {
-    pendente: Circle,
+    pendente:   Circle,
     em_analise: Clock,
-    aprovado: CheckCircle,
-    rejeitado: AlertCircle,
+    aprovado:   CheckCircle,
+    rejeitado:  AlertCircle,
   }[perfil.status_selo] ?? Circle;
 
   return (
     <>
-      {/* Greeting */}
-      <div style={{ marginBottom: 28 }}>
+      {/* Saudação */}
+      <div style={{ marginBottom: 24 }}>
         <h1 className="panel-page-title">Olá, {firstName}!</h1>
-        <p className="panel-page-subtitle">
-          Acompanhe o status da certificação e a documentação da sua organização.
-        </p>
+        <p className="panel-page-subtitle">Acompanhe o status da certificação da sua organização.</p>
       </div>
 
       {/* Selo Card */}
@@ -116,16 +103,13 @@ export default function DashboardPage() {
             {seloInfo.label}
           </span>
         </div>
-
         <p className="panel-selo-desc">{seloInfo.desc}</p>
-
         {perfil.observacao_selo && (
           <div className="panel-selo-obs">
             <strong style={{ color: 'var(--site-gold)' }}>Observação:</strong>{' '}
             {perfil.observacao_selo}
           </div>
         )}
-
         <div className="panel-selo-progress-row">
           <span className="panel-selo-progress-label">Progresso</span>
           <span className="panel-selo-progress-pct">{seloInfo.progress}%</span>
@@ -134,6 +118,9 @@ export default function DashboardPage() {
           <div className="panel-selo-bar-fill" style={{ width: `${seloInfo.progress}%` }} />
         </div>
       </div>
+
+      {/* Bloco de Certificação contextual */}
+      <CertBlock status={perfil.status_selo} />
 
       {/* Stats */}
       {stats ? (
@@ -144,9 +131,9 @@ export default function DashboardPage() {
             <div className="panel-stat-sub">enviados</div>
           </div>
           <div className="panel-stat">
-            <div className="panel-stat-label">Prestações</div>
+            <div className="panel-stat-label">Demonstrativos</div>
             <div className="panel-stat-value">{stats.prestacoes}</div>
-            <div className="panel-stat-sub">registradas</div>
+            <div className="panel-stat-sub">registrados</div>
           </div>
           <div className="panel-stat">
             <div className="panel-stat-label">Formulários</div>
@@ -156,18 +143,16 @@ export default function DashboardPage() {
         </div>
       ) : (
         <div className="panel-stats">
-          {[0, 1, 2].map(i => (
-            <div key={i} className="panel-stat" style={{ minHeight: 88, background: 'rgba(255,255,255,.6)' }} />
-          ))}
+          {[0, 1, 2].map(i => <div key={i} className="panel-stat" style={{ minHeight: 88, background: 'rgba(255,255,255,.6)' }} />)}
         </div>
       )}
 
-      {/* Required checklist */}
+      {/* Checklist de documentos obrigatórios */}
       <div className="panel-card">
         <div className="panel-card-header">
-          <h2 className="panel-card-title">Documentos Necessários para o Selo</h2>
+          <h2 className="panel-card-title">Documentos Obrigatórios</h2>
           <Link href="/painel/documentos" className="panel-btn panel-btn-ghost panel-btn-sm">
-            <FileText size={13} /> Gerenciar
+            Gerenciar
           </Link>
         </div>
         <div className="panel-card-body">
@@ -180,10 +165,9 @@ export default function DashboardPage() {
                     {done ? <CheckCircle size={12} /> : <Circle size={12} />}
                   </div>
                   <span className={`panel-check-label ${done ? 'done' : ''}`}>{doc.label}</span>
-                  {done
-                    ? <span className="panel-badge aprovado">Enviado</span>
-                    : <span className="panel-badge pendente">Pendente</span>
-                  }
+                  <span className={`panel-badge ${done ? 'aprovado' : 'pendente'}`}>
+                    {done ? 'Enviado' : 'Pendente'}
+                  </span>
                 </div>
               );
             })}
@@ -191,31 +175,79 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Quick links */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginTop: 24 }}>
-        {[
-          { href: '/painel/documentos', icon: FileText, label: 'Enviar Documentos', desc: 'Faça upload de arquivos' },
-          { href: '/painel/prestacao-contas', icon: BookOpen, label: 'Prestação de Contas', desc: 'Registre demonstrativos' },
-          { href: '/painel/formularios', icon: ClipboardList, label: 'Formulários', desc: 'Preencha os formulários obrigatórios' },
-          { href: '/painel/relatorio-conformidade', icon: ShieldCheck, label: 'Relatório de Conformidade', desc: 'Preencha e envie para certificação' },
-        ].map(item => {
-          const Icon = item.icon;
-          return (
-            <Link key={item.href} href={item.href} style={{ background: '#fff', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-lg)', padding: '18px 20px', display: 'flex', gap: 14, alignItems: 'center', textDecoration: 'none', boxShadow: 'var(--site-shadow-sm)', transition: 'box-shadow .2s, transform .2s' }}
-              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'var(--site-shadow-md)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'var(--site-shadow-sm)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}
-            >
-              <div style={{ width: 38, height: 38, borderRadius: 'var(--site-radius-md)', background: 'var(--site-surface-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--site-primary)', flexShrink: 0 }}>
-                <Icon size={18} />
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--site-text-primary)', marginBottom: 2 }}>{item.label}</div>
-                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--site-text-secondary)' }}>{item.desc}</div>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
+      {/* CTA — Meu Processo */}
+      <Link href="/painel/processo" style={{
+        display: 'flex', alignItems: 'center', gap: 14, marginTop: 8,
+        background: '#fff', border: '1px solid var(--site-border)',
+        borderRadius: 'var(--site-radius-lg)', padding: '18px 22px',
+        textDecoration: 'none', boxShadow: 'var(--site-shadow-sm)',
+        transition: 'box-shadow .2s, transform .2s',
+      }}
+        onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'var(--site-shadow-md)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
+        onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = 'var(--site-shadow-sm)'; (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}
+      >
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--site-text-primary)', marginBottom: 2 }}>Gerenciar Meu Processo</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--site-text-secondary)' }}>Formulários · Documentos · Demonstrativos · Relatório de Conformidade</div>
+        </div>
+        <ChevronRight size={18} style={{ color: 'var(--site-text-secondary)', flexShrink: 0 }} />
+      </Link>
     </>
+  );
+}
+
+/* ── Bloco contextual de certificação ──────────────────────────────── */
+function CertBlock({ status }: { status: string }) {
+  if (status === 'aprovado') {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'rgba(22,163,74,.06)', border: '1px solid rgba(22,163,74,.2)', borderRadius: 'var(--site-radius-lg)' }}>
+        <CheckCircle size={18} style={{ color: '#16a34a', flexShrink: 0 }} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: '#16a34a' }}>Selo OSC Certificado</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--site-text-secondary)' }}>Sua organização está certificada pelo programa Selo OSC Gestão de Parcerias</div>
+        </div>
+        <Link href="/painel/certificacao" className="panel-btn panel-btn-ghost panel-btn-sm" style={{ flexShrink: 0 }}>
+          Ver certificado <ChevronRight size={13} />
+        </Link>
+      </div>
+    );
+  }
+  if (status === 'em_analise') {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'rgba(37,99,235,.05)', border: '1px solid rgba(37,99,235,.18)', borderRadius: 'var(--site-radius-lg)' }}>
+        <Clock size={18} style={{ color: '#2563eb', flexShrink: 0 }} />
+        <div>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: '#2563eb' }}>Documentação em Análise</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--site-text-secondary)' }}>Prazo de até 5 dias úteis para retorno da equipe OBGP</div>
+        </div>
+      </div>
+    );
+  }
+  if (status === 'rejeitado') {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'rgba(220,38,38,.05)', border: '1px solid rgba(220,38,38,.2)', borderRadius: 'var(--site-radius-lg)' }}>
+        <AlertCircle size={18} style={{ color: '#dc2626', flexShrink: 0 }} />
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: '#dc2626' }}>Revisão Necessária</div>
+          <div style={{ fontSize: 'var(--text-xs)', color: 'var(--site-text-secondary)' }}>Corrija os pontos indicados e reenvie seus documentos</div>
+        </div>
+        <Link href="/painel/certificacao" className="panel-btn panel-btn-ghost panel-btn-sm" style={{ flexShrink: 0 }}>
+          Corrigir <ChevronRight size={13} />
+        </Link>
+      </div>
+    );
+  }
+  // pendente
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', background: 'rgba(197,171,118,.08)', border: '1px solid rgba(197,171,118,.3)', borderRadius: 'var(--site-radius-lg)' }}>
+      <Award size={18} style={{ color: 'var(--site-gold)', flexShrink: 0 }} />
+      <div style={{ flex: 1 }}>
+        <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--site-text-primary)' }}>Obtenha o Selo OSC — R$ 350</div>
+        <div style={{ fontSize: 'var(--text-xs)', color: 'var(--site-text-secondary)' }}>Pagamento único via PIX · Válido 12 meses</div>
+      </div>
+      <Link href="/painel/certificacao" className="panel-btn panel-btn-primary panel-btn-sm" style={{ flexShrink: 0 }}>
+        Iniciar <ChevronRight size={13} />
+      </Link>
+    </div>
   );
 }

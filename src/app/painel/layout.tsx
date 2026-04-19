@@ -4,30 +4,40 @@ import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
-  LayoutDashboard, FileText, BookOpen,
-  ClipboardList, Menu, X, ChevronRight, ShieldCheck, Award, ChevronLeft,
+  LayoutDashboard, ClipboardList,
+  Menu, X, ChevronRight, ChevronLeft,
 } from 'lucide-react';
 import { PainelProvider, usePainel } from './PainelContext';
 import PublicLayout from '../components/PublicLayout';
 import './painel.css';
 
 const NAV_ITEMS = [
-  { label: 'Dashboard',                 path: '/painel',                          icon: LayoutDashboard },
-  { label: 'Certificação',              path: '/painel/certificacao',             icon: Award },
-  { label: 'Documentos',                path: '/painel/documentos',               icon: FileText },
-  { label: 'Prestação de Contas',       path: '/painel/prestacao-contas',         icon: BookOpen },
-  { label: 'Formulários',               path: '/painel/formularios',              icon: ClipboardList },
-  { label: 'Relatório de Conformidade', path: '/painel/relatorio-conformidade',   icon: ShieldCheck },
+  { label: 'Início',   path: '/painel',          icon: LayoutDashboard },
+  { label: 'Processo', path: '/painel/processo',  icon: ClipboardList },
 ];
 
 const BREADCRUMB: Record<string, string> = {
-  '/painel':                            'Visão Geral',
-  '/painel/certificacao':               'Certificação',
-  '/painel/documentos':                 'Documentos',
-  '/painel/prestacao-contas':           'Prestação de Contas',
-  '/painel/formularios':                'Formulários',
-  '/painel/relatorio-conformidade':     'Relatório de Conformidade',
+  '/painel':                                        'Início',
+  '/painel/processo':                               'Processo',
+  '/painel/certificacao':                           'Certificação',
+  '/painel/documentos':                             'Documentos',
+  '/painel/prestacao-contas':                       'Demonstrativos Financeiros',
+  '/painel/formularios':                            'Formulários',
+  '/painel/formularios/cadastramento':              'Cadastramento',
+  '/painel/formularios/diagnostico':                'Diagnóstico',
+  '/painel/formularios/relatorio_atividades':       'Relatório de Atividades',
+  '/painel/formularios/renovacao':                  'Renovação',
+  '/painel/relatorio-conformidade':                 'Relatório de Conformidade',
 };
+
+function getBreadcrumb(pathname: string): string {
+  if (BREADCRUMB[pathname]) return BREADCRUMB[pathname];
+  const sorted = Object.entries(BREADCRUMB).sort((a, b) => b[0].length - a[0].length);
+  for (const [path, label] of sorted) {
+    if (pathname.startsWith(path + '/')) return label;
+  }
+  return 'Painel';
+}
 
 function PainelShell({ children }: { children: React.ReactNode }) {
   const { perfil, loading } = usePainel();
@@ -35,9 +45,7 @@ function PainelShell({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  useEffect(() => {
-    setSidebarOpen(false);
-  }, [pathname]);
+  useEffect(() => { setSidebarOpen(false); }, [pathname]);
 
   if (loading) {
     return (
@@ -75,7 +83,8 @@ function PainelShell({ children }: { children: React.ReactNode }) {
         <nav className="panel-nav">
           {NAV_ITEMS.map(item => {
             const Icon = item.icon;
-            const active = pathname === item.path;
+            const active = pathname === item.path ||
+              (item.path !== '/painel' && pathname.startsWith(item.path));
             return (
               <Link key={item.path} href={item.path} className={`panel-nav-item ${active ? 'active' : ''}`}>
                 <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
@@ -85,7 +94,6 @@ function PainelShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        {/* Botão de colapso (apenas desktop) */}
         <button
           className="panel-collapse-btn"
           onClick={() => setSidebarCollapsed(c => !c)}
@@ -106,10 +114,9 @@ function PainelShell({ children }: { children: React.ReactNode }) {
             <div className="panel-breadcrumb">
               <span>Painel</span>
               <ChevronRight size={13} />
-              <span className="panel-breadcrumb-active">{BREADCRUMB[pathname] ?? 'Painel'}</span>
+              <span className="panel-breadcrumb-active">{getBreadcrumb(pathname)}</span>
             </div>
           </div>
-
           <div className="panel-header-right" />
         </header>
 
