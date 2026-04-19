@@ -18,6 +18,8 @@ import {
   Sparkles,
   BookOpen,
   Trash2,
+  Bell,
+  CheckCheck,
 } from 'lucide-react';
 import './admin.css';
 import AdminSearch from './AdminSearch';
@@ -53,6 +55,11 @@ function getBreadcrumb(path: string) {
   return map[path] || 'Dashboard';
 }
 
+interface Notificacao {
+  id: string; tipo: string; titulo: string; mensagem: string | null;
+  lida: boolean; created_at: string; osc_id: string | null;
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const currentPath = usePathname();
@@ -62,6 +69,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [currentTime, setCurrentTime] = useState('');
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifs, setNotifs] = useState<Notificacao[]>([]);
+  const [notifUnread, setNotifUnread] = useState(0);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem('admin-theme') as 'light' | 'dark' | null;
@@ -96,6 +106,30 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     return () => subscription.unsubscribe();
   }, [router]);
+
+  const loadNotifs = async () => {
+    const { data } = await supabase
+      .from('notificacoes')
+      .select('id, tipo, titulo, mensagem, lida, created_at, osc_id')
+      .in('destinatario', ['admin', 'ambos'])
+      .order('created_at', { ascending: false })
+      .limit(20);
+    const list = (data ?? []) as Notificacao[];
+    setNotifs(list);
+    setNotifUnread(list.filter(n => !n.lida).length);
+  };
+
+  useEffect(() => {
+    if (!isLoadingAuth) loadNotifs();
+  }, [isLoadingAuth]);
+
+  const markAllRead = async () => {
+    const ids = notifs.filter(n => !n.lida).map(n => n.id);
+    if (!ids.length) return;
+    await supabase.from('notificacoes').update({ lida: true }).in('id', ids);
+    setNotifs(prev => prev.map(n => ({ ...n, lida: true })));
+    setNotifUnread(0);
+  };
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -215,11 +249,79 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <div className="admin-header-right">
             <AdminSearch />
 
-            {/* Profile Dropdown (Replaced Notification Bell) */}
+            {/* Notifications Bell */}
             <div style={{ position: 'relative' }}>
-              <button 
-                className={`admin-header-icon-btn ${userMenuOpen ? 'active' : ''}`} 
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
+              <button
+                className={`admin-header-icon-btn ${notifOpen ? 'active' : ''}`}
+                onClick={() => { setNotifOpen(o => !o); setUserMenuOpen(false); }}
+                aria-label="Notificações"
+                style={{ position: 'relative' }}
+              >
+                <Bell size={18} />
+                {notifUnread > 0 && (
+                  <span style={{
+                    position: 'absolute', top: 4, right: 4,
+                    width: 16, height: 16, borderRadius: '50%',
+                    background: '#dc2626', color: '#fff',
+                    fontSize: '0.6rem', fontWeight: 800,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    lineHeight: 1, border: '1.5px solid var(--admin-surface)',
+                  }}>
+                    {notifUnread > 9 ? '9+' : notifUnread}
+                  </span>
+                )}
+              </button>
+              {notifOpen && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 8px)', right: 0,
+                  width: 340, background: 'var(--admin-card)', border: '1px solid var(--admin-border)',
+                  borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.14)', zIndex: 200, overflow: 'hidden',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid var(--admin-border)' }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--admin-text-primary)' }}>
+                      Notificações {notifUnread > 0 && <span style={{ color: '#dc2626' }}>({notifUnread})</span>}
+                    </span>
+                    {notifUnread > 0 && (
+                      <button onClick={markAllRead} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', color: 'var(--admin-primary)', fontWeight: 600 }}>
+                        <CheckCheck size={13} /> Marcar todas
+                      </button>
+                    )}
+                  </div>
+                  <div style={{ maxHeight: 360, overflowY: 'auto' }}>
+                    {notifs.length === 0 ? (
+                      <div style={{ padding: '28px 16px', textAlign: 'center', fontSize: '0.82rem', color: 'var(--admin-text-tertiary)' }}>
+                        Nenhuma notificação
+                      </div>
+                    ) : notifs.map(n => (
+                      <div key={n.id} style={{
+                        padding: '12px 16px', borderBottom: '1px solid var(--admin-border)',
+                        background: n.lida ? 'transparent' : 'rgba(13,54,79,.04)',
+                        cursor: n.osc_id ? 'pointer' : 'default',
+                      }}
+                        onClick={() => { if (n.osc_id) { router.push(`/admin/dashboard/oscs/${n.osc_id}`); setNotifOpen(false); } }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                          <div style={{ width: 8, height: 8, borderRadius: '50%', background: n.lida ? 'transparent' : '#dc2626', marginTop: 5, flexShrink: 0, border: n.lida ? '1.5px solid var(--admin-border)' : 'none' }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: '0.82rem', fontWeight: n.lida ? 500 : 700, color: 'var(--admin-text-primary)', lineHeight: 1.4 }}>{n.titulo}</div>
+                            {n.mensagem && <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)', marginTop: 2, lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{n.mensagem}</div>}
+                            <div style={{ fontSize: '0.68rem', color: 'var(--admin-text-tertiary)', marginTop: 4 }}>
+                              {new Date(n.created_at).toLocaleString('pt-BR')}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Profile Dropdown */}
+            <div style={{ position: 'relative' }}>
+              <button
+                className={`admin-header-icon-btn ${userMenuOpen ? 'active' : ''}`}
+                onClick={() => { setUserMenuOpen(o => !o); setNotifOpen(false); }}
                 aria-label="Perfil do Usuário"
               >
                 <User size={18} />

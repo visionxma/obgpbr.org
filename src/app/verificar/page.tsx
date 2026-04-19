@@ -9,9 +9,6 @@ import { supabase } from '@/lib/supabase';
 interface ResultadoCertificado {
   razao_social: string | null;
   cnpj: string | null;
-  municipio: string | null;
-  estado: string | null;
-  osc_id: string;
   certificado_numero: string | null;
   certificado_emitido_at: string | null;
   status_selo: string;
@@ -35,26 +32,24 @@ function VerificarContent() {
   const [resultado, setResultado] = useState<ResultadoCertificado | null | undefined>(undefined);
 
   const buscar = async (q = query) => {
-    const term = q.trim().replace(/\D/g, q.trim().startsWith('RC') ? undefined! : '');
-    const raw  = q.trim();
+    const raw = q.trim();
     if (!raw) return;
     setLoading(true);
     setResultado(undefined);
 
-    // Tenta por número do certificado, CNPJ ou razão social
     const cnpjClean = raw.replace(/\D/g, '');
     const isCnpj = cnpjClean.length === 14;
-    const isCodigo = raw.toUpperCase().startsWith('RC');
+    const isCodigo = /^RC\d+\d{8}OBGP$/i.test(raw.trim());
 
     let query_supabase = supabase
       .from('osc_perfis')
-      .select('razao_social, cnpj, municipio, estado, osc_id, certificado_numero, certificado_emitido_at, status_selo')
+      .select('razao_social, cnpj, certificado_numero, certificado_emitido_at, status_selo')
       .eq('status_selo', 'aprovado');
 
     if (isCodigo) {
-      query_supabase = query_supabase.ilike('certificado_numero', `%${raw.toUpperCase()}%`);
+      query_supabase = query_supabase.eq('certificado_numero', raw.trim().toUpperCase());
     } else if (isCnpj) {
-      query_supabase = query_supabase.or(`cnpj.eq.${cnpjClean},cnpj.ilike.%${cnpjClean}%`);
+      query_supabase = query_supabase.eq('cnpj', cnpjClean);
     } else {
       query_supabase = query_supabase.ilike('razao_social', `%${raw}%`);
     }
@@ -168,10 +163,8 @@ function VerificarContent() {
                 {[
                   { label: 'Razão Social',         value: resultado.razao_social ?? '—' },
                   { label: 'CNPJ',                  value: fmtCnpj(resultado.cnpj) },
-                  { label: 'Localidade',             value: [resultado.municipio, resultado.estado].filter(Boolean).join(' / ') || '—' },
                   { label: 'Código de Verificação', value: resultado.certificado_numero ?? '—', mono: true },
                   { label: 'Data de Certificação',  value: fmtDate(resultado.certificado_emitido_at) },
-                  { label: 'OSC ID',                value: resultado.osc_id, mono: true },
                 ].map(({ label, value, mono }) => (
                   <div key={label}>
                     <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--site-text-tertiary)', marginBottom: 4 }}>{label}</div>

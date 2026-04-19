@@ -7,7 +7,7 @@ import {
   ArrowLeft, CheckCircle, XCircle, Clock, ExternalLink,
   FileText, BookOpen, ClipboardList, AlertCircle, Save,
   Building2, Phone, MapPin, Hash, ShieldCheck, ChevronDown, ChevronUp,
-  Edit2, X, Mail, Home, User, Award, CreditCard,
+  Edit2, X, Mail, Home, User, Award, CreditCard, PenLine,
 } from 'lucide-react';
 
 /* ── Types ──────────────────────────────────────── */
@@ -41,6 +41,11 @@ interface Formulario {
 interface Pagamento {
   id: string; status: string; valor: number;
   metodo_pagamento: string | null; paid_at: string | null; created_at: string;
+}
+interface Assinatura {
+  id: string; role: 'admin_rt' | 'contador' | 'superadmin';
+  nome_assinante: string | null; credencial: string | null;
+  signed_at: string; valida: boolean;
 }
 interface ChecklistItem {
   id: string; label: string; checked: boolean; doc_url: string | null; doc_nome: string | null;
@@ -159,6 +164,13 @@ export default function OscDetailPage() {
   const [certEmitidaAt, setCertEmitidaAt] = useState<string | null>(null);
   const [togglingLiberar, setTogglingLiberar] = useState(false);
 
+  // Two-step approval
+  const [assinaturas, setAssinaturas] = useState<Assinatura[]>([]);
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null);
+  const [currentRole, setCurrentRole] = useState<string | null>(null);
+  const [signing, setSigning] = useState(false);
+  const [signMsg, setSignMsg] = useState('');
+
   useEffect(() => {
     const load = async () => {
       const { data: p, error } = await supabase
@@ -173,6 +185,12 @@ export default function OscDetailPage() {
       setCertLiberada(!!(pf as OscPerfil & { certificacao_liberada?: boolean }).certificacao_liberada);
       setCertNumero((pf as OscPerfil & { certificado_numero?: string | null }).certificado_numero ?? null);
       setCertEmitidaAt((pf as OscPerfil & { certificado_emitido_at?: string | null }).certificado_emitido_at ?? null);
+
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (authUser) {
+        setCurrentUserEmail(authUser.email ?? null);
+        setCurrentRole((authUser.app_metadata?.role as string) ?? null);
+      }
 
       const [docsRes, prestRes, formRes, relRes, pagRes] = await Promise.all([
         supabase.from('osc_documentos').select('*').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }),
@@ -190,6 +208,12 @@ export default function OscDetailPage() {
         setRelatorio(r);
         setRelStatus(r.status);
         setRelObs(r.observacao_admin ?? '');
+        // Load signatures for this relatorio
+        const { data: assinRes } = await supabase
+          .from('relatorio_assinaturas')
+          .select('id, role, nome_assinante, credencial, signed_at, valida')
+          .eq('relatorio_id', r.id);
+        setAssinaturas((assinRes ?? []) as Assinatura[]);
       }
       if (pagRes.data) setPagamento(pagRes.data as Pagamento);
       setLoading(false);
@@ -204,6 +228,49 @@ export default function OscDetailPage() {
     const { error } = await supabase.from('osc_perfis').update({ certificacao_liberada: next }).eq('id', perfil.id);
     if (!error) setCertLiberada(next);
     setTogglingLiberar(false);
+  };
+
+  /* ── Two-step signature ── */
+  const handleSign = async () => {
+    if (!relatorio || !currentRole) return;
+    if (currentRole !== 'admin_rt' && currentRole !== 'contador' && currentRole !== 'superadmin') return;
+    setSigning(true); setSignMsg('');
+
+    // Build canonical document hash: sha256(relatorio_id + signed_at)
+    const canonical = `${relatorio.id}:${new Date().toISOString()}:${currentUserEmail ?? ''}`;
+    let docHash = '';
+    try {
+      const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(canonical));
+      docHash = Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch { docHash = canonical; }
+
+    const signRole = currentRole === 'superadmin' ? 'admin_rt' : currentRole;
+    const { error } = await supabase.rpc('assinar_relatorio', {
+      p_relatorio_id: relatorio.id,
+      p_role: signRole,
+      p_nome: currentUserEmail ?? signRole,
+      p_credencial: currentUserEmail ?? '',
+      p_hash: docHash,
+      p_ip: null,
+    });
+
+    if (error) {
+      setSignMsg(`error:Erro ao assinar: ${error.message}`);
+    } else {
+      setSignMsg('ok:Assinatura registrada com sucesso!');
+      // Refresh signatures and relatorio status
+      const [assinRes, relRes2] = await Promise.all([
+        supabase.from('relatorio_assinaturas').select('id, role, nome_assinante, credencial, signed_at, valida').eq('relatorio_id', relatorio.id),
+        supabase.from('relatorios_conformidade').select('status, observacao_admin, reviewed_at').eq('id', relatorio.id).single(),
+      ]);
+      setAssinaturas((assinRes.data ?? []) as Assinatura[]);
+      if (relRes2.data) {
+        setRelatorio(prev => prev ? { ...prev, ...relRes2.data } : prev);
+        setRelStatus(relRes2.data.status);
+      }
+      setTimeout(() => setSignMsg(''), 4000);
+    }
+    setSigning(false);
   };
 
   /* ── Save OSC data ── */
@@ -822,6 +889,92 @@ export default function OscDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* ══ Two-step approval signatures ══ */}
+      {relatorio && (relatorio.status === 'em_analise' || relatorio.status === 'aprovado') && (() => {
+        const ROLE_LABELS: Record<string, string> = { admin_rt: 'Responsável Técnico (RT)', contador: 'Contador / Auditor', superadmin: 'Superadmin' };
+        const REQUIRED_ROLES: Array<'admin_rt' | 'contador'> = ['admin_rt', 'contador'];
+        const canSign = currentRole === 'admin_rt' || currentRole === 'contador' || currentRole === 'superadmin';
+        const signRole = currentRole === 'superadmin' ? 'admin_rt' : (currentRole as 'admin_rt' | 'contador' | null);
+        const alreadySigned = signRole ? assinaturas.some(a => a.role === signRole && a.valida) : false;
+
+        return (
+          <div className="glass-card" style={{ marginTop: 24 }}>
+            <div className="glass-card-header">
+              <span className="glass-card-title">
+                <span className="glass-card-title-icon"><PenLine size={15} /></span>
+                Assinaturas Digitais — Aprovação em Duas Etapas
+              </span>
+            </div>
+            <div className="glass-card-body">
+              <MsgBanner msg={signMsg} />
+              <p style={{ fontSize: '0.82rem', color: 'var(--admin-text-secondary)', marginBottom: 16, lineHeight: 1.6 }}>
+                O relatório deve ser assinado pelo <strong>Responsável Técnico</strong> e pelo <strong>Contador/Auditor</strong> para ser aprovado automaticamente.
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+                {REQUIRED_ROLES.map(role => {
+                  const sig = assinaturas.find(a => a.role === role && a.valida);
+                  return (
+                    <div key={role} style={{
+                      display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px',
+                      borderRadius: 10, border: `1.5px solid ${sig ? 'rgba(22,163,74,.3)' : 'var(--admin-border)'}`,
+                      background: sig ? 'rgba(22,163,74,.04)' : 'var(--admin-surface)',
+                    }}>
+                      <div style={{ width: 36, height: 36, borderRadius: '50%', background: sig ? 'rgba(22,163,74,.12)' : 'rgba(220,38,38,.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        {sig ? <CheckCircle size={16} style={{ color: '#16a34a' }} /> : <Clock size={16} style={{ color: '#dc2626' }} />}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--admin-text-primary)' }}>{ROLE_LABELS[role]}</div>
+                        {sig ? (
+                          <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-secondary)', marginTop: 2 }}>
+                            Assinado por <strong>{sig.nome_assinante ?? sig.credencial}</strong> em {new Date(sig.signed_at).toLocaleString('pt-BR')}
+                          </div>
+                        ) : (
+                          <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)', marginTop: 2 }}>Aguardando assinatura</div>
+                        )}
+                      </div>
+                      {sig && (
+                        <span style={{ fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.07em', background: 'rgba(22,163,74,.12)', color: '#15803d', padding: '3px 9px', borderRadius: 20 }}>
+                          Assinado
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {canSign && !alreadySigned && relatorio.status !== 'aprovado' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 10, background: 'rgba(13,54,79,.04)', border: '1px solid rgba(13,54,79,.1)' }}>
+                  <PenLine size={16} style={{ color: 'var(--admin-primary)', flexShrink: 0 }} />
+                  <div style={{ flex: 1, fontSize: '0.82rem', color: 'var(--admin-text-secondary)' }}>
+                    Você está logado como <strong>{ROLE_LABELS[currentRole === 'superadmin' ? 'admin_rt' : currentRole!] ?? currentRole}</strong>. Assine para registrar sua aprovação.
+                  </div>
+                  <button
+                    className="admin-btn admin-btn-primary"
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 20px', borderRadius: 9, fontSize: '0.85rem', flexShrink: 0 }}
+                    onClick={handleSign}
+                    disabled={signing}
+                  >
+                    {signing ? '...' : <><PenLine size={13} /> Assinar Relatório</>}
+                  </button>
+                </div>
+              )}
+
+              {canSign && alreadySigned && (
+                <div style={{ fontSize: '0.82rem', color: '#15803d', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <CheckCircle size={14} /> Você já assinou este relatório.
+                </div>
+              )}
+
+              {!canSign && (
+                <div style={{ fontSize: '0.78rem', color: 'var(--admin-text-tertiary)', fontStyle: 'italic' }}>
+                  Apenas usuários com perfil <strong>admin_rt</strong> ou <strong>contador</strong> podem assinar.
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ══ Relatório de Conformidade ══ */}
       {relatorio && (() => {
