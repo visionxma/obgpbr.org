@@ -669,3 +669,137 @@
 @keyframes panelPageIn  { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 @keyframes panelScaleIn { from { opacity: 0; transform: scale(.95); }  to { opacity: 1; transform: scale(1); } }
 @keyframes panelSpin    { 100% { transform: rotate(360deg); } }
+
+/* ═══════════════════════════════════════════════
+   PAINEL V2 — Sem sidebar, header com voltar
+   ═══════════════════════════════════════════════ */
+
+.pv2-shell {
+  min-height: 100vh;
+  background: var(--site-bg, #f0f3f5);
+  font-family: var(--font-body);
+  padding-top: 76px; /* altura do nav público */
+}
+
+/* ── Header ── */
+.pv2-header {
+  position: sticky;
+  top: 76px;
+  z-index: 50;
+  height: 54px;
+  background: rgba(255,255,255,.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(0,0,0,.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  gap: 12px;
+}
+
+.pv2-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.pv2-logo {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.pv2-logo-text {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--site-primary);
+  letter-spacing: .06em;
+}
+
+.pv2-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--site-border);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+.pv2-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: var(--site-radius-md);
+  background: transparent;
+  border: 1px solid var(--site-border);
+  color: var(--site-text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.pv2-back-btn:hover {
+  background: var(--site-surface-blue);
+  border-color: var(--site-primary);
+  color: var(--site-primary);
+}
+
+.pv2-chevron {
+  color: var(--site-text-secondary);
+  opacity: .35;
+  flex-shrink: 0;
+}
+
+.pv2-page-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--site-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pv2-osc-id {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  flex-shrink: 0;
+  gap: 1px;
+}
+.pv2-osc-id-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--site-text-secondary);
+}
+.pv2-osc-id-value {
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--site-primary);
+  letter-spacing: .03em;
+}
+
+/* ── Área de conteúdo ── */
+.pv2-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 28px 48px;
+}
+
+/* ── Responsivo ── */
+@media (max-width: 640px) {
+  .pv2-header { padding: 0 16px; gap: 8px; }
+  .pv2-page-title { display: none; }
+  .pv2-osc-id-value { font-size: 0.65rem; }
+  .pv2-content { padding: 20px 14px 36px; }
+}

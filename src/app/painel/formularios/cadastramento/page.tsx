@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Save, CheckCircle, Loader2, MapPin } from 'lucide-react';
+import { Save, CheckCircle, Loader2, MapPin } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../../PainelContext';
 import {
@@ -192,14 +192,9 @@ export default function FormCadastramento() {
 
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
-        <button onClick={() => router.push('/painel/formularios')} className="panel-btn panel-btn-ghost panel-btn-sm">
-          <ArrowLeft size={14} /> Voltar
-        </button>
-        <div>
-          <h1 className="panel-page-title" style={{ marginBottom: 2 }}>Formulário de Cadastramento da OSC</h1>
-          <p className="panel-page-subtitle">Preencha todos os dados cadastrais da organização</p>
-        </div>
+      <div style={{ marginBottom: 24 }}>
+        <h1 className="panel-page-title" style={{ marginBottom: 2 }}>Formulário de Cadastramento da OSC</h1>
+        <p className="panel-page-subtitle">Preencha todos os dados cadastrais da organização</p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20, maxWidth: 780 }}>
