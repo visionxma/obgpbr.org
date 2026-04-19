@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from 'next/navigation';
-import { Menu, X, Mail, Phone, MapPin, LogIn, UserPlus } from "lucide-react";
+import { Menu, X, Mail, Phone, MapPin, LogIn } from "lucide-react";
 
 const NAV_ITEMS = [
   { label: 'Início', path: '/inicio' },
@@ -84,9 +84,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <Link href="/login" className="hdr-btn-ghost">
               <LogIn size={15} /> Entrar
             </Link>
-            <Link href="/cadastro" className="hdr-cta">
-              <UserPlus size={15} /> Criar Conta
-            </Link>
           </div>
 
           <button className="hdr-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
@@ -121,9 +118,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             <div className="mob-auth-btns" style={{ animationDelay: `${NAV_ITEMS.length * 0.05}s`, animation: `fadeInUp .45s var(--ease-out) ${NAV_ITEMS.length * 0.05}s both` }}>
               <Link href="/login" onClick={() => setMenuOpen(false)} className="mob-btn-ghost">
                 <LogIn size={15} /> Entrar
-              </Link>
-              <Link href="/cadastro" onClick={() => setMenuOpen(false)} className="mob-cta">
-                <UserPlus size={15} /> Criar Conta
               </Link>
             </div>
             <div style={{ marginTop: 'auto', padding: '24px 0 0', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
