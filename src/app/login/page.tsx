@@ -121,10 +121,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="auth-footer-text">
-          Não tem uma conta?{' '}
-          <Link href="/cadastro" className="auth-link">Criar conta gratuita</Link>
-        </p>
       </div>
 
       <style>{`
