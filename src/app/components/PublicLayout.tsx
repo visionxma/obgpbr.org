@@ -16,7 +16,7 @@ const NAV_ITEMS = [
   { label: 'Painel OSC', path: '/painel' },
 ];
 
-export default function PublicLayout({ children }: { children: React.ReactNode }) {
+export default function PublicLayout({ children, navRightSlot }: { children: React.ReactNode; navRightSlot?: React.ReactNode }) {
   const pathname = usePathname();
   const isPainel = pathname?.startsWith('/painel');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -82,6 +82,10 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             ))}
           </nav>
 
+
+          {navRightSlot && (
+            <div className="hdr-nav-right-slot">{navRightSlot}</div>
+          )}
 
           <button className="hdr-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -211,6 +215,8 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         .hdr-btn-ghost:hover{color:#fff;border-color:rgba(255,255,255,.5);background:rgba(255,255,255,.07)}
         .hdr-cta{display:inline-flex;align-items:center;gap:6px}
         @media(min-width:1024px){.hdr-nav{display:flex}.hdr-actions{display:flex}.hdr-toggle{display:none}}
+        .hdr-nav-right-slot{display:none;align-items:center}
+        @media(min-width:1024px){.hdr-nav-right-slot{display:flex}}
 
         /* MOBILE */
         .mob-overlay{position:fixed;inset:0;background:rgba(0,0,0,.60);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);z-index:998;animation:fadeIn .25s ease-out}

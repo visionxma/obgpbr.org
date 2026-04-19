@@ -1,13 +1,11 @@
 'use client';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { PainelProvider, usePainel } from './PainelContext';
 import PublicLayout from '../components/PublicLayout';
 import './painel.css';
 
-// Destino do botão voltar para cada rota
 const BACK_NAV: Record<string, { href: string; label: string }> = {
   '/painel/certificacao':                     { href: '/painel/processo',    label: 'Processo' },
   '/painel/documentos':                       { href: '/painel/processo',    label: 'Processo' },
@@ -20,20 +18,6 @@ const BACK_NAV: Record<string, { href: string; label: string }> = {
   '/painel/formularios/renovacao':            { href: '/painel/formularios', label: 'Formulários' },
 };
 
-const PAGE_TITLE: Record<string, string> = {
-  '/painel':                                  'Início',
-  '/painel/processo':                         'Meu Processo',
-  '/painel/certificacao':                     'Certificação',
-  '/painel/documentos':                       'Documentos',
-  '/painel/prestacao-contas':                 'Demonstrativos Financeiros',
-  '/painel/formularios':                      'Formulários',
-  '/painel/formularios/cadastramento':        'Cadastramento',
-  '/painel/formularios/diagnostico':          'Diagnóstico Organizacional',
-  '/painel/formularios/relatorio_atividades': 'Relatório de Atividades',
-  '/painel/formularios/renovacao':            'Renovação do Selo',
-  '/painel/relatorio-conformidade':           'Relatório de Conformidade',
-};
-
 function resolve<T>(map: Record<string, T>, pathname: string): T | null {
   if (map[pathname]) return map[pathname];
   const sorted = Object.entries(map).sort((a, b) => b[0].length - a[0].length);
@@ -43,8 +27,25 @@ function resolve<T>(map: Record<string, T>, pathname: string): T | null {
   return null;
 }
 
+function OscIdBadge() {
+  const { perfil } = usePainel();
+  if (!perfil) return null;
+  return (
+    <div style={{
+      display: 'flex', flexDirection: 'column', alignItems: 'flex-end',
+      padding: '4px 12px',
+      background: 'rgba(197,171,118,.1)',
+      border: '1px solid rgba(197,171,118,.2)',
+      borderRadius: 8,
+    }}>
+      <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.1em', color: 'rgba(197,171,118,.55)' }}>OSC</span>
+      <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--site-gold)', letterSpacing: '.03em', fontFamily: 'var(--font-heading)' }}>{perfil.osc_id}</span>
+    </div>
+  );
+}
+
 function PainelShell({ children }: { children: React.ReactNode }) {
-  const { perfil, loading } = usePainel();
+  const { loading } = usePainel();
   const pathname = usePathname();
 
   if (loading) {
@@ -58,53 +59,19 @@ function PainelShell({ children }: { children: React.ReactNode }) {
     );
   }
 
-  const backNav  = resolve(BACK_NAV, pathname);
-  const title    = resolve(PAGE_TITLE, pathname) ?? 'Painel';
-  const isRoot   = pathname === '/painel/processo';
+  const backNav = resolve(BACK_NAV, pathname);
 
   return (
     <div className="pv2-shell">
-
-      {/* ── Cabeçalho ── */}
-      <header className="pv2-header">
-        <div className="pv2-header-left">
-
-          {/* Logo — leva ao Processo */}
-          <Link href="/painel/processo" className="pv2-logo">
-            <Image src="/logo.png" alt="OBGP" width={28} height={28} style={{ objectFit: 'contain' }} />
-            <span className="pv2-logo-text">OBG<span style={{ color: 'var(--site-gold)' }}>P</span></span>
-          </Link>
-
-          {!isRoot && <span className="pv2-divider" />}
-
-          {/* Botão voltar */}
-          {backNav && (
+      <main key={pathname} className="pv2-content panel-page-in">
+        {/* Botão voltar — discreto, acima do conteúdo */}
+        {backNav && (
+          <div style={{ marginBottom: 20 }}>
             <Link href={backNav.href} className="pv2-back-btn">
-              <ArrowLeft size={13} />
-              {backNav.label}
+              <ArrowLeft size={13} /> {backNav.label}
             </Link>
-          )}
-
-          {/* Título da página atual */}
-          {!isRoot && (
-            <>
-              {backNav && <ChevronRight size={12} className="pv2-chevron" />}
-              <span className="pv2-page-title">{title}</span>
-            </>
-          )}
-        </div>
-
-        {/* ID da OSC */}
-        {perfil && (
-          <div className="pv2-osc-id">
-            <span className="pv2-osc-id-label">OSC</span>
-            <span className="pv2-osc-id-value">{perfil.osc_id}</span>
           </div>
         )}
-      </header>
-
-      {/* ── Conteúdo ── */}
-      <main key={pathname} className="pv2-content panel-page-in">
         {children}
       </main>
     </div>
@@ -113,10 +80,17 @@ function PainelShell({ children }: { children: React.ReactNode }) {
 
 export default function PainelLayout({ children }: { children: React.ReactNode }) {
   return (
-    <PublicLayout>
-      <PainelProvider>
-        <PainelShell>{children}</PainelShell>
-      </PainelProvider>
+    <PainelProvider>
+      <PainelInner>{children}</PainelInner>
+    </PainelProvider>
+  );
+}
+
+// Componente intermediário para acessar o contexto antes de renderizar PublicLayout
+function PainelInner({ children }: { children: React.ReactNode }) {
+  return (
+    <PublicLayout navRightSlot={<OscIdBadge />}>
+      <PainelShell>{children}</PainelShell>
     </PublicLayout>
   );
 }
