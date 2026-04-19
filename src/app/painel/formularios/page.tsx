@@ -97,16 +97,6 @@ export default function FormulariosPage() {
     router.push(`/painel/formularios/${def.tipo}`);
   };
 
-  const handleConcluir = async (id: string) => {
-    await supabase.from('osc_formularios').update({ status: 'concluido', updated_at: new Date().toISOString() }).eq('id', id);
-    await fetchForms();
-  };
-
-  const handleReabrir = async (id: string) => {
-    await supabase.from('osc_formularios').update({ status: 'em_andamento', updated_at: new Date().toISOString() }).eq('id', id);
-    await fetchForms();
-  };
-
   if (loading) return <div className="panel-loading"><div className="panel-spinner" /></div>;
 
   const concluded = forms.filter(f => f.status === 'concluido').length;
@@ -162,10 +152,12 @@ export default function FormulariosPage() {
 
               {/* Footer */}
               <div className="panel-form-card-footer">
+                {/* Status */}
                 <span className={`panel-badge ${cfg.cls}`}>
                   <StatusIcon size={11} /> {cfg.label}
                 </span>
 
+                {/* Ação única contextual */}
                 {!user ? (
                   <a
                     href={`https://wa.me/5598987100001?text=Olá%2C+gostaria+de+preencher+o+${encodeURIComponent(def.titulo)}`}
@@ -173,29 +165,22 @@ export default function FormulariosPage() {
                     className="panel-btn panel-btn-primary panel-btn-sm"
                     style={{ textDecoration: 'none' }}
                   >
-                    <ArrowRight size={12} /> Solicitar via WhatsApp
+                    <ArrowRight size={12} /> Solicitar
                   </a>
                 ) : status === 'concluido' ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: 'var(--text-xs)', color: 'var(--site-text-secondary)' }}>
-                      {rec && new Date(rec.updated_at).toLocaleDateString('pt-BR')}
-                    </span>
-                    <button className="panel-btn panel-btn-ghost panel-btn-sm" onClick={() => router.push(`/painel/formularios/${def.tipo}`)}>
-                      <Pencil size={11} /> Ver/Editar
-                    </button>
-                    <button className="panel-btn panel-btn-ghost panel-btn-sm" onClick={() => rec && handleReabrir(rec.id)}>
-                      Reabrir
-                    </button>
-                  </div>
+                  <button
+                    className="panel-btn panel-btn-ghost panel-btn-sm"
+                    onClick={() => router.push(`/painel/formularios/${def.tipo}`)}
+                  >
+                    <Pencil size={11} /> Ver / Editar
+                  </button>
                 ) : status === 'em_andamento' ? (
-                  <div style={{ display: 'flex', gap: 8 }}>
-                    <button className="panel-btn panel-btn-primary panel-btn-sm" onClick={() => router.push(`/painel/formularios/${def.tipo}`)}>
-                      <Pencil size={12} /> Preencher
-                    </button>
-                    <button className="panel-btn panel-btn-ghost panel-btn-sm" onClick={() => rec && handleConcluir(rec.id)}>
-                      Concluído
-                    </button>
-                  </div>
+                  <button
+                    className="panel-btn panel-btn-primary panel-btn-sm"
+                    onClick={() => router.push(`/painel/formularios/${def.tipo}`)}
+                  >
+                    <Pencil size={12} /> Continuar
+                  </button>
                 ) : (
                   <button
                     className="panel-btn panel-btn-primary panel-btn-sm"
