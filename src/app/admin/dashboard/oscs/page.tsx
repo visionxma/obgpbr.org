@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import {
   Search, Users, Eye,
   CheckCircle, Clock, XCircle, Circle,
-  Trash2, RotateCcw, AlertTriangle, Trash,
+  Trash2, RotateCcw, AlertTriangle, Trash, ArrowLeft,
 } from 'lucide-react';
 
 interface OscPerfil {
@@ -243,18 +243,26 @@ function OscsContent() {
           )}
 
           {/* Lixeira toggle */}
-          <button
-            onClick={() => { setTrashView(v => !v); setStatusFilter(''); setQuery(''); }}
-            className="admin-btn admin-btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', fontSize: '0.78rem', borderRadius: 8, position: 'relative' }}>
-            <Trash size={13} />
-            {trashView ? 'Voltar' : 'Lixeira'}
-            {!trashView && trash.length > 0 && (
-              <span style={{ position: 'absolute', top: -6, right: -6, background: '#dc2626', color: '#fff', borderRadius: '50%', width: 16, height: 16, fontSize: '0.6rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {trash.length > 99 ? '99+' : trash.length}
-              </span>
-            )}
-          </button>
+          {trashView ? (
+            <button
+              onClick={() => { setTrashView(false); setStatusFilter(''); setQuery(''); }}
+              className="admin-btn admin-btn-secondary"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', fontSize: '0.78rem', borderRadius: 8, fontWeight: 600 }}>
+              <ArrowLeft size={13} /> Voltar
+            </button>
+          ) : (
+            <button
+              onClick={() => { setTrashView(true); setStatusFilter(''); setQuery(''); }}
+              className="admin-btn admin-btn-secondary"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', fontSize: '0.78rem', borderRadius: 8, position: 'relative' }}>
+              <Trash size={13} /> Lixeira
+              {trash.length > 0 && (
+                <span style={{ position: 'absolute', top: -6, right: -6, background: '#dc2626', color: '#fff', borderRadius: '50%', width: 16, height: 16, fontSize: '0.6rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {trash.length > 99 ? '99+' : trash.length}
+                </span>
+              )}
+            </button>
+          )}
 
           {/* Esvaziar lixeira */}
           {trashView && trash.length > 0 && (
