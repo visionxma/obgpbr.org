@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -28,7 +28,7 @@ function fmtCnpj(cnpj: string | null) {
   return `${d.slice(0,2)}.${d.slice(2,5)}.${d.slice(5,8)}/${d.slice(8,12)}-${d.slice(12)}`;
 }
 
-export default function VerificarPage() {
+function VerificarContent() {
   const searchParams = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('codigo') ?? searchParams.get('cnpj') ?? '');
   const [loading, setLoading] = useState(false);
@@ -201,5 +201,13 @@ export default function VerificarPage() {
 
       <style>{`@keyframes spin{100%{transform:rotate(360deg)}}`}</style>
     </main>
+  );
+}
+
+export default function VerificarPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#f0f3f5' }} />}>
+      <VerificarContent />
+    </Suspense>
   );
 }

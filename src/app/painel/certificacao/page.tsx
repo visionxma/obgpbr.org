@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import {
   ShieldCheck, CreditCard, CheckCircle, Clock, XCircle,
@@ -38,7 +38,7 @@ function fmtCurrency(v: number) {
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
-export default function CertificacaoPage() {
+function CertificacaoContent() {
   const { user, perfil } = usePainel();
   const searchParams = useSearchParams();
   const statusParam = searchParams.get('status');
@@ -334,5 +334,13 @@ export default function CertificacaoPage() {
 
       <style>{`@keyframes spin{100%{transform:rotate(360deg)}}`}</style>
     </>
+  );
+}
+
+export default function CertificacaoPage() {
+  return (
+    <Suspense fallback={<div />}>
+      <CertificacaoContent />
+    </Suspense>
   );
 }

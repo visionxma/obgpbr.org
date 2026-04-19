@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -40,7 +40,7 @@ function fmtDate(iso: string) {
     + ' ' + d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function OscsPage() {
+function OscsContent() {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get('status') ?? '';
   const initialTrash  = searchParams.get('lixeira') === '1';
@@ -379,5 +379,13 @@ export default function OscsPage() {
 
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
+  );
+}
+
+export default function OscsPage() {
+  return (
+    <Suspense fallback={<div />}>
+      <OscsContent />
+    </Suspense>
   );
 }
