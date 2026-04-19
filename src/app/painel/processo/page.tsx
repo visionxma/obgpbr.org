@@ -68,12 +68,12 @@ export default function ProcessoPage() {
 
   return (
     <>
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ marginBottom: 16 }}>
         <h1 className="panel-page-title">Meu Processo</h1>
         <p className="panel-page-subtitle">Complete as etapas abaixo para obter o Selo OSC Gestão de Parcerias</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, maxWidth: 760 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 760 }}>
 
         {/* ── Etapa 1: Formulários ── */}
         <StepCard
@@ -167,11 +167,11 @@ function StepCard({ num, icon: Icon, title, done, active, href, badge, highlight
       background: '#fff',
       border: `1px solid ${borderColor}`,
       borderRadius: 'var(--site-radius-lg)',
-      padding: '18px 22px',
+      padding: '14px 20px',
       boxShadow: highlight ? '0 2px 12px rgba(13,54,79,.08)' : 'var(--site-shadow-sm)',
     }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
         <div style={{ width: 30, height: 30, borderRadius: '50%', background: numBg, color: numColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.78rem', fontWeight: 800, flexShrink: 0 }}>
           {done ? <CheckCircle size={15} /> : num}
         </div>
