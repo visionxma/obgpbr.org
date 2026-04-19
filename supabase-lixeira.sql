@@ -1,0 +1,11 @@
+-- ═══════════════════════════════════════════════════════════════════
+-- OBGP — Lixeira de OSCs (soft-delete)
+-- Executar no Supabase SQL Editor
+-- ═══════════════════════════════════════════════════════════════════
+
+-- Coluna de soft-delete
+ALTER TABLE public.osc_perfis
+  ADD COLUMN IF NOT EXISTS deleted_at timestamptz DEFAULT NULL;
+
+-- Índice para queries de lixeira
+CREATE INDEX IF NOT EXISTS idx_osc_perfis_deleted_at ON public.osc_perfis (deleted_at);
