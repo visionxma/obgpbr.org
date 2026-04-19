@@ -43,15 +43,20 @@ function fmtDate(iso: string) {
 function OscsContent() {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get('status') ?? '';
-  const initialTrash  = searchParams.get('lixeira') === '1';
-
   const [all, setAll]         = useState<OscPerfil[]>([]);
   const [trash, setTrash]     = useState<OscPerfil[]>([]);
   const [filtered, setFiltered] = useState<OscPerfil[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [query, setQuery]     = useState('');
-  const [trashView, setTrashView] = useState(initialTrash);
+  const [trashView, setTrashView] = useState(searchParams.get('lixeira') === '1');
+
+  // Sync trashView when URL query param changes (sidebar navigation)
+  useEffect(() => {
+    setTrashView(searchParams.get('lixeira') === '1');
+    setStatusFilter('');
+    setQuery('');
+  }, [searchParams]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState(false);
   const [confirmEmptyOpen, setConfirmEmptyOpen] = useState(false);
