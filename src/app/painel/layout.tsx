@@ -8,6 +8,7 @@ import {
   ClipboardList, Menu, X, ChevronRight, ShieldCheck, Award,
 } from 'lucide-react';
 import { PainelProvider, usePainel } from './PainelContext';
+import PublicLayout from '../components/PublicLayout';
 import './painel.css';
 
 const NAV_ITEMS = [
@@ -112,8 +113,10 @@ function PainelShell({ children }: { children: React.ReactNode }) {
 
 export default function PainelLayout({ children }: { children: React.ReactNode }) {
   return (
-    <PainelProvider>
-      <PainelShell>{children}</PainelShell>
-    </PainelProvider>
+    <PublicLayout>
+      <PainelProvider>
+        <PainelShell>{children}</PainelShell>
+      </PainelProvider>
+    </PublicLayout>
   );
 }

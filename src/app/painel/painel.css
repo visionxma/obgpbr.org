@@ -8,6 +8,7 @@
   min-height: 100vh;
   background: var(--site-bg, #f0f3f5);
   font-family: var(--font-body);
+  padding-top: 76px;
 }
 
 /* ── Overlay (mobile) ──────────────────────────── */
@@ -24,7 +25,6 @@
 /* ── Sidebar ────────────────────────────────────── */
 .panel-sidebar {
   width: 260px;
-  min-height: 100vh;
   background: var(--site-primary);
   background-image: url('/texture-dark.svg');
   background-repeat: repeat;
@@ -32,8 +32,8 @@
   display: flex;
   flex-direction: column;
   position: fixed;
-  top: 0; left: 0; bottom: 0;
-  z-index: 100;
+  top: 76px; left: 0; bottom: 0;
+  z-index: 90;
   overflow-y: auto;
   transition: transform .3s cubic-bezier(.22,1,.36,1);
 }
@@ -188,7 +188,7 @@
 
 /* ── Header ─────────────────────────────────────── */
 .panel-header {
-  position: sticky; top: 0; z-index: 50;
+  position: sticky; top: 76px; z-index: 50;
   height: 64px;
   background: rgba(255,255,255,.88);
   backdrop-filter: blur(16px);
