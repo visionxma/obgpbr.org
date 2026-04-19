@@ -73,7 +73,7 @@ function PainelShell({ children }: { children: React.ReactNode }) {
           <Link href="/inicio" className="panel-brand-link">
             <Image
               src="/logo.png" alt="OBGP" width={34} height={34}
-              style={{ objectFit: 'contain', filter: 'brightness(0) invert(1)' }}
+              style={{ objectFit: 'contain' }}
             />
             <span className="panel-brand-name">OBG<span style={{ color: 'var(--site-gold)' }}>P</span></span>
           </Link>
