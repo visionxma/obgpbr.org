@@ -22,7 +22,7 @@ import {
   Bell,
   CheckCheck,
 } from 'lucide-react';
-import './gestao.css';
+import './admin.css';
 import AdminSearch from './AdminSearch';
 
 /**
