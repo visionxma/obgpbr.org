@@ -113,7 +113,7 @@ export default function FormCadastramento() {
   const fetchCEP = async (cep: string) => {
     setCepLoading(true);
     try {
-      const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const res = await fetch(`/api/cep/${cep}`);
       const json = await res.json();
       if (!json.erro) {
         setDados(prev => ({
