@@ -17,6 +17,7 @@ import {
   BarChart3,
   Sparkles,
   BookOpen,
+  Trash2,
 } from 'lucide-react';
 import './admin.css';
 import AdminSearch from './AdminSearch';
@@ -27,13 +28,14 @@ import AdminSearch from './AdminSearch';
  */
 
 const navItems = [
-  { label: 'Visão Geral',        path: '/admin/dashboard',                   icon: LayoutDashboard, section: 'Principal' },
-  { label: 'Analytics',          path: '/admin/dashboard/analytics',          icon: BarChart3,       section: 'Principal' },
-  { label: 'Gestão de OSCs',     path: '/admin/dashboard/oscs',               icon: User,            section: 'Gestão' },
-  { label: 'Nossas Experiências',path: '/admin/dashboard/experiencias',       icon: Sparkles,        section: 'Conteúdo' },
-  { label: 'Blog',               path: '/admin/dashboard/blog',               icon: BookOpen,        section: 'Conteúdo' },
-  { label: 'Transparência',      path: '/admin/dashboard/transparencia',      icon: ShieldCheck,     section: 'Conteúdo' },
-  { label: 'Configurações',      path: '/admin/dashboard/settings',           icon: Settings,        section: 'Sistema' },
+  { label: 'Visão Geral',        path: '/admin/dashboard',                    icon: LayoutDashboard, section: 'Principal' },
+  { label: 'Analytics',          path: '/admin/dashboard/analytics',           icon: BarChart3,       section: 'Principal' },
+  { label: 'Gestão de OSCs',     path: '/admin/dashboard/oscs',                icon: User,            section: 'Gestão' },
+  { label: 'Lixeira',            path: '/admin/dashboard/oscs?lixeira=1',      icon: Trash2,          section: 'Gestão' },
+  { label: 'Nossas Experiências',path: '/admin/dashboard/experiencias',        icon: Sparkles,        section: 'Conteúdo' },
+  { label: 'Blog',               path: '/admin/dashboard/blog',                icon: BookOpen,        section: 'Conteúdo' },
+  { label: 'Transparência',      path: '/admin/dashboard/transparencia',       icon: ShieldCheck,     section: 'Conteúdo' },
+  { label: 'Configurações',      path: '/admin/dashboard/settings',            icon: Settings,        section: 'Sistema' },
 ];
 
 function getBreadcrumb(path: string) {
@@ -47,6 +49,7 @@ function getBreadcrumb(path: string) {
     '/admin/dashboard/settings':           'Configurações',
   };
   if (path.startsWith('/admin/dashboard/oscs/')) return 'Detalhe da OSC';
+  if (typeof window !== 'undefined' && window.location.search.includes('lixeira=1')) return 'Lixeira';
   return map[path] || 'Dashboard';
 }
 

@@ -43,6 +43,7 @@ function fmtDate(iso: string) {
 export default function OscsPage() {
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get('status') ?? '';
+  const initialTrash  = searchParams.get('lixeira') === '1';
 
   const [all, setAll]         = useState<OscPerfil[]>([]);
   const [trash, setTrash]     = useState<OscPerfil[]>([]);
@@ -50,7 +51,7 @@ export default function OscsPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [query, setQuery]     = useState('');
-  const [trashView, setTrashView] = useState(false);
+  const [trashView, setTrashView] = useState(initialTrash);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState(false);
   const [confirmEmptyOpen, setConfirmEmptyOpen] = useState(false);
