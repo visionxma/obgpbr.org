@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   LayoutDashboard, FileText, BookOpen,
-  ClipboardList, Menu, X, ChevronRight, ShieldCheck, Award,
+  ClipboardList, Menu, X, ChevronRight, ShieldCheck, Award, ChevronLeft,
 } from 'lucide-react';
 import { PainelProvider, usePainel } from './PainelContext';
 import PublicLayout from '../components/PublicLayout';
@@ -33,6 +33,7 @@ function PainelShell({ children }: { children: React.ReactNode }) {
   const { perfil, loading } = usePainel();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   useEffect(() => {
     setSidebarOpen(false);
@@ -51,11 +52,11 @@ function PainelShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="panel-shell">
+    <div className={`panel-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       {sidebarOpen && <div className="panel-overlay" onClick={() => setSidebarOpen(false)} />}
 
       {/* ── Sidebar ── */}
-      <aside className={`panel-sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside className={`panel-sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="panel-brand">
           <Link href="/inicio" className="panel-brand-link">
             <Image src="/logo.png" alt="OBGP" width={34} height={34} style={{ objectFit: 'contain' }} />
@@ -78,12 +79,21 @@ function PainelShell({ children }: { children: React.ReactNode }) {
             return (
               <Link key={item.path} href={item.path} className={`panel-nav-item ${active ? 'active' : ''}`}>
                 <Icon size={18} strokeWidth={active ? 2.2 : 1.8} />
-                {item.label}
+                <span className="panel-nav-label">{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
+        {/* Botão de colapso (apenas desktop) */}
+        <button
+          className="panel-collapse-btn"
+          onClick={() => setSidebarCollapsed(c => !c)}
+          aria-label={sidebarCollapsed ? 'Expandir menu' : 'Recolher menu'}
+        >
+          <ChevronLeft size={16} className={sidebarCollapsed ? 'rotated' : ''} />
+          <span className="panel-nav-label">Recolher</span>
+        </button>
       </aside>
 
       {/* ── Main ── */}

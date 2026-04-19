@@ -128,7 +128,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <main style={{ minHeight: '100vh' }}>{children}</main>
 
       {/* ═══ FOOTER ═══ */}
-      <footer className="ftr">
+      {!isPainel && <footer className="ftr">
         <div className="container">
           {/* Top area */}
           <div className="ftr-top">
@@ -179,7 +179,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             </a>
           </div>
         </div>
-      </footer>
+      </footer>}
 
       {/* ═══ STYLES ═══ */}
       <style>{`

@@ -35,11 +35,25 @@
   top: 76px; left: 0; bottom: 0;
   z-index: 90;
   overflow-y: auto;
-  transition: transform .3s cubic-bezier(.22,1,.36,1);
+  overflow-x: hidden;
+  transition: transform .3s cubic-bezier(.22,1,.36,1), width .3s cubic-bezier(.22,1,.36,1);
 }
 @media (max-width: 1024px) {
   .panel-sidebar { transform: translateX(-100%); }
   .panel-sidebar.open { transform: translateX(0); }
+}
+
+/* Colapso desktop */
+@media (min-width: 1025px) {
+  .panel-sidebar.collapsed { width: 60px; }
+  .panel-sidebar.collapsed .panel-brand-name,
+  .panel-sidebar.collapsed .panel-brand-subtitle,
+  .panel-sidebar.collapsed .panel-osc-id,
+  .panel-sidebar.collapsed .panel-nav-label { opacity: 0; width: 0; overflow: hidden; white-space: nowrap; }
+  .panel-sidebar.collapsed .panel-brand-link { justify-content: center; }
+  .panel-sidebar.collapsed .panel-nav-item { justify-content: center; padding: 11px 0; }
+  .panel-sidebar.collapsed .panel-collapse-btn { justify-content: center; padding: 11px 0; }
+  .panel-shell.sidebar-collapsed .panel-main { margin-left: 60px; }
 }
 
 .panel-brand {
@@ -117,6 +131,31 @@
 .panel-nav-item:hover { color: rgba(255,255,255,.85); background: rgba(255,255,255,.07); }
 .panel-nav-item.active { color: #fff; background: rgba(255,255,255,.12); font-weight: 600; }
 .panel-nav-item.active svg { color: var(--site-gold); }
+.panel-nav-label { transition: opacity .25s, width .25s; }
+
+/* Botão colapso */
+.panel-collapse-btn {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  width: calc(100% - 24px);
+  margin: 8px 12px 16px;
+  padding: 10px 12px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  color: rgba(255,255,255,.45);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  border-radius: var(--site-radius-md);
+  cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.panel-collapse-btn:hover { background: rgba(255,255,255,.1); color: rgba(255,255,255,.8); }
+.panel-collapse-btn svg { flex-shrink: 0; transition: transform .3s cubic-bezier(.22,1,.36,1); }
+.panel-collapse-btn svg.rotated { transform: rotate(180deg); }
+@media (min-width: 1025px) { .panel-collapse-btn { display: flex; } }
 
 /* Sidebar footer */
 .panel-sidebar-footer {
@@ -183,6 +222,7 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  transition: margin-left .3s cubic-bezier(.22,1,.36,1);
 }
 @media (max-width: 1024px) { .panel-main { margin-left: 0; } }
 
