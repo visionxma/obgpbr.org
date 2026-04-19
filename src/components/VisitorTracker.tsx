@@ -8,7 +8,7 @@ export default function VisitorTracker() {
 
   useEffect(() => {
     // Não rastreia as páginas do Admin
-    if (pathname?.startsWith('/admin')) return;
+    if (pathname?.startsWith('/gestao')) return;
 
     let sessionId = sessionStorage.getItem('gn_session_id');
     if (!sessionId) {

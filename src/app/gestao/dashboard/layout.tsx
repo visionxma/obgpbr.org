@@ -22,7 +22,7 @@ import {
   Bell,
   CheckCheck,
 } from 'lucide-react';
-import './admin.css';
+import './gestao.css';
 import AdminSearch from './AdminSearch';
 
 /**
@@ -31,28 +31,28 @@ import AdminSearch from './AdminSearch';
  */
 
 const navItems = [
-  { label: 'Visão Geral',        path: '/admin/dashboard',                    icon: LayoutDashboard, section: 'Principal' },
-  { label: 'Analytics',          path: '/admin/dashboard/analytics',           icon: BarChart3,       section: 'Principal' },
-  { label: 'Gestão de OSCs',     path: '/admin/dashboard/oscs',                icon: User,            section: 'Gestão' },
-  { label: 'Lixeira',            path: '/admin/dashboard/oscs?lixeira=1',      icon: Trash2,          section: 'Gestão' },
-  { label: 'Nossas Experiências',path: '/admin/dashboard/experiencias',        icon: Sparkles,        section: 'Conteúdo' },
-  { label: 'Blog',               path: '/admin/dashboard/blog',                icon: BookOpen,        section: 'Conteúdo' },
-  { label: 'Transparência',      path: '/admin/dashboard/transparencia',       icon: ShieldCheck,     section: 'Conteúdo' },
-  { label: 'Configurações',      path: '/admin/dashboard/settings',            icon: Settings,        section: 'Sistema' },
+  { label: 'Visão Geral',        path: '/gestao/dashboard',                    icon: LayoutDashboard, section: 'Principal' },
+  { label: 'Analytics',          path: '/gestao/dashboard/analytics',           icon: BarChart3,       section: 'Principal' },
+  { label: 'Gestão de OSCs',     path: '/gestao/dashboard/oscs',                icon: User,            section: 'Gestão' },
+  { label: 'Lixeira',            path: '/gestao/dashboard/oscs?lixeira=1',      icon: Trash2,          section: 'Gestão' },
+  { label: 'Nossas Experiências',path: '/gestao/dashboard/experiencias',        icon: Sparkles,        section: 'Conteúdo' },
+  { label: 'Blog',               path: '/gestao/dashboard/blog',                icon: BookOpen,        section: 'Conteúdo' },
+  { label: 'Transparência',      path: '/gestao/dashboard/transparencia',       icon: ShieldCheck,     section: 'Conteúdo' },
+  { label: 'Configurações',      path: '/gestao/dashboard/settings',            icon: Settings,        section: 'Sistema' },
 ];
 
 function getBreadcrumb(path: string, isLixeira: boolean) {
   const map: Record<string, string> = {
-    '/admin/dashboard':                'Visão Geral',
-    '/admin/dashboard/analytics':      'Analytics e Métricas',
-    '/admin/dashboard/oscs':           'Gestão de OSCs',
-    '/admin/dashboard/experiencias':   'Nossas Experiências',
-    '/admin/dashboard/blog':           'Blog',
-    '/admin/dashboard/transparencia':  'Transparência',
-    '/admin/dashboard/settings':       'Configurações',
+    '/gestao/dashboard':                'Visão Geral',
+    '/gestao/dashboard/analytics':      'Analytics e Métricas',
+    '/gestao/dashboard/oscs':           'Gestão de OSCs',
+    '/gestao/dashboard/experiencias':   'Nossas Experiências',
+    '/gestao/dashboard/blog':           'Blog',
+    '/gestao/dashboard/transparencia':  'Transparência',
+    '/gestao/dashboard/settings':       'Configurações',
   };
-  if (path.startsWith('/admin/dashboard/oscs/')) return 'Detalhe da OSC';
-  if (path === '/admin/dashboard/oscs' && isLixeira) return 'Lixeira';
+  if (path.startsWith('/gestao/dashboard/oscs/')) return 'Detalhe da OSC';
+  if (path === '/gestao/dashboard/oscs' && isLixeira) return 'Lixeira';
   return map[path] || 'Dashboard';
 }
 
@@ -130,9 +130,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }: any) => {
       if (!session) {
-        router.replace('/admin');
+        router.replace('/gestao');
       } else if (session.user?.app_metadata?.role !== 'admin') {
-        supabase.auth.signOut().then(() => router.replace('/admin'));
+        supabase.auth.signOut().then(() => router.replace('/gestao'));
       } else {
         setSession(session);
         setIsLoadingAuth(false);
@@ -141,9 +141,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, authSession: any) => {
       if (!authSession) {
-        router.replace('/admin');
+        router.replace('/gestao');
       } else if (authSession.user?.app_metadata?.role !== 'admin') {
-        supabase.auth.signOut().then(() => router.replace('/admin'));
+        supabase.auth.signOut().then(() => router.replace('/gestao'));
       } else {
         setSession(authSession);
         setIsLoadingAuth(false);
@@ -209,7 +209,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    router.push('/admin');
+    router.push('/gestao');
   };
 
   if (isLoadingAuth) {
@@ -327,7 +327,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                         background: n.lida ? 'transparent' : 'rgba(13,54,79,.04)',
                         cursor: n.osc_id ? 'pointer' : 'default',
                       }}
-                        onClick={() => { if (n.osc_id) { router.push(`/admin/dashboard/oscs/${n.osc_id}`); setNotifOpen(false); } }}
+                        onClick={() => { if (n.osc_id) { router.push(`/gestao/dashboard/oscs/${n.osc_id}`); setNotifOpen(false); } }}
                       >
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                           <div style={{ width: 8, height: 8, borderRadius: '50%', background: n.lida ? 'transparent' : '#dc2626', marginTop: 5, flexShrink: 0, border: n.lida ? '1.5px solid var(--admin-border)' : 'none' }} />
@@ -375,14 +375,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                     </div>
                   </button>
 
-                  <button className="user-dropdown-item" onClick={() => router.push('/admin')}>
+                  <button className="user-dropdown-item" onClick={() => router.push('/gestao')}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <User size={16} />
                       <span>Trocar de conta</span>
                     </div>
                   </button>
 
-                  <button className="user-dropdown-item" onClick={() => router.push('/admin/dashboard/settings')}>
+                  <button className="user-dropdown-item" onClick={() => router.push('/gestao/dashboard/settings')}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <Settings size={16} />
                       <span>Configurações</span>

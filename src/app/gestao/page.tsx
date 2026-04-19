@@ -46,7 +46,7 @@ export default function AdminLogin() {
         }
         setSuccessMessage("Autenticação aprovada! Preparando ambiente...");
         setTimeout(() => {
-          window.location.href = '/admin/dashboard';
+          window.location.href = '/gestao/dashboard';
         }, 1200);
       }
     } catch (err: any) {

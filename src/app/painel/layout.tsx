@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import {
   LayoutDashboard, FileText, BookOpen,
-  ClipboardList, LogOut, LogIn, Lock, Menu, X, ChevronRight, ShieldCheck, Award,
+  ClipboardList, LogOut, Menu, X, ChevronRight, ShieldCheck, Award,
   Bell, CheckCheck,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -34,25 +34,6 @@ interface Notificacao {
   id: string; titulo: string; mensagem: string | null; lida: boolean; created_at: string;
 }
 
-function LoginPromptMain() {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '80px 20px', textAlign: 'center', gap: 16 }}>
-      <Lock size={48} style={{ color: 'rgba(13,54,79,.15)' }} />
-      <h2 style={{ fontFamily: 'var(--font-heading)', color: 'var(--site-primary)', fontSize: '1.4rem', fontWeight: 800, margin: 0 }}>
-        Acesso ao Painel
-      </h2>
-      <p style={{ color: 'var(--site-text-secondary)', fontSize: 'var(--text-sm)', maxWidth: 340, margin: 0 }}>
-        Entre com sua conta para acessar o painel de certificação da sua organização.
-      </p>
-      <Link
-        href="/login"
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '13px 28px', background: 'var(--site-primary)', color: '#fff', borderRadius: 'var(--site-radius-full)', fontWeight: 700, fontSize: 'var(--text-sm)', textDecoration: 'none', marginTop: 4 }}
-      >
-        <LogIn size={16} /> Entrar na conta
-      </Link>
-    </div>
-  );
-}
 
 function PainelShell({ children }: { children: React.ReactNode }) {
   const { user, perfil, loading } = usePainel();
@@ -148,26 +129,20 @@ function PainelShell({ children }: { children: React.ReactNode }) {
           })}
         </nav>
 
-        <div className="panel-sidebar-footer">
-          {user ? (
-            <>
-              <div className="panel-user-info">
-                <div className="panel-user-avatar">{initial}</div>
-                <div>
-                  <div className="panel-user-name">{displayName}</div>
-                  <div className="panel-user-email">{user.email}</div>
-                </div>
+        {user && (
+          <div className="panel-sidebar-footer">
+            <div className="panel-user-info">
+              <div className="panel-user-avatar">{initial}</div>
+              <div>
+                <div className="panel-user-name">{displayName}</div>
+                <div className="panel-user-email">{user.email}</div>
               </div>
-              <button onClick={handleLogout} className="panel-logout-btn">
-                <LogOut size={14} /> Sair
-              </button>
-            </>
-          ) : (
-            <Link href="/login" className="panel-logout-btn" style={{ textDecoration: 'none', justifyContent: 'center' }}>
-              <LogIn size={14} /> Entrar na conta
-            </Link>
-          )}
-        </div>
+            </div>
+            <button onClick={handleLogout} className="panel-logout-btn">
+              <LogOut size={14} /> Sair
+            </button>
+          </div>
+        )}
       </aside>
 
       {/* ── Main ── */}
@@ -259,7 +234,7 @@ function PainelShell({ children }: { children: React.ReactNode }) {
         </header>
 
         <main key={pathname} className="panel-page panel-page-in">
-          {user ? children : <LoginPromptMain />}
+          {children}
         </main>
       </div>
     </div>

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from 'next/navigation';
-import { Menu, X, Mail, Phone, MapPin, LogIn } from "lucide-react";
+import { Menu, X, Mail, Phone, MapPin } from "lucide-react";
 
 const NAV_ITEMS = [
   { label: 'Início', path: '/inicio' },
@@ -80,11 +80,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
             ))}
           </nav>
 
-          <div className="hdr-actions">
-            <Link href="/login" className="hdr-btn-ghost">
-              <LogIn size={15} /> Entrar
-            </Link>
-          </div>
 
           <button className="hdr-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label="Menu">
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -115,11 +110,6 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
                 <span className="mob-link-dot" />
               </Link>
             ))}
-            <div className="mob-auth-btns" style={{ animationDelay: `${NAV_ITEMS.length * 0.05}s`, animation: `fadeInUp .45s var(--ease-out) ${NAV_ITEMS.length * 0.05}s both` }}>
-              <Link href="/login" onClick={() => setMenuOpen(false)} className="mob-btn-ghost">
-                <LogIn size={15} /> Entrar
-              </Link>
-            </div>
             <div style={{ marginTop: 'auto', padding: '24px 0 0', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
               <a href="mailto:contato.org.obgp@gmail.com" className="mob-contact-link">
                 <Mail size={14} /> contato.org.obgp@gmail.com

@@ -366,7 +366,7 @@ function OscsContent() {
                         ) : (
                           <>
                             <Link
-                              href={`/admin/dashboard/oscs/${osc.id}`}
+                              href={`/gestao/dashboard/oscs/${osc.id}`}
                               className="admin-btn admin-btn-secondary"
                               style={{ padding: '7px 14px', fontSize: '0.78rem', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
                               <Eye size={13} /> Analisar

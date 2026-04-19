@@ -72,7 +72,10 @@ export default function FormulariosPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchForms(); }, [perfil]);
+  useEffect(() => {
+    if (!perfil) { setLoading(false); return; }
+    fetchForms();
+  }, [perfil]);
 
   const getRecord = (tipo: string) => forms.find(f => f.tipo === tipo);
 
@@ -169,7 +172,16 @@ export default function FormulariosPage() {
                   <StatusIcon size={11} /> {cfg.label}
                 </span>
 
-                {status === 'concluido' ? (
+                {!user ? (
+                  <a
+                    href={`https://wa.me/5598987100001?text=Olá%2C+gostaria+de+preencher+o+${encodeURIComponent(def.titulo)}`}
+                    target="_blank" rel="noopener noreferrer"
+                    className="panel-btn panel-btn-primary panel-btn-sm"
+                    style={{ textDecoration: 'none' }}
+                  >
+                    <ArrowRight size={12} /> Solicitar via WhatsApp
+                  </a>
+                ) : status === 'concluido' ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ fontSize: 'var(--text-xs)', color: 'var(--site-text-secondary)' }}>
                       {rec && new Date(rec.updated_at).toLocaleDateString('pt-BR')}

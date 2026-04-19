@@ -71,7 +71,10 @@ export default function PrestacaoContasPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [perfil]);
+  useEffect(() => {
+    if (!perfil) { setLoading(false); return; }
+    fetchData();
+  }, [perfil]);
 
   const resetForm = () => {
     setTitulo(''); setPeriodo(''); setValor(''); setFile(null); setError(''); setSuccess('');

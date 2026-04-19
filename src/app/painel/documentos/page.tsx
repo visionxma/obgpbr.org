@@ -82,7 +82,10 @@ export default function DocumentosPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchDocs(); }, [perfil]);
+  useEffect(() => {
+    if (!perfil) { setLoading(false); return; }
+    fetchDocs();
+  }, [perfil]);
 
   const resetModal = () => {
     setNome(''); setTipo('estatuto'); setFile(null); setError(''); setSuccess('');

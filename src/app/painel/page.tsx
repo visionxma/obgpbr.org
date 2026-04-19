@@ -54,7 +54,35 @@ export default function DashboardPage() {
     load();
   }, [perfil]);
 
-  if (!perfil) return null;
+  if (!perfil) return (
+    <>
+      <div style={{ marginBottom: 28 }}>
+        <h1 className="panel-page-title">Painel de Certificação OSC</h1>
+        <p className="panel-page-subtitle">Gestão de Parcerias — OBGP</p>
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14 }}>
+        {[
+          { href: '/painel/formularios',           icon: ClipboardList, label: 'Formulários',               desc: 'Preencha os formulários obrigatórios' },
+          { href: '/painel/documentos',             icon: FileText,      label: 'Enviar Documentos',          desc: 'Faça upload de arquivos' },
+          { href: '/painel/prestacao-contas',       icon: BookOpen,      label: 'Prestação de Contas',        desc: 'Registre demonstrativos financeiros' },
+          { href: '/painel/certificacao',           icon: ShieldCheck,   label: 'Certificação',               desc: 'Inicie o processo de certificação' },
+        ].map(item => {
+          const Icon = item.icon;
+          return (
+            <a key={item.href} href={item.href} style={{ background: '#fff', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-lg)', padding: '18px 20px', display: 'flex', gap: 14, alignItems: 'center', textDecoration: 'none', boxShadow: 'var(--site-shadow-sm)' }}>
+              <div style={{ width: 38, height: 38, borderRadius: 'var(--site-radius-md)', background: 'var(--site-surface-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--site-primary)', flexShrink: 0 }}>
+                <Icon size={18} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--site-text-primary)', marginBottom: 2 }}>{item.label}</div>
+                <div style={{ fontSize: 'var(--text-xs)', color: 'var(--site-text-secondary)' }}>{item.desc}</div>
+              </div>
+            </a>
+          );
+        })}
+      </div>
+    </>
+  );
 
   const seloInfo = SELO_MAP[perfil.status_selo as keyof typeof SELO_MAP];
   const firstName = (perfil.responsavel || user?.user_metadata?.nome || 'Usuário').split(' ')[0];

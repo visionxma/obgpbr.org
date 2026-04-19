@@ -63,10 +63,10 @@ export default function DashboardOverview() {
   }, []);
 
   const statCards = [
-    { label: 'OSCs Cadastradas',  value: stats.total,       icon: Users,        colorClass: 'primary', href: '/admin/dashboard/oscs' },
-    { label: 'Aguardando',        value: stats.pendente,    icon: Clock,        colorClass: 'info',    href: '/admin/dashboard/oscs?status=pendente' },
-    { label: 'Em Análise',        value: stats.em_analise,  icon: AlertCircle,  colorClass: 'warning', href: '/admin/dashboard/oscs?status=em_analise' },
-    { label: 'Aprovadas',         value: stats.aprovado,    icon: CheckCircle,  colorClass: 'success', href: '/admin/dashboard/oscs?status=aprovado' },
+    { label: 'OSCs Cadastradas',  value: stats.total,       icon: Users,        colorClass: 'primary', href: '/gestao/dashboard/oscs' },
+    { label: 'Aguardando',        value: stats.pendente,    icon: Clock,        colorClass: 'info',    href: '/gestao/dashboard/oscs?status=pendente' },
+    { label: 'Em Análise',        value: stats.em_analise,  icon: AlertCircle,  colorClass: 'warning', href: '/gestao/dashboard/oscs?status=em_analise' },
+    { label: 'Aprovadas',         value: stats.aprovado,    icon: CheckCircle,  colorClass: 'success', href: '/gestao/dashboard/oscs?status=aprovado' },
   ];
 
   return (
@@ -105,7 +105,7 @@ export default function DashboardOverview() {
               <span className="glass-card-title-icon"><Users size={16} /></span>
               OSCs Recentes
             </span>
-            <Link href="/admin/dashboard/oscs" className="glass-card-action">
+            <Link href="/gestao/dashboard/oscs" className="glass-card-action">
               Ver todas <ArrowRight size={13} />
             </Link>
           </div>
@@ -148,19 +148,19 @@ export default function DashboardOverview() {
             )}
           </p>
           <div className="quick-actions-list">
-            <Link href="/admin/dashboard/oscs" className="quick-action-btn primary">
+            <Link href="/gestao/dashboard/oscs" className="quick-action-btn primary">
               <Users size={17} /> Gestão de OSCs
             </Link>
-            <Link href="/admin/dashboard/oscs?status=em_analise" className="quick-action-btn ghost">
+            <Link href="/gestao/dashboard/oscs?status=em_analise" className="quick-action-btn ghost">
               <AlertCircle size={17} /> OSCs em Análise
             </Link>
-            <Link href="/admin/dashboard/experiencias" className="quick-action-btn ghost">
+            <Link href="/gestao/dashboard/experiencias" className="quick-action-btn ghost">
               <Sparkles size={17} /> Experiências
             </Link>
-            <Link href="/admin/dashboard/transparencia" className="quick-action-btn ghost">
+            <Link href="/gestao/dashboard/transparencia" className="quick-action-btn ghost">
               <ShieldCheck size={17} /> Transparência
             </Link>
-            <Link href="/admin/dashboard/analytics" className="quick-action-btn ghost">
+            <Link href="/gestao/dashboard/analytics" className="quick-action-btn ghost">
               <BarChart3 size={17} /> Analytics
             </Link>
           </div>

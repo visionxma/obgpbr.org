@@ -35,20 +35,13 @@ export async function middleware(request: NextRequest) {
   const { response, user } = await createClient(request);
   const path = request.nextUrl.pathname;
 
-  // /admin/dashboard — exige role 'admin'; redireciona para /admin se não autenticado ou sem permissão
-  if (path.startsWith('/admin/dashboard')) {
+  // /gestao/dashboard — exige role 'admin'; redireciona para /gestao se não autenticado ou sem permissão
+  if (path.startsWith('/gestao/dashboard')) {
     if (!user || user.app_metadata?.role !== 'admin') {
-      return NextResponse.redirect(new URL('/admin', request.url));
+      return NextResponse.redirect(new URL('/gestao', request.url));
     }
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     response.headers.set('Pragma', 'no-cache');
-  }
-
-  // /painel — exige autenticação; redireciona para /login se não autenticado
-  if (path.startsWith('/painel')) {
-    if (!user) {
-      return NextResponse.redirect(new URL('/login', request.url));
-    }
   }
 
   return response;

@@ -396,7 +396,7 @@ export default function OscDetailPage() {
     <div className="admin-empty-state">
       <div className="admin-empty-state-icon"><AlertCircle size={32} /></div>
       <div className="admin-empty-state-text">OSC não encontrada.</div>
-      <Link href="/admin/dashboard/oscs" className="admin-btn admin-btn-secondary" style={{ marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8 }}>
+      <Link href="/gestao/dashboard/oscs" className="admin-btn admin-btn-secondary" style={{ marginTop: 16, display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 8 }}>
         <ArrowLeft size={14} /> Voltar
       </Link>
     </div>
@@ -418,7 +418,7 @@ export default function OscDetailPage() {
     <div>
       {/* Back */}
       <div style={{ marginBottom: 24 }}>
-        <Link href="/admin/dashboard/oscs" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', fontWeight: 600, color: 'var(--admin-text-secondary)', textDecoration: 'none', transition: 'color .2s' }}
+        <Link href="/gestao/dashboard/oscs" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', fontWeight: 600, color: 'var(--admin-text-secondary)', textDecoration: 'none', transition: 'color .2s' }}
           onMouseEnter={e => (e.currentTarget.style.color = 'var(--admin-primary)')}
           onMouseLeave={e => (e.currentTarget.style.color = 'var(--admin-text-secondary)')}
         >
