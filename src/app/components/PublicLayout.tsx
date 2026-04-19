@@ -18,6 +18,7 @@ const NAV_ITEMS = [
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const isPainel = pathname?.startsWith('/painel');
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('');
@@ -63,7 +64,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
   return (
     <>
       {/* ═══ HEADER ═══ */}
-      <header className={`hdr ${scrolled ? 'hdr--float' : ''}`}>
+      <header className={`hdr ${scrolled ? (isPainel ? 'hdr--glass' : 'hdr--float') : ''}`}>
         <div className="hdr-inner">
           <Link href="/inicio" className="hdr-logo">
             <span className="hdr-logo-img-wrap">
@@ -185,6 +186,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
         /* HEADER — left/transform nunca mudam, apenas top/width/border-radius/shadow */
         .hdr{position:fixed;top:0;left:50%;transform:translateX(-50%);width:100%;z-index:1000;background:rgba(8,33,48,.52);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);border-bottom:1px solid rgba(255,255,255,.08);box-shadow:0 1px 0 rgba(255,255,255,.05) inset,0 4px 24px rgba(0,0,0,.18);border-radius:0;transition:top .65s cubic-bezier(.22,1,.36,1),width .65s cubic-bezier(.22,1,.36,1),border-radius .65s cubic-bezier(.22,1,.36,1),border .55s ease,box-shadow .65s cubic-bezier(.22,1,.36,1),background .55s ease}
         .hdr--float{top:14px;width:calc(100% - 40px);max-width:1180px;border-radius:60px;background:rgba(8,33,48,.62);border:1px solid rgba(255,255,255,.14);box-shadow:0 2px 0 rgba(255,255,255,.08) inset,0 12px 40px rgba(0,0,0,.28),0 1px 0 rgba(0,0,0,.20)}
+        .hdr--glass{background:rgba(8,33,48,.80);backdrop-filter:blur(32px) saturate(200%);-webkit-backdrop-filter:blur(32px) saturate(200%);border-bottom:1px solid rgba(255,255,255,.12);box-shadow:0 4px 24px rgba(0,0,0,.22)}
         .hdr-inner{max-width:1180px;margin:0 auto;padding:0 32px;height:76px;display:flex;align-items:center;justify-content:space-between;gap:16px;transition:height .65s cubic-bezier(.22,1,.36,1),padding .65s cubic-bezier(.22,1,.36,1)}
         .hdr--float .hdr-inner{height:62px;padding:0 24px}
         .hdr-logo{text-decoration:none;display:flex;align-items:center;gap:10px;padding:6px 14px 6px 6px;border-radius:var(--site-radius-full);background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.07);transition:background .3s,border-color .3s,box-shadow .3s}
