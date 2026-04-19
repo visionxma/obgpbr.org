@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { ClipboardList, BarChart3, FileCheck, RefreshCw, ArrowRight, CheckCircle, Clock, Circle } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ClipboardList, BarChart3, FileCheck, RefreshCw, ArrowRight, CheckCircle, Clock, Circle, Pencil } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../PainelContext';
 
@@ -58,6 +59,7 @@ const ICON_COLORS = {
 
 export default function FormulariosPage() {
   const { user, perfil } = usePainel();
+  const router = useRouter();
   const [forms, setForms] = useState<Formulario[]>([]);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState<string | null>(null);
@@ -84,23 +86,15 @@ export default function FormulariosPage() {
     setActing(def.tipo);
 
     const existing = getRecord(def.tipo);
-    if (existing) {
-      if (existing.status === 'nao_iniciado') {
-        await supabase.from('osc_formularios').update({ status: 'em_andamento', updated_at: new Date().toISOString() }).eq('id', existing.id);
-        await fetchForms();
-      }
-    } else {
+    if (!existing) {
       await supabase.from('osc_formularios').insert({
-        user_id: user.id,
-        osc_id: perfil.osc_id,
-        titulo: def.titulo,
-        tipo: def.tipo,
-        status: 'em_andamento',
-        dados: {},
+        user_id: user.id, osc_id: perfil.osc_id,
+        titulo: def.titulo, tipo: def.tipo, status: 'em_andamento', dados: {},
       });
       await fetchForms();
     }
     setActing(null);
+    router.push(`/painel/formularios/${def.tipo}`);
   };
 
   const handleConcluir = async (id: string) => {
@@ -182,18 +176,26 @@ export default function FormulariosPage() {
                     <ArrowRight size={12} /> Solicitar via WhatsApp
                   </a>
                 ) : status === 'concluido' ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span style={{ fontSize: 'var(--text-xs)', color: 'var(--site-text-secondary)' }}>
                       {rec && new Date(rec.updated_at).toLocaleDateString('pt-BR')}
                     </span>
+                    <button className="panel-btn panel-btn-ghost panel-btn-sm" onClick={() => router.push(`/painel/formularios/${def.tipo}`)}>
+                      <Pencil size={11} /> Ver/Editar
+                    </button>
                     <button className="panel-btn panel-btn-ghost panel-btn-sm" onClick={() => rec && handleReabrir(rec.id)}>
                       Reabrir
                     </button>
                   </div>
                 ) : status === 'em_andamento' ? (
-                  <button className="panel-btn panel-btn-ghost panel-btn-sm" onClick={() => rec && handleConcluir(rec.id)}>
-                    Marcar concluído
-                  </button>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button className="panel-btn panel-btn-primary panel-btn-sm" onClick={() => router.push(`/painel/formularios/${def.tipo}`)}>
+                      <Pencil size={12} /> Preencher
+                    </button>
+                    <button className="panel-btn panel-btn-ghost panel-btn-sm" onClick={() => rec && handleConcluir(rec.id)}>
+                      Concluído
+                    </button>
+                  </div>
                 ) : (
                   <button
                     className="panel-btn panel-btn-primary panel-btn-sm"
