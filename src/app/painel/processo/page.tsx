@@ -46,20 +46,11 @@ const QUALIFICACAO_FINANCEIRA = [
 ];
 
 const QUALIFICACAO_TECNICA = [
-  { id: '5.1.1', title: 'Termo de Compromisso de Destinação de Recursos MPTMA' },
-  { id: '5.1.2', title: 'Termo de Contrato (Prefeitura de Presidente Médici/MA)' },
-  { id: '5.1.3', title: 'Termo de Contrato (Prefeitura de Presidente Médici/MA)' },
-  { id: '5.1.4', title: 'Acordo de Cooperação Técnica (Cachoeira Grande/MA)' },
-  { id: '5.1.4.1', title: 'Aditivo Acordo de Cooperação Técnica (Prefeitura Municipal de Cachoeira Grande/MA)' },
-  { id: '5.1.5', title: 'Acordo de Cooperação Técnica (Prefeitura Municipal de Morros/MA)' },
-  { id: '5.1.6', title: 'Termo de Contrato (Prefeitura Municipal de Lago do Junco/MA)' },
-  { id: '5.1.7', title: 'Declaração de Parceria (Defensoria Pública do Estado/MA)' },
-  { id: '5.1.8', title: 'Termo de Fomento Prefeitura Municipal de Primeira Cruz/MA' },
-  { id: '5.1.9', title: 'Declaração de Cooperação e Parceria Prefeitura Municipal de Icatu/MA' },
-  { id: '5.1.10', title: 'Declaração de Parceria e Atuação Conjunta Movimento Nacional da População de Rua MNPR' },
-  { id: '5.1.11', title: 'Contrato Ministério do Desenvolvimento e Assistência Social, Família e Combate a Fome' },
-  { id: '5.1', title: 'Registro e Regularidade da Entidade em Conselho Classe (se houver)' },
-  { id: '5.2', title: 'Registro e Regularidade do Profissional RT da Entidade em Conselho Classe (se houver)' },
+  { id: '5.1', title: 'Termo de Contrato' },
+  { id: '5.2', title: 'Convênio' },
+  { id: '5.3', title: 'Termo de Colaboração' },
+  { id: '5.4', title: 'Termo de Fomento' },
+  { id: '5.5', title: 'Acordo de Cooperação Técnica' },
 ];
 
 export default function ProcessoPage() {
