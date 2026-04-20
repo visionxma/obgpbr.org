@@ -78,6 +78,40 @@ function fmtHora(iso: string) {
   return new Date(iso).toLocaleTimeString('pt-BR', { hour:'2-digit', minute:'2-digit' });
 }
 
+function DateInput({ value, onChange, style }: {
+  value: string | null;
+  onChange: (v: string | null) => void;
+  style?: React.CSSProperties;
+}) {
+  function toDisplay(iso: string | null) {
+    if (!iso) return '';
+    const [y, m, d] = iso.split('-');
+    return (d && m && y) ? `${d}/${m}/${y}` : '';
+  }
+  const [display, setDisplay] = useState(toDisplay(value));
+  useEffect(() => { setDisplay(toDisplay(value)); }, [value]);
+
+  function handle(e: React.ChangeEvent<HTMLInputElement>) {
+    const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
+    let fmt = digits;
+    if (digits.length > 2) fmt = digits.slice(0,2) + '/' + digits.slice(2);
+    if (digits.length > 4) fmt = digits.slice(0,2) + '/' + digits.slice(2,4) + '/' + digits.slice(4);
+    setDisplay(fmt);
+    if (digits.length === 8) {
+      const iso = `${digits.slice(4)}-${digits.slice(2,4)}-${digits.slice(0,2)}`;
+      if (!isNaN(new Date(iso).getTime())) onChange(iso);
+    } else if (digits.length === 0) {
+      onChange(null);
+    }
+  }
+  return (
+    <input type="text" inputMode="numeric" maxLength={10}
+      value={display} onChange={handle} placeholder="dd/mm/aaaa"
+      style={style}
+    />
+  );
+}
+
 const TH: React.CSSProperties = {
   padding:'9px 12px', fontSize:'0.62rem', fontWeight:700,
   textTransform:'uppercase', letterSpacing:'.06em',
@@ -589,21 +623,25 @@ function RelatorioContent() {
                           <tr key={`${item.id}-exp`}>
                             <td colSpan={9} style={{ padding:'16px 20px', borderTop:'1px dashed #e5e7eb', background:'rgba(13,54,79,.02)' }}>
                               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))', gap:10, marginBottom:10 }}>
-                                {[
-                                  { f:'codigo_controle', label:'Código de Controle', type:'text',  ph:'ex: 3AA3.704B.578E.7710' },
-                                  { f:'data_emissao',    label:'Data de Emissão',    type:'date',  ph:'' },
-                                  { f:'data_validade',   label:'Data de Validade',   type:'date',  ph:'' },
-                                ].map(({ f, label, type, ph }) => (
-                                  <div key={f}>
-                                    <label style={{ display:'block', fontSize:'0.6rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.05em', color:'#9ca3af', marginBottom:3 }}>{label}</label>
-                                    <input type={type}
-                                      value={(item as unknown as Record<string,string>)[f] ?? ''}
-                                      onChange={e => updateItem(item.id, f as keyof RelatorioItem, e.target.value||null)}
-                                      placeholder={ph}
-                                      style={{ width:'100%', padding:'7px 9px', border:'1.5px solid #e5e7eb', borderRadius:7, fontSize:'0.82rem', outline:'none', background:'#fff', boxSizing:'border-box' }}
-                                    />
-                                  </div>
-                                ))}
+                                <div>
+                                  <label style={{ display:'block', fontSize:'0.6rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.05em', color:'#9ca3af', marginBottom:3 }}>Código de Controle</label>
+                                  <input type="text"
+                                    value={item.codigo_controle ?? ''}
+                                    onChange={e => updateItem(item.id, 'codigo_controle', e.target.value||null)}
+                                    placeholder="ex: 3AA3.704B.578E.7710"
+                                    style={{ width:'100%', padding:'7px 9px', border:'1.5px solid #e5e7eb', borderRadius:7, fontSize:'0.82rem', outline:'none', background:'#fff', boxSizing:'border-box' }}
+                                  />
+                                </div>
+                                <div>
+                                  <label style={{ display:'block', fontSize:'0.6rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.05em', color:'#9ca3af', marginBottom:3 }}>Data de Emissão</label>
+                                  <DateInput value={item.data_emissao} onChange={v => updateItem(item.id, 'data_emissao', v)}
+                                    style={{ width:'100%', padding:'7px 9px', border:'1.5px solid #e5e7eb', borderRadius:7, fontSize:'0.82rem', outline:'none', background:'#fff', boxSizing:'border-box' }} />
+                                </div>
+                                <div>
+                                  <label style={{ display:'block', fontSize:'0.6rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.05em', color:'#9ca3af', marginBottom:3 }}>Data de Validade</label>
+                                  <DateInput value={item.data_validade} onChange={v => updateItem(item.id, 'data_validade', v)}
+                                    style={{ width:'100%', padding:'7px 9px', border:'1.5px solid #e5e7eb', borderRadius:7, fontSize:'0.82rem', outline:'none', background:'#fff', boxSizing:'border-box' }} />
+                                </div>
                                 <div>
                                   <label style={{ display:'block', fontSize:'0.6rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.05em', color:'#9ca3af', marginBottom:3 }}>Status</label>
                                   <select value={item.status}
