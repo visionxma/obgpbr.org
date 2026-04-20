@@ -1,195 +1,399 @@
 'use client';
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import React, { useState } from 'react';
 import {
-  ClipboardList, FileText, BookOpen, ShieldCheck,
-  CheckCircle, Circle, Clock, AlertCircle, ChevronRight,
+  ShieldCheck, UploadCloud, CheckCircle2, FileText, ChevronRight, Activity, Clock, FileCheck, Search, FileSignature, HelpCircle, Check, AlertCircle, CircleDashed, Briefcase
 } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import { usePainel } from '../PainelContext';
 
-const FORM_DEFS = [
-  { tipo: 'cadastramento',       label: 'Cadastramento',  obrigatorio: true  },
-  { tipo: 'diagnostico',         label: 'Diagnóstico',    obrigatorio: true  },
-  { tipo: 'relatorio_atividades',label: 'Atividades',     obrigatorio: false },
-  { tipo: 'renovacao',           label: 'Renovação',      obrigatorio: false },
+const HABILITACAO_JURIDICA = [
+  { id: '2.1', title: 'Cartão CNPJ' },
+  { id: '2.2', title: 'QSA Cartão CNPJ' },
+  { id: '2.3', title: 'Cadastro Contribuinte Municipal/Estadual' },
+  { id: '2.4', title: 'Alvará de Licença e Funcionamento' },
+  { id: '2.5', title: 'Estatuto Social' },
+  { id: '2.6', title: 'Ata Constituição/Fundação' },
+  { id: '2.7', title: 'Ata Eleição e Posse atual' },
+  { id: '2.8', title: 'Relação de Membros atual' },
+  { id: '2.9', title: 'Comprovante de Endereço da Entidade' },
+  { id: '2.10', title: 'RG/CPF do Representante Legal' },
+  { id: '2.11', title: 'Comprovante de Endereço do Representante Legal' },
 ];
 
-const DOC_DEFS = [
-  { tipo: 'estatuto',   label: 'Estatuto'       },
-  { tipo: 'ata',        label: 'Ata de Eleição' },
-  { tipo: 'cnpj',       label: 'CNPJ'           },
-  { tipo: 'balancete',  label: 'Balancete'      },
-  { tipo: 'certidao',   label: 'Certidão'       },
+const REGULARIDADE_FISCAL = [
+  { id: '3.1', title: 'CND Federal' },
+  { id: '3.2', title: 'CND Estadual' },
+  { id: '3.3', title: 'CNDA Estadual' },
+  { id: '3.4', title: 'CND Municipal' },
+  { id: '3.5', title: 'CRF FGTS' },
+  { id: '3.6', title: 'CND Trabalhista' },
+  { id: '3.7', title: 'CND CAEMA' },
 ];
 
-const REL_STATUS: Record<string, { label: string; color: string }> = {
-  em_preenchimento: { label: 'Em preenchimento', color: '#d97706' },
-  em_analise:       { label: 'Em análise',        color: '#2563eb' },
-  aprovado:         { label: 'Aprovado',           color: '#16a34a' },
-  reprovado:        { label: 'Revisão necessária', color: '#dc2626' },
-};
+const QUALIFICACAO_FINANCEIRA = [
+  { id: '4.1', title: 'Certidão de Falência e Concordata' },
+  { id: '4.2', title: 'Registro e Regularidade do Contador' },
+  { id: '4.3', title: 'Demonstrações Financeiras (Balanço Social) último dois exercícios (ITG 2002)' },
+  { id: '4.3.1', title: 'Termo de abertura' },
+  { id: '4.3.2', title: 'Balanço Patrimonial' },
+  { id: '4.3.3', title: 'Demonstração do Superávit e Déficit' },
+  { id: '4.3.4', title: 'Demonstração das Mutações do Patrimônio Líquido' },
+  { id: '4.3.5', title: 'Demonstração dos Fluxos de Caixa' },
+  { id: '4.3.6', title: 'Notas Explicativas dos dois últimos exercícios sociais' },
+  { id: '4.3.7', title: 'Termo de encerramento' },
+  { id: '4.4', title: 'Ata de aprovação de contas com parecer do Conselho Fiscal dos últimos dois exercícios sociais da entidade' },
+];
 
-interface FormRow  { tipo: string; status: string }
-interface DocRow   { tipo: string }
-interface RelRow   { status: string }
+const QUALIFICACAO_TECNICA = [
+  { id: '5.1.1', title: 'Termo de Compromisso de Destinação de Recursos MPTMA' },
+  { id: '5.1.2', title: 'Termo de Contrato (Prefeitura de Presidente Médici/MA)' },
+  { id: '5.1.3', title: 'Termo de Contrato (Prefeitura de Presidente Médici/MA)' },
+  { id: '5.1.4', title: 'Acordo de Cooperação Técnica (Cachoeira Grande/MA)' },
+  { id: '5.1.4.1', title: 'Aditivo Acordo de Cooperação Técnica (Prefeitura Municipal de Cachoeira Grande/MA)' },
+  { id: '5.1.5', title: 'Acordo de Cooperação Técnica (Prefeitura Municipal de Morros/MA)' },
+  { id: '5.1.6', title: 'Termo de Contrato (Prefeitura Municipal de Lago do Junco/MA)' },
+  { id: '5.1.7', title: 'Declaração de Parceria (Defensoria Pública do Estado/MA)' },
+  { id: '5.1.8', title: 'Termo de Fomento Prefeitura Municipal de Primeira Cruz/MA' },
+  { id: '5.1.9', title: 'Declaração de Cooperação e Parceria Prefeitura Municipal de Icatu/MA' },
+  { id: '5.1.10', title: 'Declaração de Parceria e Atuação Conjunta Movimento Nacional da População de Rua MNPR' },
+  { id: '5.1.11', title: 'Contrato Ministério do Desenvolvimento e Assistência Social, Família e Combate a Fome' },
+  { id: '5.1', title: 'Registro e Regularidade da Entidade em Conselho Classe (se houver)' },
+  { id: '5.2', title: 'Registro e Regularidade do Profissional RT da Entidade em Conselho Classe (se houver)' },
+];
 
 export default function ProcessoPage() {
   const { perfil } = usePainel();
-  const [forms, setForms]       = useState<FormRow[]>([]);
-  const [docTipos, setDocTipos] = useState<string[]>([]);
-  const [prestacoes, setPrestacoes] = useState(0);
-  const [relatorio, setRelatorio]   = useState<RelRow | null>(null);
-  const [loading, setLoading]       = useState(true);
+  const [data, setData] = useState<Record<string, any>>({});
 
-  useEffect(() => {
-    if (!perfil) { setLoading(false); return; }
-    (async () => {
-      const [formsRes, docsRes, prestRes, relRes] = await Promise.all([
-        supabase.from('osc_formularios').select('tipo, status').eq('osc_id', perfil.osc_id),
-        supabase.from('osc_documentos').select('tipo').eq('osc_id', perfil.osc_id),
-        supabase.from('osc_prestacao_contas').select('id', { count: 'exact' }).eq('osc_id', perfil.osc_id),
-        supabase.from('relatorios_conformidade').select('status').eq('osc_id', perfil.osc_id).maybeSingle(),
-      ]);
-      setForms((formsRes.data ?? []) as FormRow[]);
-      setDocTipos(((docsRes.data ?? []) as DocRow[]).map(d => d.tipo));
-      setPrestacoes(prestRes.count ?? 0);
-      setRelatorio(relRes.data as RelRow | null);
-      setLoading(false);
-    })();
-  }, [perfil]);
+  const handleUpdate = (id: string, field: string, value: string) => {
+    setData(prev => ({
+      ...prev,
+      [id]: {
+        ...(prev[id] || {}),
+        [field]: value
+      }
+    }));
+  };
 
-  if (loading) return <div className="panel-loading"><div className="panel-spinner" /></div>;
-
-  const formsMap    = Object.fromEntries(forms.map(f => [f.tipo, f.status]));
-  const obgDone     = ['cadastramento', 'diagnostico'].every(t => formsMap[t] === 'concluido');
-  const docsDone    = DOC_DEFS.filter(d => docTipos.includes(d.tipo)).length;
-  const relStatus   = relatorio ? REL_STATUS[relatorio.status] : null;
+  const currentProgress = 35; // Mock progress for visual tracking
 
   return (
-    <>
-      <div style={{ marginBottom: 16 }}>
-        <h1 className="panel-page-title">Meu Processo</h1>
-        <p className="panel-page-subtitle">Complete as etapas abaixo para obter o Selo OSC Gestão de Parcerias</p>
+    <div style={{ maxWidth: 1100, margin: '0 auto', paddingBottom: 60, fontFamily: 'var(--font-sans)', color: 'var(--site-text-primary)' }}>
+      {/* HEADER TITLE */}
+      <div style={{ marginBottom: 24 }}>
+        <h1 className="panel-page-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <ShieldCheck size={28} color="var(--site-gold)" /> Meu Processo — Relatório de Conformidade
+        </h1>
+        <p className="panel-page-subtitle">Acompanhamento e estruturação documental oficial para a certificação do Selo OSC.</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, maxWidth: 760 }}>
+      {/* PAINEL DE ACOMPANHAMENTO (PROGRESS TRACKER) */}
+      <div style={{ 
+        background: 'var(--site-surface-blue)', 
+        borderRadius: 'var(--site-radius-xl)', 
+        padding: '28px 32px', 
+        marginBottom: 36,
+        border: '1px solid var(--site-border-blue)',
+        boxShadow: 'var(--site-shadow-md)'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 20 }}>
+          <div style={{ flex: 1, minWidth: 280 }}>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: 8, color: 'var(--site-primary)' }}>PAINEL DE ACOMPANHAMENTO</h2>
+            <div style={{ display: 'flex', gap: 24, marginTop: 16 }}>
+              <div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--site-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status do Processo</span>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: '#d97706', display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                  <CircleDashed size={16} /> Em Andamento
+                </div>
+              </div>
+              <div>
+                <span style={{ fontSize: '0.8rem', color: 'var(--site-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Situação da Conformidade</span>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--site-text-primary)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                  <Search size={16} color="var(--site-text-tertiary)" /> Em Análise Documental
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style={{ width: 140 }}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--site-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', textAlign: 'right' }}>Progresso Geral</span>
+            <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--site-gold)', textAlign: 'right', lineHeight: 1 }}>{currentProgress}%</div>
+          </div>
+        </div>
 
-        {/* ── Etapa 1: Formulários ── */}
-        <StepCard
-          num="1" icon={ClipboardList} title="Formulários"
-          done={obgDone} href="/painel/formularios"
-          badge={`${forms.filter(f => f.status === 'concluido').length}/${FORM_DEFS.length} concluídos`}
-        >
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 6 }}>
-            {FORM_DEFS.map(({ tipo, label, obrigatorio }) => (
-              <Pill key={tipo}
-                label={label + (obrigatorio ? ' *' : '')}
-                done={formsMap[tipo] === 'concluido'}
-                partial={formsMap[tipo] === 'em_andamento'}
-              />
+        {/* Linha de Evolução */}
+        <div style={{ marginTop: 32, position: 'relative' }}>
+          <div style={{ position: 'absolute', top: 14, left: 0, right: 0, height: 2, background: 'rgba(0,0,0,0.06)', zIndex: 0 }} />
+          <div style={{ position: 'absolute', top: 14, left: 0, width: `${currentProgress}%`, height: 2, background: 'var(--site-gold)', zIndex: 1, transition: 'width 1s ease' }} />
+          
+          <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 2 }}>
+            {[
+              { label: 'Início', active: true, done: true },
+              { label: 'Habilitação Jurídica', active: true, done: false },
+              { label: 'Regularidade Fiscal', active: false, done: false },
+              { label: 'Qual. Econômica', active: false, done: false },
+              { label: 'Qual. Técnica', active: false, done: false },
+              { label: 'Finalização', active: false, done: false }
+            ].map((step, i) => (
+              <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, width: 80 }}>
+                <div style={{ 
+                  width: 30, height: 30, borderRadius: '50%', 
+                  background: step.done ? 'var(--site-gold)' : (step.active ? '#fff' : 'rgba(0,0,0,0.04)'),
+                  border: step.done ? 'none' : (step.active ? '2px solid var(--site-gold)' : '2px solid rgba(0,0,0,0.1)'),
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: step.done ? '#fff' : (step.active ? 'var(--site-gold)' : 'rgba(0,0,0,0.2)')
+                }}>
+                  {step.done ? <Check size={16} /> : <span style={{ fontSize: 12, fontWeight: 700 }}>{i + 1}</span>}
+                </div>
+                <span style={{ fontSize: '0.65rem', fontWeight: step.active ? 700 : 500, color: step.active ? 'var(--site-text-primary)' : 'var(--site-text-tertiary)', textAlign: 'center', lineHeight: 1.2 }}>{step.label}</span>
+              </div>
             ))}
           </div>
-          <p style={{ fontSize: 'var(--text-xs)', color: 'var(--site-text-secondary)', margin: 0 }}>* obrigatório para certificação</p>
-        </StepCard>
+        </div>
+      </div>
 
-        {/* ── Etapa 2: Documentos Institucionais ── */}
-        <StepCard
-          num="2" icon={FileText} title="Documentos Institucionais"
-          done={docsDone >= DOC_DEFS.length} href="/painel/documentos"
-          badge={`${docsDone}/${DOC_DEFS.length} enviados`}
-        >
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-            {DOC_DEFS.map(({ tipo, label }) => (
-              <Pill key={tipo} label={label} done={docTipos.includes(tipo)} />
-            ))}
+      {/* 1. DADOS DA ENTIDADE */}
+      <section style={{ marginBottom: 40, border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-xl)', overflow: 'hidden', background: '#fff' }}>
+        <header style={{ background: 'var(--site-surface-warm)', padding: '16px 24px', borderBottom: '1px solid var(--site-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Briefcase size={20} color="var(--site-text-primary)" />
+          <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>1. DADOS DA ENTIDADE</h2>
+        </header>
+        <div style={{ padding: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
+          <InputField label="CNPJ" value="12.345.678/0001-90" readonly />
+          <InputField label="Natureza Jurídica" value="399-9 - Associação Privada" readonly />
+          <InputField label="Razão Social" value="Organização Brasil Gestão de Parcerias" readonly />
+          <InputField label="Nome Fantasia" value="OBGP BRASIL" readonly />
+          <InputField label="Endereço" value="Av. L, nº 10 D, Qd. 32 - Morada do Sol, Paço do Lumiar/MA" readonly />
+          <InputField label="Data de Abertura do CNPJ" value="15/04/2010" readonly />
+          <InputField label="E-mail" value="contato.org.obgp@gmail.com" readonly />
+          <InputField label="Telefone" value="(98) 9 8710-0001" readonly />
+        </div>
+      </section>
+
+      {/* RENDER SECTIONS HELPER */}
+      <DocumentSection 
+        number="2" title="HABILITAÇÃO JURÍDICA" 
+        items={HABILITACAO_JURIDICA} data={data} handleUpdate={handleUpdate} 
+      />
+      
+      <DocumentSection 
+        number="3" title="REGULARIDADE FISCAL, SOCIAL E TRABALHISTA" 
+        items={REGULARIDADE_FISCAL} data={data} handleUpdate={handleUpdate} 
+      />
+      
+      <DocumentSection 
+        number="4" title="QUALIFICAÇÃO ECONÔMICO-FINANCEIRA" 
+        items={QUALIFICACAO_FINANCEIRA} data={data} handleUpdate={handleUpdate} 
+      />
+      
+      <DocumentSection 
+        number="5" title="QUALIFICAÇÃO TÉCNICA" 
+        items={QUALIFICACAO_TECNICA} data={data} handleUpdate={handleUpdate} 
+      />
+
+      {/* 6. CONCLUSÃO (FORMATO OFICIAL) */}
+      <section style={{ marginBottom: 40, border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-xl)', overflow: 'hidden', background: '#fff' }}>
+        <header style={{ background: 'var(--site-primary)', color: '#fff', padding: '16px 24px', borderBottom: '1px solid var(--site-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <FileSignature size={20} color="#fff" />
+          <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#fff' }}>6. CONCLUSÃO (FORMATO OFICIAL)</h2>
+        </header>
+        <div style={{ padding: '32px 40px', background: 'rgba(197,171,118,0.03)' }}>
+          <div style={{ background: '#fff', border: '1px solid rgba(197,171,118,0.3)', padding: 32, borderRadius: 'var(--site-radius-lg)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', fontFamily: '"Times New Roman", Times, serif', fontSize: '1.1rem', lineHeight: 1.8, color: '#222', position: 'relative' }}>
+            <div style={{ position: 'absolute', top: 20, right: 20, opacity: 0.1, pointerEvents: 'none' }}>
+              <ShieldCheck size={120} />
+            </div>
+            
+            <p style={{ textAlign: 'justify', marginBottom: 20 }}>
+              Após análise documental, constata-se que a entidade, incluindo identificação completa (nome e CNPJ), apresenta a seguinte conformidade:
+            </p>
+            <ul style={{ listStyleType: 'none', paddingLeft: 0, marginBottom: 20 }}>
+              <li style={{ marginBottom: 8 }}><strong>Habilitação Jurídica</strong> – 100% conforme</li>
+              <li style={{ marginBottom: 8 }}><strong>Regularidade Fiscal, Social e Trabalhista</strong> – 100% conforme</li>
+              <li style={{ marginBottom: 8 }}><strong>Qualificação Econômico-Financeira</strong> – 100% conforme</li>
+              <li style={{ marginBottom: 8 }}><strong>Qualificação Técnica</strong> – 100% conforme</li>
+            </ul>
+            <p style={{ textAlign: 'justify', marginBottom: 20 }}>
+              Portanto, recomenda-se certificação independente através do <strong>“SELO OSC GESTÃO DE PARCERIAS”</strong>.
+            </p>
+            <p style={{ textAlign: 'justify', fontSize: '0.9rem', color: '#666', borderTop: '1px solid #eee', paddingTop: 16, marginTop: 32 }}>
+              A autenticidade do documento deve ser validável por meio de código de verificação e acesso ao website oficial.
+            </p>
           </div>
-        </StepCard>
-
-        {/* ── Etapa 3: Demonstrativos Financeiros ── */}
-        <StepCard
-          num="3" icon={BookOpen} title="Demonstrativos Financeiros"
-          done={prestacoes > 0} href="/painel/prestacao-contas"
-          badge={prestacoes > 0 ? `${prestacoes} registro${prestacoes > 1 ? 's' : ''}` : 'Nenhum registro'}
-        >
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--site-text-secondary)', margin: 0 }}>
-            Faça upload de balancetes, demonstrativos e relatórios contábeis do período.
-          </p>
-        </StepCard>
-
-        {/* ── Etapa 4: Relatório de Conformidade ── */}
-        <StepCard
-          num="4" icon={ShieldCheck} title="Relatório de Conformidade"
-          done={relatorio?.status === 'aprovado'}
-          active={!!relatorio && relatorio.status !== 'aprovado'}
-          href="/painel/relatorio-conformidade"
-          badge={relStatus?.label ?? 'Não iniciado'}
-          highlight
-        >
-          <p style={{ fontSize: 'var(--text-sm)', color: 'var(--site-text-secondary)', margin: 0 }}>
-            Preencha o checklist das 4 seções, anexe os documentos comprobatórios e envie para análise.
-          </p>
-        </StepCard>
-
-      </div>
-    </>
-  );
-}
-
-/* ── Componentes internos ─────────────────────────────────────────── */
-
-function Pill({ label, done, partial }: { label: string; done: boolean; partial?: boolean }) {
-  const color  = done ? '#16a34a' : partial ? '#d97706' : 'var(--site-text-secondary)';
-  const bg     = done ? 'rgba(22,163,74,.1)' : partial ? 'rgba(217,119,6,.1)' : 'rgba(13,54,79,.06)';
-  const border = done ? 'rgba(22,163,74,.2)' : partial ? 'rgba(217,119,6,.2)' : 'transparent';
-  const Icon   = done ? CheckCircle : partial ? Clock : Circle;
-  return (
-    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 10px', borderRadius: 'var(--site-radius-full)', fontSize: 'var(--text-xs)', fontWeight: 600, background: bg, color, border: `1px solid ${border}` }}>
-      <Icon size={11} /> {label}
-    </span>
-  );
-}
-
-function StepCard({ num, icon: Icon, title, done, active, href, badge, highlight, children }: {
-  num: string; icon: React.ElementType; title: string;
-  done?: boolean; active?: boolean; href: string;
-  badge?: string; highlight?: boolean;
-  children: React.ReactNode;
-}) {
-  const borderColor = done ? 'rgba(22,163,74,.25)' : active ? 'rgba(37,99,235,.22)' : 'var(--site-border)';
-  const numBg       = done ? '#16a34a' : active ? 'var(--site-primary)' : 'rgba(13,54,79,.08)';
-  const numColor    = done || active ? '#fff' : 'var(--site-text-secondary)';
-  const badgeColor  = done ? '#16a34a' : 'var(--site-text-secondary)';
-  const badgeBg     = done ? 'rgba(22,163,74,.1)' : 'rgba(13,54,79,.06)';
-
-  return (
-    <div style={{
-      background: '#fff',
-      border: `1px solid ${borderColor}`,
-      borderRadius: 'var(--site-radius-lg)',
-      padding: '14px 20px',
-      boxShadow: highlight ? '0 2px 12px rgba(13,54,79,.08)' : 'var(--site-shadow-sm)',
-    }}>
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-        <div style={{ width: 30, height: 30, borderRadius: '50%', background: numBg, color: numColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.78rem', fontWeight: 800, flexShrink: 0 }}>
-          {done ? <CheckCircle size={15} /> : num}
+          <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-end' }}>
+            <button className="btn btn-gold" style={{ padding: '14px 28px', fontSize: '1rem' }}>
+              <CheckCircle2 size={18} /> Validar e Gerar Relatório Oficial
+            </button>
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, flexWrap: 'wrap' }}>
-          <Icon size={15} style={{ color: 'var(--site-primary)', flexShrink: 0 }} />
-          <span style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--site-text-primary)' }}>{title}</span>
-          {badge && (
-            <span style={{ fontSize: '0.68rem', fontWeight: 600, padding: '2px 8px', borderRadius: 'var(--site-radius-full)', background: badgeBg, color: badgeColor }}>
-              {badge}
-            </span>
-          )}
-        </div>
-        <Link href={href} className="panel-btn panel-btn-ghost panel-btn-sm" style={{ flexShrink: 0 }}>
-          Acessar <ChevronRight size={13} />
-        </Link>
-      </div>
-      {/* Conteúdo */}
-      {children}
+      </section>
+
     </div>
   );
 }
+
+/* ── COMPONENTES INTERNOS ── */
+
+function InputField({ label, value, readonly = false }: { label: string, value?: string, readonly?: boolean }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--site-text-tertiary)', textTransform: 'uppercase' }}>{label}</label>
+      <input 
+        type="text" 
+        value={value || ''} 
+        readOnly={readonly}
+        style={{
+          padding: '10px 14px',
+          borderRadius: 'var(--site-radius-md)',
+          border: '1px solid var(--site-border)',
+          background: readonly ? 'var(--site-surface-warm)' : '#fff',
+          color: readonly ? 'var(--site-text-secondary)' : 'var(--site-text-primary)',
+          fontSize: '0.9rem',
+          outline: 'none',
+          pointerEvents: readonly ? 'none' : 'auto'
+        }}
+      />
+    </div>
+  );
+}
+
+function DocumentSection({ number, title, items, data, handleUpdate }: { 
+  number: string, title: string, items: { id: string, title: string }[], 
+  data: Record<string, any>, handleUpdate: (id: string, field: string, val: string) => void 
+}) {
+  return (
+    <section style={{ marginBottom: 40, border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-xl)', overflow: 'hidden', background: '#fff' }}>
+      <header style={{ background: 'var(--site-surface-warm)', padding: '16px 24px', borderBottom: '1px solid var(--site-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--site-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800 }}>
+          {number}
+        </div>
+        <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>{title}</h2>
+      </header>
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        {items.map((item, index) => {
+          const itemData = data[item.id] || {};
+          const status = itemData.status || 'pendente';
+          const isLast = index === items.length - 1;
+          
+          return (
+            <div key={item.id} style={{ padding: '24px', borderBottom: isLast ? 'none' : '1px solid var(--site-border)', position: 'relative' }}>
+              <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                
+                {/* ID Prefix */}
+                <div style={{ background: 'rgba(0,0,0,0.04)', padding: '4px 8px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: 'var(--site-text-secondary)', minWidth: 46, textAlign: 'center', marginTop: 2 }}>
+                  {item.id}
+                </div>
+
+                {/* Content */}
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, color: 'var(--site-text-primary)', maxWidth: '70%' }}>
+                      {item.title}
+                    </h3>
+                    
+                    {/* Status Badge */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <select 
+                        value={status}
+                        onChange={(e) => handleUpdate(item.id, 'status', e.target.value)}
+                        style={{
+                          appearance: 'none',
+                          padding: '6px 12px 6px 30px',
+                          borderRadius: 'var(--site-radius-full)',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          border: 'none',
+                          cursor: 'pointer',
+                          outline: 'none',
+                          backgroundColor: status === 'conforme' ? 'rgba(22,163,74,0.1)' : (status === 'pendente' ? 'rgba(0,0,0,0.05)' : 'rgba(217,119,6,0.1)'),
+                          color: status === 'conforme' ? '#16a34a' : (status === 'pendente' ? 'var(--site-text-secondary)' : '#d97706'),
+                          backgroundImage: `url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="${status === 'conforme' ? '%2316a34a' : (status === 'pendente' ? '%23666' : '%23d97706')}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>')`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 10px center',
+                          paddingRight: 28
+                        }}
+                      >
+                        <option value="pendente">Pendente</option>
+                        <option value="em_analise">Em Análise</option>
+                        <option value="conforme">Conforme (Válido/Vigente)</option>
+                        <option value="irregular">Irregular / Vencido</option>
+                        <option value="nao_se_aplica">Não se Aplica</option>
+                      </select>
+                      
+                      {status === 'conforme' && <div style={{position:'absolute', right: 236, top: 22}}><CheckCircle2 size={14} color="#16a34a"/></div>}
+                      {status === 'pendente' && <div style={{position:'absolute', right: 114, top: 26}}><AlertCircle size={14} color="var(--site-text-secondary)"/></div>}
+                      {status === 'em_analise' && <div style={{position:'absolute', right: 120, top: 26}}><Clock size={14} color="#d97706"/></div>}
+                      {status === 'irregular' && <div style={{position:'absolute', right: 154, top: 26}}><AlertCircle size={14} color="#dc2626"/></div>}
+                    </div>
+                  </div>
+
+                  {/* Form Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--site-text-tertiary)' }}>Código de Controle</label>
+                      <input type="text" placeholder="Ex: DOC-2026-001" value={itemData.codigo || ''} onChange={(e) => handleUpdate(item.id, 'codigo', e.target.value)} style={inputStyle} />
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--site-text-tertiary)' }}>Data de Emissão</label>
+                      <input type="date" value={itemData.data_emissao || ''} onChange={(e) => handleUpdate(item.id, 'data_emissao', e.target.value)} style={inputStyle} />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--site-text-tertiary)' }}>Data de Validade <span style={{ fontWeight: 400 }}>(se houver)</span></label>
+                      <input type="date" value={itemData.data_validade || ''} onChange={(e) => handleUpdate(item.id, 'data_validade', e.target.value)} style={inputStyle} />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--site-text-tertiary)' }}>Upload do Documento</label>
+                      <label style={{ 
+                        border: '1px dashed var(--site-border)', 
+                        padding: '10px', 
+                        borderRadius: 'var(--site-radius-md)', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        gap: 8, 
+                        cursor: 'pointer',
+                        background: 'var(--site-surface-warm)',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        color: 'var(--site-primary)',
+                        transition: 'all 0.2s'
+                      }}>
+                        <UploadCloud size={16} /> 
+                        {itemData.file ? 'Documento Anexado' : 'Selecionar Arquivo'}
+                        <input type="file" style={{ display: 'none' }} onChange={(e) => handleUpdate(item.id, 'file', e.target.files?.[0]?.name || '')} />
+                      </label>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: '1 / -1' }}>
+                      <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--site-text-tertiary)' }}>Análise da Situação Atual</label>
+                      <textarea 
+                        placeholder="Descreva observações sobre o documento..." 
+                        value={itemData.analise || ''} 
+                        onChange={(e) => handleUpdate(item.id, 'analise', e.target.value)} 
+                        rows={2} 
+                        style={{...inputStyle, resize: 'vertical'}}
+                      />
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+const inputStyle = {
+  padding: '8px 12px',
+  borderRadius: 'var(--site-radius-md)',
+  border: '1px solid var(--site-border)',
+  fontSize: '0.85rem',
+  color: 'var(--site-text-primary)',
+  outline: 'none',
+  fontFamily: 'var(--font-sans)',
+  width: '100%'
+};
