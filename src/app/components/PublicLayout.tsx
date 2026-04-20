@@ -141,7 +141,7 @@ export default function PublicLayout({ children, navRightSlot }: { children: Rea
                 <Image src="/logo.png" alt="OBGP" width={72} height={72} style={{ objectFit: 'contain', filter: 'drop-shadow(0 2px 12px rgba(197,171,118,0.40))' }} />
                 <span className="ftr-logo" style={{ marginBottom: 0 }}>OBG<span style={{ color: 'var(--site-gold)' }}>P</span></span>
               </div>
-              <p className="ftr-tagline">Gestão de parcerias<br />com transparência</p>
+              <p className="ftr-tagline">Gestão de Parcerias<br />com Resultados</p>
             </div>
             <div className="ftr-cols">
               <div className="ftr-col">

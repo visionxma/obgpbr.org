@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import {
-  ShieldCheck, ChevronDown, ChevronUp, Upload, ExternalLink,
+  ShieldCheck, Upload, ExternalLink,
   Save, Send, Lock, CheckCircle, AlertCircle, FileText,
   Plus, Trash2, Clock,
 } from 'lucide-react';
@@ -48,10 +48,12 @@ async function computeHash(file: File): Promise<string> {
 }
 
 const SECAO_LABELS: Record<number,string> = {
+  1: 'Dados da Entidade',
   2: 'Habilitação Jurídica',
   3: 'Regularidade Fiscal, Social e Trabalhista',
   4: 'Qualificação Econômico-Financeira',
   5: 'Qualificação Técnica',
+  6: 'Conclusão',
 };
 const STATUS_LABELS: Record<string,string> = {
   pendente:'Pendente', conforme:'Conforme',
@@ -77,11 +79,11 @@ function fmtHora(iso: string) {
 }
 
 const TH: React.CSSProperties = {
-  padding:'10px 12px', fontSize:'0.63rem', fontWeight:700,
+  padding:'9px 12px', fontSize:'0.62rem', fontWeight:700,
   textTransform:'uppercase', letterSpacing:'.06em',
   color:'#9ca3af', textAlign:'center', whiteSpace:'nowrap',
 };
-const TD: React.CSSProperties = { padding:'10px 12px', verticalAlign:'middle' };
+const TD: React.CSSProperties = { padding:'9px 12px', verticalAlign:'middle' };
 
 /* ── Toast ─────────────────────────────────────────────────────────── */
 function Toast({ msg, onClose }: { msg: string; onClose: () => void }) {
@@ -104,49 +106,56 @@ function Toast({ msg, onClose }: { msg: string; onClose: () => void }) {
   );
 }
 
-/* ── Stepper ────────────────────────────────────────────────────────── */
-function Stepper({ itens, openSecao, setOpenSecao, dadosSalvos }: {
-  itens: RelatorioItem[];
-  openSecao: number;
-  setOpenSecao: (s: number) => void;
-  dadosSalvos: boolean;
+/* ── Section header ─────────────────────────────────────────────────── */
+function SecaoHeader({ num, label, conf, total, pend, readonly }: {
+  num: number; label: string; conf: number; total: number; pend: number; readonly: boolean;
 }) {
-  const steps = [
-    { num: 1, label: 'Dados', icon: '📋' },
-    { num: 2, label: 'Hab. Jurídica', icon: '⚖️' },
-    { num: 3, label: 'Fiscal', icon: '📄' },
-    { num: 4, label: 'Econômico', icon: '💰' },
-    { num: 5, label: 'Técnica', icon: '🏆' },
-  ];
+  const done = total > 0 && conf === total;
   return (
-    <div style={{ display:'flex', gap:0, marginBottom:24, background:'#fff', borderRadius:14, border:'1px solid #e5e7eb', overflow:'hidden', boxShadow:'0 1px 4px rgba(0,0,0,.04)' }}>
-      {steps.map((s, i) => {
-        const isActive = openSecao === s.num;
-        const secItens = itens.filter(x => !x.is_header && x.secao === s.num);
-        const conf = secItens.filter(x => x.status === 'conforme').length;
-        const total = secItens.length;
-        const done = s.num === 1 ? dadosSalvos : total > 0 && conf === total;
-        return (
-          <button key={s.num} onClick={() => setOpenSecao(s.num)}
-            style={{
-              flex: 1, padding:'12px 8px', border:'none', borderRight: i < 4 ? '1px solid #e5e7eb' : 'none',
-              background: isActive ? 'var(--site-primary,#0D364F)' : 'transparent',
-              cursor:'pointer', transition:'all .2s', textAlign:'center',
-            }}>
-            <div style={{ fontSize:'1rem', marginBottom:2 }}>
-              {done ? '✅' : s.icon}
-            </div>
-            <div style={{ fontSize:'0.65rem', fontWeight:700, color: isActive ? '#fff' : '#1f2937', lineHeight:1.2 }}>{s.label}</div>
-            {s.num > 1 && total > 0 && (
-              <div style={{ fontSize:'0.6rem', color: isActive ? 'rgba(255,255,255,.7)' : '#9ca3af', marginTop:2 }}>
-                {conf}/{total}
-              </div>
-            )}
-          </button>
-        );
-      })}
+    <div style={{
+      padding:'14px 20px', borderBottom:'1px solid #e5e7eb',
+      display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:8,
+      background: done ? 'rgba(22,163,74,.03)' : undefined,
+    }}>
+      <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+        <div style={{
+          width:28, height:28, borderRadius:'50%',
+          background: done ? '#16a34a' : 'var(--site-primary,#0D364F)',
+          color:'#fff', display:'flex', alignItems:'center', justifyContent:'center',
+          fontSize:'0.75rem', fontWeight:800, flexShrink:0,
+        }}>
+          {done ? <CheckCircle size={13}/> : num}
+        </div>
+        <span style={{ fontWeight:800, fontSize:'0.9rem', color:'var(--site-primary,#0D364F)' }}>
+          {num} — {label}
+        </span>
+      </div>
+      <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+        {pend > 0 && !readonly && (
+          <span style={{ fontSize:'0.68rem', color:'#f59e0b', fontWeight:700, background:'rgba(245,158,11,.1)', padding:'2px 8px', borderRadius:6 }}>
+            {pend} pendente{pend>1?'s':''}
+          </span>
+        )}
+        {total > 0 && (
+          <span style={{ fontSize:'0.72rem', color: done ? '#16a34a' : '#9ca3af', fontWeight:700 }}>
+            {done ? '✅ Concluído' : `${conf}/${total} conformes`}
+          </span>
+        )}
+      </div>
     </div>
   );
+}
+
+/* ── Badge ──────────────────────────────────────────────────────────── */
+const STATUS_COLORS: Record<string,[string,string]> = {
+  pendente:     ['#f59e0b','rgba(245,158,11,.1)'],
+  conforme:     ['#16a34a','rgba(22,163,74,.1)'],
+  nao_conforme: ['#dc2626','rgba(220,38,38,.08)'],
+  nao_aplicavel:['#6b7280','rgba(107,114,128,.1)'],
+};
+function Badge({ s }: { s: string }) {
+  const [c,bg] = STATUS_COLORS[s] ?? ['#6b7280','rgba(107,114,128,.1)'];
+  return <span style={{ display:'inline-block', padding:'2px 8px', borderRadius:6, fontSize:'0.68rem', fontWeight:700, color:c, background:bg, whiteSpace:'nowrap' }}>{STATUS_LABELS[s]??s}</span>;
 }
 
 /* ── Main component ─────────────────────────────────────────────────── */
@@ -158,7 +167,6 @@ function RelatorioContent() {
   const [relatorio, setRelatorio]   = useState<Relatorio | null>(null);
   const [itens, setItens]           = useState<RelatorioItem[]>([]);
   const [dados, setDados]           = useState<Record<string,string>>({});
-  const [openSecao, setOpenSecao]   = useState<number>(1);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [saving, setSaving]         = useState<string | null>(null);
   const [uploading, setUploading]   = useState<string | null>(null);
@@ -220,7 +228,7 @@ function RelatorioContent() {
       setItens((its ?? []) as RelatorioItem[]);
 
       const base = rel.dados_entidade ?? {};
-      const newDados = {
+      setDados({
         razao_social:      base.razao_social       ?? (perfil as unknown as Record<string,string>).razao_social       ?? '',
         cnpj:              base.cnpj               ?? (perfil as unknown as Record<string,string>).cnpj               ?? '',
         natureza_juridica: base.natureza_juridica  ?? (perfil as unknown as Record<string,string>).natureza_juridica  ?? '',
@@ -229,11 +237,8 @@ function RelatorioContent() {
         data_abertura_cnpj:base.data_abertura_cnpj ?? (perfil as unknown as Record<string,string>).data_abertura_cnpj ?? '',
         email_osc:         base.email_osc           ?? (perfil as unknown as Record<string,string>).email_osc          ?? '',
         telefone:          base.telefone             ?? (perfil as unknown as Record<string,string>).telefone           ?? '',
-      };
-      setDados(newDados);
-      if (Object.values(base).some(v => v)) {
-        setDadosSalvos(true);
-      }
+      });
+      if (Object.values(base).some(v => v)) setDadosSalvos(true);
       setLoading(false);
     })();
   }, [user, perfil]);
@@ -369,18 +374,6 @@ function RelatorioContent() {
     setSubmitting(false);
   };
 
-  /* ── Badges ── */
-  const STATUS_COLORS: Record<string,[string,string]> = {
-    pendente:     ['#f59e0b','rgba(245,158,11,.1)'],
-    conforme:     ['#16a34a','rgba(22,163,74,.1)'],
-    nao_conforme: ['#dc2626','rgba(220,38,38,.08)'],
-    nao_aplicavel:['#6b7280','rgba(107,114,128,.1)'],
-  };
-  function Badge({ s }: { s: string }) {
-    const [c,bg] = STATUS_COLORS[s] ?? ['#6b7280','rgba(107,114,128,.1)'];
-    return <span style={{ display:'inline-block', padding:'2px 8px', borderRadius:6, fontSize:'0.68rem', fontWeight:700, color:c, background:bg, whiteSpace:'nowrap' }}>{STATUS_LABELS[s]??s}</span>;
-  }
-
   /* ── Render guards ── */
   if (loading) return (
     <div style={{ textAlign:'center', padding:'60px 0' }}>
@@ -406,38 +399,45 @@ function RelatorioContent() {
 
   if (!relatorio) return null;
 
-  const secoes: (2|3|4|5)[] = [2,3,4,5];
   const totalItens = itens.filter(i => !i.is_header).length;
   const conformes  = itens.filter(i => i.status === 'conforme').length;
   const progPct    = totalItens > 0 ? Math.round((conformes/totalItens)*100) : 0;
 
+  /* Estatísticas por seção para Conclusão */
+  const secStats = ([2,3,4,5] as const).map(s => {
+    const si = itens.filter(i => i.secao === s && !i.is_header);
+    return { secao: s, label: SECAO_LABELS[s], total: si.length, conf: si.filter(i => i.status === 'conforme').length };
+  });
+
   return (
-    <div>
-      {/* Toast */}
+    <div style={{ display:'flex', flexDirection:'column', gap:14 }}>
       {toast && <Toast msg={toast} onClose={() => setToast('')}/>}
 
-      {/* Stepper de navegação */}
-      <Stepper itens={itens} openSecao={openSecao} setOpenSecao={setOpenSecao} dadosSalvos={dadosSalvos}/>
-
-      {/* Barra de progresso geral */}
-      <div style={{ background:'#fff', borderRadius:12, padding:'12px 18px', border:'1px solid #e5e7eb', marginBottom:18, display:'flex', alignItems:'center', gap:14 }}>
-        <div style={{ flex:1 }}>
-          <div style={{ display:'flex', justifyContent:'space-between', marginBottom:5, fontSize:'0.75rem', fontWeight:600, color:'#6b7280' }}>
-            <span>Progresso geral</span>
-            <span style={{ color: progPct===100?'#16a34a':'inherit' }}>{conformes}/{totalItens} conformes — {progPct}%</span>
-          </div>
-          <div style={{ height:6, background:'#e5e7eb', borderRadius:4, overflow:'hidden' }}>
-            <div style={{ height:'100%', width:`${progPct}%`, background: progPct===100?'#16a34a':'var(--site-primary,#0D364F)', borderRadius:4, transition:'width .4s' }}/>
-          </div>
+      {/* Cabeçalho */}
+      <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', flexWrap:'wrap', gap:10, marginBottom:2 }}>
+        <div>
+          <h1 className="panel-page-title" style={{ marginBottom:4 }}>Relatório de Conformidade</h1>
+          <p className="panel-page-subtitle" style={{ margin:0 }}>Preencha todas as seções e envie para análise da OBGP</p>
         </div>
-        <div style={{ flexShrink:0, fontSize:'0.72rem', color:'#9ca3af', fontFamily:'monospace' }}>
+        <div style={{ fontSize:'0.7rem', color:'#9ca3af', fontFamily:'monospace', alignSelf:'center' }}>
           {relatorio.numero}
+        </div>
+      </div>
+
+      {/* Barra de progresso */}
+      <div style={{ background:'#fff', borderRadius:12, padding:'12px 18px', border:'1px solid #e5e7eb' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6, fontSize:'0.75rem', fontWeight:600, color:'#6b7280' }}>
+          <span>Progresso geral</span>
+          <span style={{ color: progPct===100?'#16a34a':'inherit' }}>{conformes}/{totalItens} conformes — {progPct}%</span>
+        </div>
+        <div style={{ height:7, background:'#e5e7eb', borderRadius:4, overflow:'hidden' }}>
+          <div style={{ height:'100%', width:`${progPct}%`, background: progPct===100?'#16a34a':'var(--site-primary,#0D364F)', borderRadius:4, transition:'width .4s' }}/>
         </div>
       </div>
 
       {/* Banners de status */}
       {relatorio.status === 'em_analise' && (
-        <div style={{ background:'rgba(59,130,246,.06)', border:'1px solid rgba(59,130,246,.2)', borderRadius:12, padding:'12px 16px', marginBottom:18, display:'flex', alignItems:'center', gap:10 }}>
+        <div style={{ background:'rgba(59,130,246,.06)', border:'1px solid rgba(59,130,246,.2)', borderRadius:12, padding:'12px 16px', display:'flex', alignItems:'center', gap:10 }}>
           <Clock size={15} style={{ color:'#2563eb', flexShrink:0 }}/>
           <span style={{ fontSize:'0.82rem', color:'#1e40af', fontWeight:500 }}>
             Enviado em {relatorio.submitted_at ? new Date(relatorio.submitted_at).toLocaleDateString('pt-BR') : '—'}. Aguardando análise OBGP.
@@ -445,108 +445,78 @@ function RelatorioContent() {
         </div>
       )}
       {relatorio.status === 'aprovado' && (
-        <div style={{ background:'rgba(22,163,74,.06)', border:'1px solid rgba(22,163,74,.2)', borderRadius:12, padding:'12px 16px', marginBottom:18, display:'flex', alignItems:'center', gap:10 }}>
+        <div style={{ background:'rgba(22,163,74,.06)', border:'1px solid rgba(22,163,74,.2)', borderRadius:12, padding:'12px 16px', display:'flex', alignItems:'center', gap:10 }}>
           <CheckCircle size={15} style={{ color:'#16a34a', flexShrink:0 }}/>
           <span style={{ fontSize:'0.82rem', color:'#15803d', fontWeight:700 }}>Relatório APROVADO. Selo OSC emitido.</span>
         </div>
       )}
       {relatorio.status === 'reprovado' && (
-        <div style={{ background:'rgba(220,38,38,.06)', border:'1px solid rgba(220,38,38,.2)', borderRadius:12, padding:'12px 16px', marginBottom:18 }}>
+        <div style={{ background:'rgba(220,38,38,.06)', border:'1px solid rgba(220,38,38,.2)', borderRadius:12, padding:'12px 16px' }}>
           <div style={{ fontSize:'0.82rem', fontWeight:700, color:'#dc2626', marginBottom:3 }}>Reprovado pela OBGP</div>
           {relatorio.observacao_admin && <div style={{ fontSize:'0.82rem', color:'#7f1d1d' }}>{relatorio.observacao_admin}</div>}
         </div>
       )}
 
       {/* ── Seção 1 — Dados da Entidade ── */}
-      {openSecao === 1 && (
-        <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e5e7eb', marginBottom:16, boxShadow:'0 1px 5px rgba(0,0,0,.04)' }}>
-          <div style={{ padding:'16px 20px', borderBottom:'1px solid #e5e7eb', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-            <span style={{ fontWeight:800, fontSize:'0.92rem', color:'var(--site-primary,#0D364F)' }}>1 — Dados da Entidade</span>
-            <span style={{ fontSize:'0.72rem', color: dadosSalvos ? '#16a34a' : '#9ca3af', display:'flex', alignItems:'center', gap:4, fontWeight:600 }}>
-              {saving === 'dados' ? (
-                <><div style={{ width:10, height:10, border:'2px solid #9ca3af', borderTopColor:'var(--site-primary,#0D364F)', borderRadius:'50%', animation:'spin 1s linear infinite' }}/> Salvando...</>
-              ) : dadosSalvos ? (
-                <><CheckCircle size={12}/> Salvo{dadosSalvoAt ? ` às ${fmtHora(dadosSalvoAt)}` : ''}</>
-              ) : (
-                'Não salvo'
-              )}
-            </span>
-          </div>
-          <div style={{ padding:'16px 20px' }}>
-            <p style={{ fontSize:'0.78rem', color:'#6b7280', marginBottom:14, lineHeight:1.5 }}>
-              Verifique e confirme os dados da entidade. Os campos são salvos automaticamente enquanto você digita.
-            </p>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:12 }}>
-              {DADOS_FIELDS.map(({ key, label }) => (
-                <div key={key}>
-                  <label style={{ display:'block', fontSize:'0.63rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', color:'#9ca3af', marginBottom:4 }}>{label}</label>
-                  <input type="text" value={dados[key]??''} disabled={readonly}
-                    onChange={e => handleDadosChange(key, e.target.value)}
-                    style={{ width:'100%', padding:'8px 10px', border:'1.5px solid #e5e7eb', borderRadius:8, fontSize:'0.83rem', outline:'none', background: readonly?'#f8fafc':'#fafafa', boxSizing:'border-box', transition:'border-color .15s' }}
-                    onFocus={e => { e.currentTarget.style.borderColor = 'var(--site-primary,#0D364F)'; }}
-                    onBlur={e => { e.currentTarget.style.borderColor = '#e5e7eb'; }}
-                  />
-                </div>
-              ))}
-            </div>
-            {!readonly && (
-              <div style={{ marginTop:16, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                <span style={{ fontSize:'0.75rem', color:'#9ca3af' }}>
-                  💡 Os dados são salvos automaticamente 1 segundo após a última edição.
-                </span>
-                <button onClick={() => setOpenSecao(2)}
-                  style={{ padding:'8px 20px', background:'var(--site-primary,#0D364F)', color:'#fff', border:'none', borderRadius:9, fontWeight:700, cursor:'pointer', fontSize:'0.82rem', display:'inline-flex', alignItems:'center', gap:5 }}>
-                  Próximo: Habilitação Jurídica →
-                </button>
+      <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e5e7eb', boxShadow:'0 1px 4px rgba(0,0,0,.04)' }}>
+        <SecaoHeader num={1} label={SECAO_LABELS[1]} conf={dadosSalvos?1:0} total={1} pend={dadosSalvos?0:1} readonly={readonly}/>
+        <div style={{ padding:'16px 20px' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))', gap:12 }}>
+            {DADOS_FIELDS.map(({ key, label }) => (
+              <div key={key}>
+                <label style={{ display:'block', fontSize:'0.62rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', color:'#9ca3af', marginBottom:4 }}>{label}</label>
+                <input type="text" value={dados[key]??''} disabled={readonly}
+                  onChange={e => handleDadosChange(key, e.target.value)}
+                  style={{ width:'100%', padding:'8px 10px', border:'1.5px solid #e5e7eb', borderRadius:8, fontSize:'0.83rem', outline:'none', background: readonly?'#f8fafc':'#fafafa', boxSizing:'border-box', transition:'border-color .15s' }}
+                  onFocus={e => { e.currentTarget.style.borderColor = 'var(--site-primary,#0D364F)'; }}
+                  onBlur={e => { e.currentTarget.style.borderColor = '#e5e7eb'; }}
+                />
               </div>
+            ))}
+          </div>
+          <div style={{ marginTop:10, display:'flex', alignItems:'center', gap:6, fontSize:'0.72rem' }}>
+            {saving === 'dados' ? (
+              <span style={{ color:'#9ca3af', display:'flex', alignItems:'center', gap:4 }}>
+                <div style={{ width:10, height:10, border:'2px solid #9ca3af', borderTopColor:'var(--site-primary,#0D364F)', borderRadius:'50%', animation:'spin 1s linear infinite' }}/> Salvando...
+              </span>
+            ) : dadosSalvos ? (
+              <span style={{ color:'#16a34a', display:'flex', alignItems:'center', gap:4, fontWeight:600 }}>
+                <CheckCircle size={12}/> Salvo{dadosSalvoAt ? ` às ${fmtHora(dadosSalvoAt)}` : ''}
+              </span>
+            ) : (
+              <span style={{ color:'#9ca3af' }}>Não salvo — os dados são salvos automaticamente após a edição.</span>
             )}
           </div>
         </div>
-      )}
+      </div>
 
       {/* ── Seções 2–5 ── */}
-      {secoes.filter(s => s === openSecao).map(secao => {
+      {([2,3,4,5] as const).map(secao => {
         const secItens = itens.filter(i => i.secao===secao).sort((a,b) => a.ordem-b.ordem);
         const secConf  = secItens.filter(i => !i.is_header && i.status==='conforme').length;
         const secTotal = secItens.filter(i => !i.is_header).length;
         const secPend  = secItens.filter(i => !i.is_header && i.status==='pendente').length;
 
         return (
-          <div key={secao} style={{ background:'#fff', borderRadius:14, border:'1px solid #e5e7eb', marginBottom:16, boxShadow:'0 1px 5px rgba(0,0,0,.04)' }}>
-            {/* Header da seção */}
-            <div style={{ padding:'16px 20px', borderBottom:'1px solid #e5e7eb', display:'flex', justifyContent:'space-between', alignItems:'center', flexWrap:'wrap', gap:8 }}>
-              <span style={{ fontWeight:800, fontSize:'0.92rem', color:'var(--site-primary,#0D364F)' }}>
-                {secao} — {SECAO_LABELS[secao]}
-              </span>
-              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                {secPend > 0 && !readonly && (
-                  <span style={{ fontSize:'0.7rem', color:'#f59e0b', fontWeight:700, background:'rgba(245,158,11,.1)', padding:'2px 8px', borderRadius:6 }}>
-                    {secPend} pendente{secPend>1?'s':''}
-                  </span>
-                )}
-                <span style={{ fontSize:'0.73rem', color: secConf===secTotal&&secTotal>0?'#16a34a':'#9ca3af', fontWeight:700 }}>
-                  {secConf===secTotal&&secTotal>0 ? '✅' : `${secConf}/${secTotal}`} conformes
-                </span>
-              </div>
-            </div>
+          <div key={secao} style={{ background:'#fff', borderRadius:14, border:'1px solid #e5e7eb', boxShadow:'0 1px 4px rgba(0,0,0,.04)' }}>
+            <SecaoHeader num={secao} label={SECAO_LABELS[secao]} conf={secConf} total={secTotal} pend={secPend} readonly={readonly}/>
 
-            {/* Instrução */}
             {!readonly && (
-              <div style={{ padding:'10px 20px', background:'rgba(13,54,79,.02)', borderBottom:'1px solid #e5e7eb', fontSize:'0.75rem', color:'#6b7280', lineHeight:1.5 }}>
-                Clique em uma linha para editar os dados do documento. Use o botão <strong>Upload</strong> para anexar o arquivo correspondente.
+              <div style={{ padding:'8px 20px', background:'rgba(13,54,79,.02)', borderBottom:'1px solid #e5e7eb', fontSize:'0.73rem', color:'#6b7280' }}>
+                Clique em uma linha para editar. Use <strong>Upload</strong> para anexar o documento comprobatório.
               </div>
             )}
 
-            {/* Tabela */}
             <div style={{ overflowX:'auto' }}>
-              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.82rem' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse', fontSize:'0.81rem' }}>
                 <thead>
                   <tr style={{ background:'#f8fafc' }}>
                     <th style={TH}>Cód.</th>
-                    <th style={{...TH,textAlign:'left',minWidth:220}}>Documento</th>
+                    <th style={{...TH,textAlign:'left',minWidth:220}}>Descrição do Documento</th>
                     <th style={TH}>Cód. Controle</th>
-                    <th style={TH}>Emissão</th>
-                    <th style={TH}>Validade</th>
+                    <th style={TH}>Data Emissão</th>
+                    <th style={TH}>Data Validade</th>
+                    <th style={{...TH,minWidth:160,textAlign:'left'}}>Análise / Situação Atual</th>
                     <th style={TH}>Status</th>
                     <th style={TH}>Arquivo</th>
                     {!readonly && <th style={TH}>Ações</th>}
@@ -564,20 +534,23 @@ function RelatorioContent() {
                             background: item.is_header ? '#f0f4f8' : exp ? 'rgba(13,54,79,.03)' : item.status==='conforme'&&!item.is_header ? 'rgba(22,163,74,.02)' : 'transparent',
                             cursor: !item.is_header && !readonly ? 'pointer' : 'default',
                           }}>
-                          <td style={{ ...TD, fontFamily:'monospace', fontWeight:700, color:'var(--site-primary,#0D364F)', whiteSpace:'nowrap', fontSize:'0.75rem' }}>
+                          <td style={{ ...TD, fontFamily:'monospace', fontWeight:700, color:'var(--site-primary,#0D364F)', whiteSpace:'nowrap', fontSize:'0.72rem' }}>
                             {item.codigo}
                           </td>
                           <td style={{ ...TD, fontWeight: item.is_header?700:500, color: item.is_header?'var(--site-primary,#0D364F)':'#1f2937', fontStyle: item.is_header?'italic':undefined }}>
                             {item.descricao}
                           </td>
-                          <td style={{ ...TD, color:'#6b7280', textAlign:'center', fontFamily:'monospace', fontSize:'0.75rem' }}>
+                          <td style={{ ...TD, color:'#6b7280', textAlign:'center', fontFamily:'monospace', fontSize:'0.72rem' }}>
                             {item.codigo_controle||'—'}
                           </td>
-                          <td style={{ ...TD, color:'#6b7280', textAlign:'center', whiteSpace:'nowrap', fontSize:'0.75rem' }}>
+                          <td style={{ ...TD, color:'#6b7280', textAlign:'center', whiteSpace:'nowrap', fontSize:'0.72rem' }}>
                             {item.data_emissao ? new Date(item.data_emissao+'T12:00:00').toLocaleDateString('pt-BR') : '—'}
                           </td>
-                          <td style={{ ...TD, color:'#6b7280', textAlign:'center', whiteSpace:'nowrap', fontSize:'0.75rem' }}>
+                          <td style={{ ...TD, color:'#6b7280', textAlign:'center', whiteSpace:'nowrap', fontSize:'0.72rem' }}>
                             {item.data_validade ? new Date(item.data_validade+'T12:00:00').toLocaleDateString('pt-BR') : '—'}
+                          </td>
+                          <td style={{ ...TD, color:'#6b7280', fontSize:'0.72rem', maxWidth:200 }}>
+                            {item.analise_atual || (item.is_header ? '' : '—')}
                           </td>
                           <td style={{ ...TD, textAlign:'center' }}>
                             {!item.is_header && <Badge s={item.status}/>}
@@ -585,7 +558,7 @@ function RelatorioContent() {
                           <td style={{ ...TD, textAlign:'center' }}>
                             {item.arquivo_nome && (
                               <button onClick={e=>{e.stopPropagation();viewFile(item.arquivo_path!)}}
-                                style={{ background:'none', border:'none', cursor:'pointer', color:'var(--site-primary,#0D364F)', display:'inline-flex', alignItems:'center', gap:3, fontSize:'0.72rem', fontWeight:600 }}>
+                                style={{ background:'none', border:'none', cursor:'pointer', color:'var(--site-primary,#0D364F)', display:'inline-flex', alignItems:'center', gap:3, fontSize:'0.7rem', fontWeight:600 }}>
                                 <ExternalLink size={11}/>{fmtBytes(item.arquivo_tamanho)}
                               </button>
                             )}
@@ -596,7 +569,7 @@ function RelatorioContent() {
                                 <div style={{ display:'flex', gap:4, justifyContent:'center' }}>
                                   <button disabled={uploading===item.id} title="Enviar arquivo"
                                     onClick={() => { uploadItemId.current=item.id; fileRef.current?.click(); }}
-                                    style={{ padding:'4px 9px', border:'1.5px solid var(--site-primary,#0D364F)', borderRadius:6, background: item.arquivo_nome?'var(--site-primary,#0D364F)':'none', cursor:'pointer', color: item.arquivo_nome?'#fff':'var(--site-primary,#0D364F)', fontSize:'0.7rem', fontWeight:700, display:'inline-flex', alignItems:'center', gap:3 }}>
+                                    style={{ padding:'4px 9px', border:'1.5px solid var(--site-primary,#0D364F)', borderRadius:6, background: item.arquivo_nome?'var(--site-primary,#0D364F)':'none', cursor:'pointer', color: item.arquivo_nome?'#fff':'var(--site-primary,#0D364F)', fontSize:'0.68rem', fontWeight:700, display:'inline-flex', alignItems:'center', gap:3 }}>
                                     {uploading===item.id ? '...' : <><Upload size={10}/>{item.arquivo_nome?'Trocar':'Upload'}</>}
                                   </button>
                                   {item.arquivo_path && (
@@ -614,7 +587,7 @@ function RelatorioContent() {
                         {/* Linha expandida de edição */}
                         {exp && !item.is_header && !readonly && (
                           <tr key={`${item.id}-exp`}>
-                            <td colSpan={8} style={{ padding:'16px 20px', borderTop:'1px dashed #e5e7eb', background:'rgba(13,54,79,.02)' }}>
+                            <td colSpan={9} style={{ padding:'16px 20px', borderTop:'1px dashed #e5e7eb', background:'rgba(13,54,79,.02)' }}>
                               <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(170px,1fr))', gap:10, marginBottom:10 }}>
                                 {[
                                   { f:'codigo_controle', label:'Código de Controle', type:'text',  ph:'ex: 3AA3.704B.578E.7710' },
@@ -661,7 +634,7 @@ function RelatorioContent() {
                                   style={{ padding:'7px 16px', background:'var(--site-primary,#0D364F)', color:'#fff', border:'none', borderRadius:8, fontWeight:700, cursor:'pointer', fontSize:'0.78rem', display:'inline-flex', alignItems:'center', gap:5 }}>
                                   <Save size={12}/>{saving===item.id?'Salvando...':'Salvar'}
                                 </button>
-                                <span style={{ fontSize:'0.72rem', color:'#9ca3af' }}>Os campos são salvos automaticamente após edição.</span>
+                                <span style={{ fontSize:'0.72rem', color:'#9ca3af' }}>Campos salvos automaticamente após edição.</span>
                               </div>
                             </td>
                           </tr>
@@ -676,7 +649,7 @@ function RelatorioContent() {
             {/* Adicionar instrumento — Seção 5 */}
             {secao===5 && !readonly && (
               <div style={{ padding:'14px 18px', borderTop:'1px solid #e5e7eb' }}>
-                <div style={{ fontSize:'0.75rem', fontWeight:700, color:'#6b7280', marginBottom:8 }}>
+                <div style={{ fontSize:'0.73rem', fontWeight:700, color:'#6b7280', marginBottom:8 }}>
                   Adicionar Instrumento de Parceria (Termo de Fomento, Colaboração, Convênio, etc.)
                 </div>
                 <div style={{ display:'flex', gap:8, alignItems:'center', flexWrap:'wrap' }}>
@@ -692,56 +665,71 @@ function RelatorioContent() {
                 </div>
               </div>
             )}
-
-            {/* Navegação entre seções */}
-            {!readonly && (
-              <div style={{ padding:'12px 18px', borderTop:'1px solid #e5e7eb', display:'flex', justifyContent:'space-between' }}>
-                <button onClick={() => setOpenSecao(secao-1)}
-                  style={{ padding:'7px 14px', background:'none', border:'1.5px solid #e5e7eb', borderRadius:8, cursor:'pointer', fontSize:'0.78rem', fontWeight:600, color:'#6b7280', display:'flex', alignItems:'center', gap:5 }}>
-                  ← {secao === 2 ? 'Dados da Entidade' : `Seção ${secao-1}`}
-                </button>
-                {secao < 5 ? (
-                  <button onClick={() => setOpenSecao(secao+1)}
-                    style={{ padding:'7px 14px', background:'var(--site-primary,#0D364F)', color:'#fff', border:'none', borderRadius:8, cursor:'pointer', fontSize:'0.78rem', fontWeight:700, display:'flex', alignItems:'center', gap:5 }}>
-                    Próximo: {SECAO_LABELS[secao+1]} →
-                  </button>
-                ) : (
-                  <button onClick={handleSubmit} disabled={submitting}
-                    style={{ padding:'10px 24px', background:'#16a34a', color:'#fff', border:'none', borderRadius:9, fontWeight:800, cursor: submitting?'wait':'pointer', fontSize:'0.85rem', display:'flex', alignItems:'center', gap:7 }}>
-                    {submitting ? 'Enviando...' : <><Send size={14}/>Enviar para Análise</>}
-                  </button>
-                )}
-              </div>
-            )}
           </div>
         );
       })}
 
-      {/* Painel final — quando nenhuma seção acima está selecionada */}
-      {openSecao > 5 && !readonly && (
-        <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e5e7eb', padding:'20px 22px', display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:14 }}>
-          <div>
-            <div style={{ fontWeight:700, fontSize:'0.88rem', color:'var(--site-primary,#0D364F)', marginBottom:2 }}>Enviar para Análise</div>
-            <div style={{ fontSize:'0.78rem', color:'#6b7280', lineHeight:1.5 }}>
-              Revise todas as seções antes de enviar. Após o envio, o relatório fica bloqueado para edição.
-            </div>
+      {/* ── Seção 6 — Conclusão ── */}
+      <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e5e7eb', boxShadow:'0 1px 4px rgba(0,0,0,.04)' }}>
+        <SecaoHeader num={6} label={SECAO_LABELS[6]} conf={progPct===100?1:0} total={1} pend={progPct===100?0:1} readonly={readonly}/>
+        <div style={{ padding:'18px 20px' }}>
+          {/* Resumo por seção */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:10, marginBottom:20 }}>
+            {secStats.map(({ secao, label, total, conf }) => {
+              const pct = total > 0 ? Math.round((conf/total)*100) : 0;
+              const done = total > 0 && conf === total;
+              return (
+                <div key={secao} style={{ border:`1px solid ${done?'rgba(22,163,74,.25)':'#e5e7eb'}`, borderRadius:10, padding:'12px 14px', background: done?'rgba(22,163,74,.03)':'#fafafa' }}>
+                  <div style={{ fontSize:'0.6rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', color: done?'#16a34a':'#9ca3af', marginBottom:4 }}>
+                    Seção {secao}
+                  </div>
+                  <div style={{ fontSize:'0.78rem', fontWeight:700, color:'var(--site-primary,#0D364F)', marginBottom:6, lineHeight:1.3 }}>{label}</div>
+                  <div style={{ height:5, background:'#e5e7eb', borderRadius:3, overflow:'hidden', marginBottom:4 }}>
+                    <div style={{ height:'100%', width:`${pct}%`, background: done?'#16a34a':'var(--site-primary,#0D364F)', borderRadius:3, transition:'width .3s' }}/>
+                  </div>
+                  <div style={{ fontSize:'0.68rem', color: done?'#16a34a':'#6b7280', fontWeight:600 }}>
+                    {done ? '✅ Concluído' : `${conf}/${total} — ${pct}%`}
+                  </div>
+                </div>
+              );
+            })}
           </div>
-          <button onClick={handleSubmit} disabled={submitting}
-            style={{ padding:'11px 26px', background:'#16a34a', color:'#fff', border:'none', borderRadius:10, fontWeight:800, cursor: submitting?'wait':'pointer', fontSize:'0.88rem', display:'flex', alignItems:'center', gap:8 }}>
-            {submitting ? 'Enviando...' : <><Send size={15}/>Enviar para Análise</>}
-          </button>
-        </div>
-      )}
 
-      {/* PDF */}
-      {(relatorio.status === 'aprovado' || relatorio.status === 'em_analise') && (
-        <div style={{ textAlign:'center', marginTop:14 }}>
-          <a href={`/api/relatorio/pdf/${relatorio.id}`} target="_blank" rel="noopener noreferrer"
-            style={{ display:'inline-flex', alignItems:'center', gap:6, fontSize:'0.82rem', fontWeight:600, color:'var(--site-primary,#0D364F)', textDecoration:'none' }}>
-            <ShieldCheck size={13}/>Visualizar / Imprimir Relatório de Conformidade
-          </a>
+          {/* Notas finais e submit */}
+          <div style={{ borderTop:'1px solid #e5e7eb', paddingTop:16 }}>
+            <div style={{ fontSize:'0.78rem', color:'#6b7280', lineHeight:1.6, marginBottom:14 }}>
+              <strong style={{ color:'#1f2937' }}>Antes de enviar, confirme:</strong>
+              <ul style={{ margin:'6px 0 0 18px', padding:0 }}>
+                <li>Todos os documentos comprobatórios foram anexados</li>
+                <li>Os dados da entidade (Seção 1) estão corretos e salvos</li>
+                <li>As datas de emissão e validade estão preenchidas</li>
+              </ul>
+            </div>
+
+            {!readonly && (
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
+                <div style={{ fontSize:'0.75rem', color:'#9ca3af', lineHeight:1.4 }}>
+                  Após o envio, o relatório ficará bloqueado para edição enquanto aguarda análise.
+                </div>
+                <button onClick={handleSubmit} disabled={submitting}
+                  style={{ padding:'11px 28px', background:'#16a34a', color:'#fff', border:'none', borderRadius:10, fontWeight:800, cursor: submitting?'wait':'pointer', fontSize:'0.88rem', display:'inline-flex', alignItems:'center', gap:8, boxShadow:'0 2px 8px rgba(22,163,74,.3)' }}>
+                  {submitting ? 'Enviando...' : <><Send size={15}/>Enviar para Análise</>}
+                </button>
+              </div>
+            )}
+
+            {/* PDF link */}
+            {(relatorio.status === 'aprovado' || relatorio.status === 'em_analise') && (
+              <div style={{ marginTop:14, paddingTop:14, borderTop:'1px solid #e5e7eb', textAlign:'center' }}>
+                <a href={`/api/relatorio/pdf/${relatorio.id}`} target="_blank" rel="noopener noreferrer"
+                  style={{ display:'inline-flex', alignItems:'center', gap:6, fontSize:'0.82rem', fontWeight:600, color:'var(--site-primary,#0D364F)', textDecoration:'none' }}>
+                  <ShieldCheck size={13}/>Visualizar / Imprimir Relatório de Conformidade
+                </a>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+      </div>
 
       <input ref={fileRef} type="file" style={{ display:'none' }}
         accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" onChange={handleUpload}/>
