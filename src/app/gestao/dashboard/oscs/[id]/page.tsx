@@ -7,7 +7,7 @@ import {
   ArrowLeft, CheckCircle, XCircle, Clock, ExternalLink,
   FileText, BookOpen, ClipboardList, AlertCircle, Save,
   Building2, Phone, MapPin, Hash, ShieldCheck, ChevronDown, ChevronUp,
-  Edit2, X, Mail, Home, User, Award, CreditCard, PenLine,
+  Edit2, X, Mail, Home, User, Award, CreditCard, PenLine, Download
 } from 'lucide-react';
 
 /* ── Types ──────────────────────────────────────── */
@@ -1151,6 +1151,19 @@ export default function OscDetailPage() {
                     onClick={handleSaveRelatorio} disabled={savingRel}>
                     {savingRel ? '...' : <><Save size={13} /> Salvar</>}
                   </button>
+                  {relatorio.arquivo_docx_path && (
+                    <button className="admin-btn"
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '7px 16px', fontSize: '0.82rem', background: '#2563eb', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
+                      onClick={async () => {
+                        const { data } = await supabase.storage.from('osc-docs').createSignedUrl(relatorio.arquivo_docx_path, 3600);
+                        if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                        else alert('Documento não disponível ou expirado.');
+                      }}
+                      title="Download do Documento Word"
+                    >
+                      <Download size={13} /> DOCX
+                    </button>
+                  )}
                 </div>
               </div>
 

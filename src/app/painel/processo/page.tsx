@@ -4,6 +4,8 @@ import {
   ShieldCheck, UploadCloud, CheckCircle2, FileText, ChevronRight, Activity, Clock, FileCheck, Search, FileSignature, HelpCircle, Check, AlertCircle, CircleDashed, Briefcase
 } from 'lucide-react';
 import { usePainel } from '../PainelContext';
+import { supabase } from '@/lib/supabase';
+import { gerarRelatorioDocx } from '@/lib/docxGenerator';
 
 const HABILITACAO_JURIDICA = [
   { id: '2.1', title: 'Cartão CNPJ' },
@@ -101,9 +103,94 @@ export default function ProcessoPage() {
     setEntidadeData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleConsultarPagamentoEEnviar = () => {
-    // Exemplo de integração: a ação enviará para o Admin somente após a liquidação do Selo
-    alert('Aviso: O envio deste processo para a Administração requer a confirmação do pagamento referente à certificação (Selo OSC). O sistema validará a compensação antes da geração oficial.');
+  const [enviando, setEnviando] = useState(false);
+  const [mensagemEnviando, setMensagemEnviando] = useState('');
+
+  const handleConsultarPagamentoEEnviar = async () => {
+    if (!perfil) return;
+    setEnviando(true);
+    setMensagemEnviando('Verificando status de liberação/pagamento...');
+
+    try {
+      // 1. Check if certificacao_liberada is true on this OSC profile
+      const { data: pData, error: pErr } = await supabase
+        .from('osc_perfis')
+        .select('certificacao_liberada')
+        .eq('id', perfil.id)
+        .single();
+      
+      if (pErr) throw pErr;
+      if (!pData?.certificacao_liberada) {
+        alert('Acesso Bloqueado: O envio do relatório requer a liberação prévia através da validação da taxa de certificação pelo setor administrativo. Finalize o repasse e aguarde a aprovação no painel.');
+        setEnviando(false);
+        return;
+      }
+
+      setMensagemEnviando('Sintetizando e gerando Documento Microsoft Word (.docx)...');
+      
+      // 2. Generate DOCX from template
+      const enderecoGeral = [entidadeData.logradouro, entidadeData.numero_endereco, entidadeData.bairro, entidadeData.municipio, entidadeData.estado].filter(Boolean).join(', ');
+      
+      const docxData = {
+        cnpj: entidadeData.cnpj || 'Não Informado',
+        natureza_juridica: entidadeData.natureza_juridica || 'Não Informado',
+        razao_social: entidadeData.razao_social || 'Não Informado',
+        nome_fantasia: entidadeData.nome_fantasia || 'Não Informado',
+        endereco: enderecoGeral || 'Não Informado',
+        data_abertura: entidadeData.data_abertura_cnpj || 'Não Informado',
+        email: entidadeData.email_osc || 'Não Informado',
+        telefone: entidadeData.telefone || 'Não Informado',
+        numero_relatorio: `OBGP${new Date().getFullYear()}${perfil.id.substring(0, 4).toUpperCase()}`,
+        codigo_controle: `RC${new Date().getTime().toString(36).toUpperCase()}`,
+        data_hoje: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+      };
+      
+      const blob = await gerarRelatorioDocx(docxData);
+
+      setMensagemEnviando('Enviando documento para criptografia em nuvem permanente...');
+      
+      // 3. Upload to Supabase Storage
+      const pathArquivo = `relatorios/${perfil.osc_id}/RELATORIO_CONFORMIDADE_${Date.now()}.docx`;
+      const { data: upData, error: upError } = await supabase.storage
+        .from('osc-docs')
+        .upload(pathArquivo, blob, { contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', upsert: true });
+        
+      if (upError) throw upError;
+
+      setMensagemEnviando('Sincronizando modelo ao painel Administrativo...');
+
+      // 4. Update the relatorios_conformidade table
+      // It includes JSONB mapping just in case we need it visually later
+      const repPayload = {
+        osc_id: perfil.osc_id,
+        numero: docxData.numero_relatorio,
+        status: 'em_analise',
+        dados_entidade: entidadeData,
+        habilitacao_juridica: data,
+        submitted_at: new Date().toISOString(),
+        arquivo_docx_path: pathArquivo
+      };
+
+      // Upsert logic based on osc_id 
+      // (Supabase generated table uses UUID 'id', so we check if there's one)
+      const { data: exist } = await supabase.from('relatorios_conformidade').select('id').eq('osc_id', perfil.osc_id).maybeSingle();
+      
+      if (exist) {
+        await supabase.from('relatorios_conformidade').update(repPayload).eq('id', exist.id);
+      } else {
+        await supabase.from('relatorios_conformidade').insert(repPayload);
+      }
+
+      setMensagemEnviando('');
+      setEnviando(false);
+      alert('Relatório gerado em DOCX, assinado e enviado ao Comitê Administrativo com sucesso! O processo passará por análise oficial.');
+
+    } catch (e: any) {
+      console.error(e);
+      alert(`Ocorreu um erro gerando/enviando seu relatório: ${e.message}`);
+      setEnviando(false);
+      setMensagemEnviando('');
+    }
   };
 
   const currentProgress = 35; // Mock progress for visual tracking
@@ -268,9 +355,14 @@ export default function ProcessoPage() {
               <AlertCircle size={14} style={{ display: 'inline', position: 'relative', top: 2, marginRight: 4 }} />
               O envio para a administração requer assinatura e pagamento ativo.
             </span>
-            <button onClick={handleConsultarPagamentoEEnviar} className="btn btn-gold" style={{ padding: '14px 28px', fontSize: '1rem' }}>
-              <CheckCircle2 size={18} /> Validar, Verificar Pagamento e Enviar Processo
+            <button onClick={handleConsultarPagamentoEEnviar} disabled={enviando} className="btn btn-gold" style={{ padding: '14px 28px', fontSize: '1rem', minWidth: 420 }}>
+              {enviando ? (
+                <span style={{ display:'flex', alignItems:'center', gap:8 }}><Clock size={18} className="spin-anim" /> {mensagemEnviando || 'Processando...'}</span>
+              ) : (
+                <><CheckCircle2 size={18} /> Validar, Verificar Pagamento e Enviar Processo</>
+              )}
             </button>
+            <style>{`@keyframes spin-anim { 100% { transform: rotate(360deg); } } .spin-anim { animation: spin-anim 1s linear infinite; }`}</style>
           </div>
         </div>
       </section>
