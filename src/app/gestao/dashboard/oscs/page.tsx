@@ -60,6 +60,7 @@ function OscsContent() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState(false);
   const [confirmEmptyOpen, setConfirmEmptyOpen] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -120,23 +121,63 @@ function OscsContent() {
     setActionLoading(false);
   };
 
-  /* ── Excluir permanentemente ── */
+  /* ── Excluir permanentemente (com cascata manual) ── */
   const handlePermanentDelete = async (ids: string[]) => {
     setActionLoading(true);
-    await supabase.from('osc_perfis').delete().in('id', ids);
-    await loadData();
-    setSelected(new Set());
-    setActionLoading(false);
+    setErrorMsg(null);
+
+    // Buscar os osc_id (texto) correspondentes aos UUIDs
+    const records = [...all, ...trash].filter(o => ids.includes(o.id));
+    const oscIds = records.map(o => o.osc_id);
+
+    try {
+      // Deletar registros filhos primeiro (evitar FK constraint)
+      if (oscIds.length) {
+        await supabase.from('osc_documentos').delete().in('osc_id', oscIds);
+        await supabase.from('notificacoes').delete().in('osc_id', oscIds);
+        await supabase.from('certificacao_pagamentos').delete().in('osc_id', oscIds);
+      }
+
+      // Deletar o perfil principal
+      const { error } = await supabase.from('osc_perfis').delete().in('id', ids);
+      if (error) throw error;
+
+      await loadData();
+      setSelected(new Set());
+    } catch (err: any) {
+      console.error('Erro ao excluir OSC:', err);
+      setErrorMsg(`Erro ao excluir: ${err?.message ?? 'Tente novamente.'}`);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  /* ── Esvaziar lixeira ── */
+  /* ── Esvaziar lixeira (com cascata manual) ── */
   const handleEmptyTrash = async () => {
     setConfirmEmptyOpen(false);
     setActionLoading(true);
+    setErrorMsg(null);
+
     const ids = trash.map(o => o.id);
-    if (ids.length) await supabase.from('osc_perfis').delete().in('id', ids);
-    await loadData();
-    setActionLoading(false);
+    const oscIds = trash.map(o => o.osc_id);
+
+    try {
+      if (ids.length) {
+        // Deletar registros filhos primeiro
+        await supabase.from('osc_documentos').delete().in('osc_id', oscIds);
+        await supabase.from('notificacoes').delete().in('osc_id', oscIds);
+        await supabase.from('certificacao_pagamentos').delete().in('osc_id', oscIds);
+
+        const { error } = await supabase.from('osc_perfis').delete().in('id', ids);
+        if (error) throw error;
+      }
+      await loadData();
+    } catch (err: any) {
+      console.error('Erro ao esvaziar lixeira:', err);
+      setErrorMsg(`Erro ao esvaziar: ${err?.message ?? 'Tente novamente.'}`);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
   /* ── Seleção ── */
@@ -178,6 +219,18 @@ function OscsContent() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── Banner de erro ── */}
+      {errorMsg && (
+        <div style={{
+          background: 'rgba(220,38,38,0.08)', border: '1px solid rgba(220,38,38,0.25)',
+          borderRadius: 10, padding: '12px 16px', marginBottom: 16,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12,
+        }}>
+          <span style={{ fontSize: '0.82rem', color: '#dc2626', fontWeight: 600 }}>{errorMsg}</span>
+          <button onClick={() => setErrorMsg(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#dc2626', fontSize: '1rem', lineHeight: 1, padding: '0 4px' }}>✕</button>
         </div>
       )}
 
