@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import {
   Search, Users, Eye,
@@ -42,6 +42,7 @@ function fmtDate(iso: string) {
 
 function OscsContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const initialStatus = searchParams.get('status') ?? '';
   const [all, setAll]         = useState<OscPerfil[]>([]);
   const [trash, setTrash]     = useState<OscPerfil[]>([]);
@@ -308,14 +309,20 @@ function OscsContent() {
           {/* Lixeira toggle */}
           {trashView ? (
             <button
-              onClick={() => { setTrashView(false); setStatusFilter(''); setQuery(''); }}
+              onClick={() => { 
+                setTrashView(false); setStatusFilter(''); setQuery(''); 
+                router.push('/gestao/dashboard/oscs'); 
+              }}
               className="admin-btn admin-btn-secondary"
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', fontSize: '0.78rem', borderRadius: 8, fontWeight: 600 }}>
               <ArrowLeft size={13} /> Voltar
             </button>
           ) : (
             <button
-              onClick={() => { setTrashView(true); setStatusFilter(''); setQuery(''); }}
+              onClick={() => { 
+                setTrashView(true); setStatusFilter(''); setQuery(''); 
+                router.push('/gestao/dashboard/oscs?lixeira=1');
+              }}
               className="admin-btn admin-btn-secondary"
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', fontSize: '0.78rem', borderRadius: 8, position: 'relative' }}>
               <Trash size={13} /> Lixeira
