@@ -63,6 +63,7 @@ function SidebarNav({ sections, onNavigate }: {
 }) {
   const currentPath = usePathname();
   const searchParams = useSearchParams();
+  const router = useRouter();
   const isLixeira = searchParams.get('lixeira') === '1';
 
   return (
@@ -77,15 +78,20 @@ function SidebarNav({ sections, onNavigate }: {
               ? currentPath === itemPath && isLixeira
               : currentPath === itemPath && !isLixeira;
             return (
-              <Link
+              <a
                 key={item.path}
                 href={item.path}
                 className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
-                onClick={onNavigate}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onNavigate();
+                  router.push(item.path);
+                  router.refresh();
+                }}
               >
                 <Icon className="sidebar-nav-icon" size={20} strokeWidth={isActive ? 2.2 : 1.8} />
                 {item.label}
-              </Link>
+              </a>
             );
           })}
         </div>
