@@ -35,9 +35,10 @@ export async function middleware(request: NextRequest) {
   const { response, user } = await createClient(request);
   const path = request.nextUrl.pathname;
 
-  // /gestao/dashboard — exige role 'admin'; redireciona para /gestao se não autenticado ou sem permissão
+  // /gestao/dashboard — exige role 'admin' ou 'superadmin'; redireciona para /gestao se não autenticado ou sem permissão
   if (path.startsWith('/gestao/dashboard')) {
-    if (!user || user.app_metadata?.role !== 'admin') {
+    const role = user?.app_metadata?.role;
+    if (!user || (role !== 'admin' && role !== 'superadmin')) {
       return NextResponse.redirect(new URL('/gestao', request.url));
     }
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');

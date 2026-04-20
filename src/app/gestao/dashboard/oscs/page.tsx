@@ -45,17 +45,14 @@ function OscsContent() {
   const router = useRouter();
   const initialStatus = searchParams.get('status') ?? '';
   const [all, setAll]         = useState<OscPerfil[]>([]);
-  const [trash, setTrash]     = useState<OscPerfil[]>([]);
+  const [trashCount, setTrashCount] = useState(0);
   const [filtered, setFiltered] = useState<OscPerfil[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [query, setQuery]     = useState('');
-  const [trashView, setTrashView] = useState(searchParams.get('lixeira') === '1');
 
-  // Sync trashView when URL query param changes (sidebar navigation)
   useEffect(() => {
-    setTrashView(searchParams.get('lixeira') === '1');
-    setStatusFilter('');
+    setStatusFilter(searchParams.get('status') ?? '');
     setQuery('');
   }, [searchParams]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -72,14 +69,13 @@ function OscsContent() {
 
     const rows = (data ?? []) as OscPerfil[];
     setAll(rows.filter(o => !o.deleted_at));
-    setTrash(rows.filter(o => !!o.deleted_at));
+    setTrashCount(rows.filter(o => !!o.deleted_at).length);
     setLoading(false);
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
 
   const applyFilters = useCallback(() => {
-    if (trashView) { setFiltered(trash); return; }
     let list = all;
     if (statusFilter) list = list.filter(o => o.status_selo === statusFilter);
     if (query.trim()) {
@@ -92,7 +88,7 @@ function OscsContent() {
       );
     }
     setFiltered(list);
-  }, [all, trash, trashView, statusFilter, query]);
+  }, [all, statusFilter, query]);
 
   useEffect(() => { applyFilters(); setSelected(new Set()); }, [applyFilters]);
 
@@ -113,26 +109,14 @@ function OscsContent() {
     setActionLoading(false);
   };
 
-  /* ── Restaurar ── */
-  const handleRestore = async (ids: string[]) => {
-    setActionLoading(true);
-    await supabase.from('osc_perfis').update({ deleted_at: null }).in('id', ids);
-    await loadData();
-    setSelected(new Set());
-    setActionLoading(false);
-  };
+  /* ── Restaurar (Removido daqui pois lixeira agora é outra página) ── */
 
-  /* ── Excluir permanentemente (com cascata manual) ── */
+  /* ── Excluir permanentemente (Simplificado) ── */
   const handlePermanentDelete = async (ids: string[]) => {
-    setActionLoading(true);
-    setErrorMsg(null);
-
-    // Buscar os osc_id (texto) correspondentes aos UUIDs
-    const records = [...all, ...trash].filter(o => ids.includes(o.id));
+    setActionLoading(true); setErrorMsg(null);
+    const records = all.filter(o => ids.includes(o.id));
     const oscIds = records.map(o => o.osc_id);
-
     try {
-      // Deletar registros filhos primeiro (evitar FK constraint)
       if (oscIds.length) {
         await Promise.all([
           supabase.from('osc_documentos').delete().in('osc_id', oscIds),
@@ -143,52 +127,14 @@ function OscsContent() {
           supabase.from('osc_formularios').delete().in('osc_id', oscIds)
         ]);
       }
-
-      // Deletar o perfil principal
       const { error } = await supabase.from('osc_perfis').delete().in('id', ids);
       if (error) throw error;
-
       await loadData();
       setSelected(new Set());
     } catch (err: any) {
-      console.error('Erro ao excluir OSC:', err);
-      setErrorMsg(`Erro ao excluir: ${err?.message ?? 'A exclusão permanente falhou possivelmente devido à falta de Políticas DELETE (RLS). Execute o SQL fornecido.'}`);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  /* ── Esvaziar lixeira (com cascata manual) ── */
-  const handleEmptyTrash = async () => {
-    setConfirmEmptyOpen(false);
-    setActionLoading(true);
-    setErrorMsg(null);
-
-    const ids = trash.map(o => o.id);
-    const oscIds = trash.map(o => o.osc_id);
-
-    try {
-      if (ids.length) {
-        // Deletar registros filhos primeiro
-        await Promise.all([
-          supabase.from('osc_documentos').delete().in('osc_id', oscIds),
-          supabase.from('notificacoes').delete().in('osc_id', oscIds),
-          supabase.from('certificacao_pagamentos').delete().in('osc_id', oscIds),
-          supabase.from('relatorios_conformidade').delete().in('osc_id', oscIds),
-          supabase.from('osc_prestacao_contas').delete().in('osc_id', oscIds),
-          supabase.from('osc_formularios').delete().in('osc_id', oscIds)
-        ]);
-
-        const { error } = await supabase.from('osc_perfis').delete().in('id', ids);
-        if (error) throw error;
-      }
-      await loadData();
-    } catch (err: any) {
-      console.error('Erro ao esvaziar lixeira:', err);
-      setErrorMsg(`Erro ao esvaziar: ${err?.message ?? 'A exclusão permanente falhou possivelmente devido à falta de Políticas DELETE (RLS). Execute o SQL fornecido.'}`);
-    } finally {
-      setActionLoading(false);
-    }
+      console.error('Erro ao excluir:', err);
+      setErrorMsg(`Erro ao excluir: ${err?.message ?? 'Falha na exclusão.'}`);
+    } finally { setActionLoading(false); }
   };
 
   /* ── Seleção ── */
@@ -206,32 +152,7 @@ function OscsContent() {
 
   return (
     <div>
-      {/* ── Confirm empty trash modal ── */}
-      {confirmEmptyOpen && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999,
-          background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <div style={{ background: '#fff', borderRadius: 16, padding: '32px 28px', maxWidth: 380, width: '90%', boxShadow: '0 8px 40px rgba(0,0,0,0.18)', textAlign: 'center' }}>
-            <AlertTriangle size={36} style={{ color: '#dc2626', marginBottom: 12 }} />
-            <div style={{ fontWeight: 800, fontSize: '1rem', marginBottom: 8 }}>Esvaziar lixeira?</div>
-            <div style={{ fontSize: '0.85rem', color: '#555', lineHeight: 1.6, marginBottom: 24 }}>
-              Todos os <strong>{trash.length}</strong> registros serão excluídos <strong>permanentemente</strong>.
-              Esta ação não pode ser desfeita.
-            </div>
-            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
-              <button onClick={() => setConfirmEmptyOpen(false)}
-                style={{ padding: '9px 20px', border: '1.5px solid #e5e7eb', borderRadius: 8, background: '#fff', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>
-                Cancelar
-              </button>
-              <button onClick={handleEmptyTrash}
-                style={{ padding: '9px 20px', border: 'none', borderRadius: 8, background: '#dc2626', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: '0.85rem' }}>
-                Esvaziar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* ── Modal removido (lixeira agora é outra página) ── */}
 
       {/* ── Banner de erro ── */}
       {errorMsg && (
@@ -247,102 +168,48 @@ function OscsContent() {
 
       {/* ── Top bar ── */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-        {!trashView ? (
-          <div className="adm-tabs">
-            {STATUS_OPTS.map(opt => {
-              const Icon = opt.icon;
-              const count = counts[opt.value as keyof typeof counts];
-              return (
-                <button key={opt.value} className={`adm-tab ${statusFilter === opt.value ? 'active' : ''}`}
-                  onClick={() => setStatusFilter(opt.value)}>
-                  <Icon size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 5 }} />
-                  {opt.label}
-                  <span style={{ marginLeft: 6, opacity: .65, fontWeight: 500 }}>({count})</span>
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--admin-text-secondary)', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Trash size={15} /> Lixeira
-            <span style={{ fontWeight: 500, color: 'var(--admin-text-tertiary)' }}>({trash.length} {trash.length === 1 ? 'item' : 'itens'})</span>
-          </div>
-        )}
+        <div className="adm-tabs">
+          {STATUS_OPTS.map(opt => {
+            const Icon = opt.icon;
+            const count = counts[opt.value as keyof typeof counts];
+            return (
+              <button key={opt.value} className={`adm-tab ${statusFilter === opt.value ? 'active' : ''}`}
+                onClick={() => setStatusFilter(opt.value)}>
+                <Icon size={13} style={{ display: 'inline', verticalAlign: 'middle', marginRight: 5 }} />
+                {opt.label}
+                <span style={{ marginLeft: 6, opacity: .65, fontWeight: 500 }}>({count})</span>
+              </button>
+            );
+          })}
+        </div>
 
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          {!trashView && (
-            <div className="admin-header-search" style={{ width: 240 }}>
-              <Search size={14} className="admin-header-search-icon" />
-              <input type="text" placeholder="Buscar OSC, responsável, CNPJ..."
-                value={query} onChange={e => setQuery(e.target.value)} />
-            </div>
-          )}
+          <div className="admin-header-search" style={{ width: 240 }}>
+            <Search size={14} className="admin-header-search-icon" />
+            <input type="text" placeholder="Buscar OSC, responsável, CNPJ..."
+              value={query} onChange={e => setQuery(e.target.value)} />
+          </div>
 
-          {/* Bulk actions */}
           {someSelected && (
-            trashView ? (
-              <>
-                <button
-                  onClick={() => handleRestore([...selected])}
-                  disabled={actionLoading}
-                  className="admin-btn admin-btn-secondary"
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', fontSize: '0.78rem', borderRadius: 8 }}>
-                  <RotateCcw size={13} /> Restaurar ({selected.size})
-                </button>
-                <button
-                  onClick={() => handlePermanentDelete([...selected])}
-                  disabled={actionLoading}
-                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', fontSize: '0.78rem', borderRadius: 8, border: 'none', background: '#dc2626', color: '#fff', cursor: 'pointer', fontWeight: 700 }}>
-                  <Trash2 size={13} /> Excluir ({selected.size})
-                </button>
-              </>
-            ) : (
-              <button
-                onClick={() => handleMoveToTrash([...selected])}
-                disabled={actionLoading}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', fontSize: '0.78rem', borderRadius: 8, border: 'none', background: '#dc2626', color: '#fff', cursor: 'pointer', fontWeight: 700 }}>
-                <Trash2 size={13} /> Mover para lixeira ({selected.size})
-              </button>
-            )
-          )}
-
-          {/* Lixeira toggle */}
-          {trashView ? (
             <button
-              onClick={() => { 
-                setTrashView(false); setStatusFilter(''); setQuery(''); 
-                router.push('/gestao/dashboard/oscs'); 
-              }}
-              className="admin-btn admin-btn-secondary"
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', fontSize: '0.78rem', borderRadius: 8, fontWeight: 600 }}>
-              <ArrowLeft size={13} /> Voltar
-            </button>
-          ) : (
-            <button
-              onClick={() => { 
-                setTrashView(true); setStatusFilter(''); setQuery(''); 
-                router.push('/gestao/dashboard/oscs?lixeira=1');
-              }}
-              className="admin-btn admin-btn-secondary"
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', fontSize: '0.78rem', borderRadius: 8, position: 'relative' }}>
-              <Trash size={13} /> Lixeira
-              {trash.length > 0 && (
-                <span style={{ position: 'absolute', top: -6, right: -6, background: '#dc2626', color: '#fff', borderRadius: '50%', width: 16, height: 16, fontSize: '0.6rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  {trash.length > 99 ? '99+' : trash.length}
-                </span>
-              )}
-            </button>
-          )}
-
-          {/* Esvaziar lixeira */}
-          {trashView && trash.length > 0 && (
-            <button
-              onClick={() => setConfirmEmptyOpen(true)}
+              onClick={() => handleMoveToTrash([...selected])}
               disabled={actionLoading}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', fontSize: '0.78rem', borderRadius: 8, border: '1.5px solid #dc2626', background: 'rgba(220,38,38,0.06)', color: '#dc2626', cursor: 'pointer', fontWeight: 700 }}>
-              <Trash2 size={13} /> Esvaziar lixeira
+              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', fontSize: '0.78rem', borderRadius: 8, border: 'none', background: '#dc2626', color: '#fff', cursor: 'pointer', fontWeight: 700 }}>
+              <Trash2 size={13} /> Mover para lixeira ({selected.size})
             </button>
           )}
+
+          <button
+            onClick={() => router.push('/gestao/dashboard/oscs/lixeira')}
+            className="admin-btn admin-btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', fontSize: '0.78rem', borderRadius: 8, position: 'relative' }}>
+            <Trash size={13} /> Lixeira
+            {trashCount > 0 && (
+              <span style={{ position: 'absolute', top: -6, right: -6, background: '#dc2626', color: '#fff', borderRadius: '50%', width: 16, height: 16, fontSize: '0.6rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {trashCount > 99 ? '99+' : trashCount}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -354,9 +221,9 @@ function OscsContent() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="admin-empty-state">
-            <div className="admin-empty-state-icon">{trashView ? <Trash size={28} /> : <Users size={28} />}</div>
+            <div className="admin-empty-state-icon"><Users size={28} /></div>
             <div className="admin-empty-state-text">
-              {trashView ? 'Lixeira vazia.' : query || statusFilter ? 'Nenhuma OSC encontrada com esses filtros.' : 'Nenhuma OSC cadastrada ainda.'}
+              {query || statusFilter ? 'Nenhuma OSC encontrada com esses filtros.' : 'Nenhuma OSC cadastrada ainda.'}
             </div>
           </div>
         ) : (
@@ -373,7 +240,7 @@ function OscsContent() {
                   <th>CNPJ</th>
                   <th>Localidade</th>
                   <th>Status</th>
-                  <th>{trashView ? 'Excluído em' : 'Cadastro'}</th>
+                  <th>Cadastro</th>
                   <th></th>
                 </tr>
               </thead>
@@ -411,45 +278,23 @@ function OscsContent() {
                       </span>
                     </td>
                     <td style={{ color: 'var(--admin-text-secondary)', fontSize: '0.82rem' }}>
-                      {trashView ? fmtDate(osc.deleted_at!) : fmtDate(osc.created_at)}
+                      {fmtDate(osc.created_at)}
                     </td>
                     <td>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                        {trashView ? (
-                          <>
-                            <button
-                              onClick={() => handleRestore([osc.id])}
-                              disabled={actionLoading}
-                              title="Restaurar"
-                              className="admin-btn admin-btn-secondary"
-                              style={{ padding: '5px 10px', fontSize: '0.75rem', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <RotateCcw size={12} />
-                            </button>
-                            <button
-                              onClick={() => handlePermanentDelete([osc.id])}
-                              disabled={actionLoading}
-                              title="Excluir permanentemente"
-                              style={{ padding: '5px 10px', border: 'none', borderRadius: 8, background: 'rgba(220,38,38,0.09)', color: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                              <Trash2 size={12} />
-                            </button>
-                          </>
-                        ) : (
-                          <>
-                            <Link
-                              href={`/gestao/dashboard/oscs/${osc.id}`}
-                              className="admin-btn admin-btn-secondary"
-                              style={{ padding: '7px 14px', fontSize: '0.78rem', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
-                              <Eye size={13} /> Analisar
-                            </Link>
-                            <button
-                              onClick={() => handleMoveToTrash([osc.id])}
-                              disabled={actionLoading}
-                              title="Mover para lixeira"
-                              style={{ padding: '7px 9px', border: 'none', borderRadius: 8, background: 'rgba(220,38,38,0.08)', color: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                              <Trash2 size={14} />
-                            </button>
-                          </>
-                        )}
+                        <Link
+                          href={`/gestao/dashboard/oscs/${osc.id}`}
+                          className="admin-btn admin-btn-secondary"
+                          style={{ padding: '7px 14px', fontSize: '0.78rem', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                          <Eye size={13} /> Analisar
+                        </Link>
+                        <button
+                          onClick={() => handleMoveToTrash([osc.id])}
+                          disabled={actionLoading}
+                          title="Mover para lixeira"
+                          style={{ padding: '7px 9px', border: 'none', borderRadius: 8, background: 'rgba(220,38,38,0.08)', color: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                          <Trash2 size={14} />
+                        </button>
                       </div>
                     </td>
                   </tr>

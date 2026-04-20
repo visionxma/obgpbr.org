@@ -34,25 +34,28 @@ const navItems = [
   { label: 'Visão Geral',        path: '/gestao/dashboard',                    icon: LayoutDashboard, section: 'Principal' },
   { label: 'Analytics',          path: '/gestao/dashboard/analytics',           icon: BarChart3,       section: 'Principal' },
   { label: 'Gestão de OSCs',     path: '/gestao/dashboard/oscs',                icon: User,            section: 'Gestão' },
-  { label: 'Lixeira',            path: '/gestao/dashboard/oscs?lixeira=1',      icon: Trash2,          section: 'Gestão' },
+  { label: 'Lixeira',            path: '/gestao/dashboard/oscs/lixeira',        icon: Trash2,          section: 'Gestão' },
   { label: 'Nossas Experiências',path: '/gestao/dashboard/experiencias',        icon: Sparkles,        section: 'Conteúdo' },
   { label: 'Blog',               path: '/gestao/dashboard/blog',                icon: BookOpen,        section: 'Conteúdo' },
   { label: 'Transparência',      path: '/gestao/dashboard/transparencia',       icon: ShieldCheck,     section: 'Conteúdo' },
   { label: 'Configurações',      path: '/gestao/dashboard/settings',            icon: Settings,        section: 'Sistema' },
 ];
 
-function getBreadcrumb(path: string, isLixeira: boolean) {
+function getBreadcrumb(path: string) {
   const map: Record<string, string> = {
     '/gestao/dashboard':                'Visão Geral',
     '/gestao/dashboard/analytics':      'Analytics e Métricas',
     '/gestao/dashboard/oscs':           'Gestão de OSCs',
+    '/gestao/dashboard/oscs/lixeira':   'Lixeira de OSCs',
     '/gestao/dashboard/experiencias':   'Nossas Experiências',
     '/gestao/dashboard/blog':           'Blog',
     '/gestao/dashboard/transparencia':  'Transparência',
     '/gestao/dashboard/settings':       'Configurações',
   };
-  if (path.startsWith('/gestao/dashboard/oscs/')) return 'Detalhe da OSC';
-  if (path === '/gestao/dashboard/oscs' && isLixeira) return 'Lixeira';
+  if (path.startsWith('/gestao/dashboard/oscs/')) {
+    if (path === '/gestao/dashboard/oscs/lixeira') return 'Lixeira de OSCs';
+    return 'Detalhe da OSC';
+  }
   return map[path] || 'Dashboard';
 }
 
@@ -62,9 +65,7 @@ function SidebarNav({ sections, onNavigate }: {
   onNavigate: () => void;
 }) {
   const currentPath = usePathname();
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const isLixeira = searchParams.get('lixeira') === '1';
 
   return (
     <nav className="sidebar-nav">
@@ -73,25 +74,20 @@ function SidebarNav({ sections, onNavigate }: {
           <div className="sidebar-nav-label">{section}</div>
           {items.map((item) => {
             const Icon = item.icon;
-            const [itemPath, itemQuery] = item.path.split('?');
-            const isActive = itemQuery
-              ? currentPath === itemPath && isLixeira
-              : currentPath === itemPath && !isLixeira;
+            const isActive = currentPath === item.path;
+            
             return (
-              <a
+              <Link
                 key={item.path}
                 href={item.path}
                 className={`sidebar-nav-item ${isActive ? 'active' : ''}`}
                 onClick={(e) => {
-                  e.preventDefault();
                   onNavigate();
-                  router.push(item.path);
-                  router.refresh();
                 }}
               >
                 <Icon className="sidebar-nav-icon" size={20} strokeWidth={isActive ? 2.2 : 1.8} />
                 {item.label}
-              </a>
+              </Link>
             );
           })}
         </div>
@@ -102,9 +98,7 @@ function SidebarNav({ sections, onNavigate }: {
 
 function BreadcrumbTitle() {
   const currentPath = usePathname();
-  const searchParams = useSearchParams();
-  const isLixeira = searchParams.get('lixeira') === '1';
-  return <>{getBreadcrumb(currentPath, isLixeira)}</>;
+  return <>{getBreadcrumb(currentPath)}</>;
 }
 
 interface Notificacao {
@@ -135,9 +129,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }: any) => {
+      const role = session?.user?.app_metadata?.role;
+      const isAdmin = role === 'admin' || role === 'superadmin';
+
       if (!session) {
         router.replace('/gestao');
-      } else if (session.user?.app_metadata?.role !== 'admin') {
+      } else if (!isAdmin) {
         supabase.auth.signOut().then(() => router.replace('/gestao'));
       } else {
         setSession(session);
@@ -146,9 +143,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, authSession: any) => {
+      const role = authSession?.user?.app_metadata?.role;
+      const isAdmin = role === 'admin' || role === 'superadmin';
+
       if (!authSession) {
         router.replace('/gestao');
-      } else if (authSession.user?.app_metadata?.role !== 'admin') {
+      } else if (!isAdmin) {
         supabase.auth.signOut().then(() => router.replace('/gestao'));
       } else {
         setSession(authSession);

@@ -15,6 +15,7 @@ import {
   Globe,
   Shield,
   ArrowRight,
+  Trash2,
 } from 'lucide-react';
 
 /* ── Tipo de cada item buscável ─────────────── */
@@ -50,6 +51,26 @@ const SEARCH_INDEX: SearchItem[] = [
     path: '/gestao/dashboard/settings',
     breadcrumb: 'Dashboard › Configurações',
     icon: Settings,
+    category: 'Navegação',
+  },
+  {
+    id: 'nav-oscs',
+    title: 'Gestão de OSCs',
+    description: 'Gerenciar Organizações da Sociedade Civil, validar documentos e selos',
+    keywords: ['osc', 'oscs', 'gestão', 'entidades', 'organizações', 'validar', 'documentos', 'selo'],
+    path: '/gestao/dashboard/oscs',
+    breadcrumb: 'Dashboard › Gestão › OSCs',
+    icon: Users,
+    category: 'Navegação',
+  },
+  {
+    id: 'nav-lixeira',
+    title: 'Lixeira de OSCs',
+    description: 'Restaurar ou excluir permanentemente registros de OSCs',
+    keywords: ['lixeira', 'trash', 'excluídos', 'restaurar', 'deletados', 'limpar'],
+    path: '/gestao/dashboard/oscs/lixeira',
+    breadcrumb: 'Dashboard › Gestão › Lixeira',
+    icon: Trash2,
     category: 'Navegação',
   },
 

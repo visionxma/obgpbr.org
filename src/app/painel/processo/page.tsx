@@ -121,9 +121,11 @@ export default function ProcessoPage() {
       
       if (pErr) throw pErr;
       if (!pData?.certificacao_liberada) {
-        alert('Acesso Bloqueado: O envio do relatório requer a liberação prévia através da validação da taxa de certificação pelo setor administrativo. Finalize o repasse e aguarde a aprovação no painel.');
-        setEnviando(false);
-        return;
+        // BYPASS ATIVADO TEMPORARIAMENTE A PEDIDO DO USUARIO
+        console.warn('Aviso bypass: Simulando que o pagamento já foi aprovado.');
+        // alert('Acesso Bloqueado: O envio do relatório requer a liberação prévia através da validação da taxa de certificação pelo setor administrativo. Finalize o repasse e aguarde a aprovação no painel.');
+        // setEnviando(false);
+        // return;
       }
 
       setMensagemEnviando('Sintetizando e gerando Documento Microsoft Word (.docx)...');

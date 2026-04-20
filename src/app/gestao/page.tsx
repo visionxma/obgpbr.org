@@ -37,7 +37,8 @@ export default function AdminLogin() {
         setErrorMessage("Credenciais inválidas. Verifique seu email e senha.");
         setLoading(false);
       } else if (data.user) {
-        const isAdmin = data.user.app_metadata?.role === 'admin';
+        const role = data.user.app_metadata?.role;
+        const isAdmin = role === 'admin' || role === 'superadmin';
         if (!isAdmin) {
           await supabase.auth.signOut();
           setErrorMessage("Acesso não autorizado. Esta área é restrita a administradores.");
