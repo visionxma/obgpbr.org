@@ -120,40 +120,40 @@ export default function ProcessoPage() {
 
       {/* PAINEL DE ACOMPANHAMENTO (PROGRESS TRACKER) */}
       <div style={{ 
-        background: 'var(--site-surface-blue)', 
+        background: 'var(--site-primary)', 
         borderRadius: 'var(--site-radius-xl)', 
         padding: '28px 32px', 
         marginBottom: 36,
-        border: '1px solid var(--site-border-blue)',
-        boxShadow: 'var(--site-shadow-md)'
+        boxShadow: '0 12px 32px rgba(13,54,79,0.15)',
+        color: '#fff'
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 20 }}>
           <div style={{ flex: 1, minWidth: 280 }}>
-            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: 8, color: 'var(--site-primary)' }}>PAINEL DE ACOMPANHAMENTO</h2>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: 8, color: '#fff' }}>PAINEL DE ACOMPANHAMENTO</h2>
             <div style={{ display: 'flex', gap: 24, marginTop: 16 }}>
               <div>
-                <span style={{ fontSize: '0.8rem', color: 'var(--site-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status do Processo</span>
-                <div style={{ fontSize: '1rem', fontWeight: 700, color: '#d97706', display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>Status do Processo</span>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--site-gold)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
                   <CircleDashed size={16} /> Em Andamento (Edição)
                 </div>
               </div>
               <div>
-                <span style={{ fontSize: '0.8rem', color: 'var(--site-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Situação da Conformidade</span>
-                <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--site-text-primary)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                  <Search size={16} color="var(--site-text-tertiary)" /> Aguardando Preenchimento e Pagamento
+                <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 700 }}>Situação da Conformidade</span>
+                <div style={{ fontSize: '1rem', fontWeight: 700, color: '#fff', display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                  <Search size={16} color="var(--site-gold)" /> Aguardando Preenchimento e Pagamento
                 </div>
               </div>
             </div>
           </div>
           <div style={{ width: 140 }}>
-            <span style={{ fontSize: '0.8rem', color: 'var(--site-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', textAlign: 'right' }}>Progresso Geral</span>
+            <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', textAlign: 'right', fontWeight: 700 }}>Progresso Geral</span>
             <div style={{ fontSize: '2.5rem', fontWeight: 900, color: 'var(--site-gold)', textAlign: 'right', lineHeight: 1 }}>{currentProgress}%</div>
           </div>
         </div>
 
         {/* Linha de Evolução */}
         <div style={{ marginTop: 32, position: 'relative' }}>
-          <div style={{ position: 'absolute', top: 14, left: 0, right: 0, height: 2, background: 'rgba(0,0,0,0.06)', zIndex: 0 }} />
+          <div style={{ position: 'absolute', top: 14, left: 0, right: 0, height: 2, background: 'rgba(255,255,255,0.15)', zIndex: 0 }} />
           <div style={{ position: 'absolute', top: 14, left: 0, width: `${currentProgress}%`, height: 2, background: 'var(--site-gold)', zIndex: 1, transition: 'width 1s ease' }} />
           
           <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 2 }}>
@@ -168,14 +168,14 @@ export default function ProcessoPage() {
               <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, width: 80 }}>
                 <div style={{ 
                   width: 30, height: 30, borderRadius: '50%', 
-                  background: step.done ? 'var(--site-gold)' : (step.active ? '#fff' : 'rgba(0,0,0,0.04)'),
-                  border: step.done ? 'none' : (step.active ? '2px solid var(--site-gold)' : '2px solid rgba(0,0,0,0.1)'),
+                  background: step.done ? 'var(--site-gold)' : (step.active ? 'var(--site-primary)' : 'rgba(255,255,255,0.05)'),
+                  border: step.done ? 'none' : (step.active ? '2px solid var(--site-gold)' : '2px solid rgba(255,255,255,0.2)'),
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: step.done ? '#fff' : (step.active ? 'var(--site-gold)' : 'rgba(0,0,0,0.2)')
+                  color: step.done ? '#fff' : (step.active ? 'var(--site-gold)' : 'rgba(255,255,255,0.4)')
                 }}>
                   {step.done ? <Check size={16} /> : <span style={{ fontSize: 12, fontWeight: 700 }}>{i + 1}</span>}
                 </div>
-                <span style={{ fontSize: '0.65rem', fontWeight: step.active ? 700 : 500, color: step.active ? 'var(--site-text-primary)' : 'var(--site-text-tertiary)', textAlign: 'center', lineHeight: 1.2 }}>{step.label}</span>
+                <span style={{ fontSize: '0.65rem', fontWeight: step.active ? 700 : 500, color: step.active ? '#fff' : 'rgba(255,255,255,0.5)', textAlign: 'center', lineHeight: 1.2 }}>{step.label}</span>
               </div>
             ))}
           </div>
@@ -184,9 +184,9 @@ export default function ProcessoPage() {
 
       {/* 1. DADOS DA ENTIDADE */}
       <section style={{ marginBottom: 40, border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-xl)', overflow: 'hidden', background: '#fff' }}>
-        <header style={{ background: 'var(--site-surface-warm)', padding: '16px 24px', borderBottom: '1px solid var(--site-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Briefcase size={20} color="var(--site-text-primary)" />
-          <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>1. DADOS DA ENTIDADE (Editável)</h2>
+        <header style={{ background: 'var(--site-primary)', padding: '16px 24px', borderBottom: '1px solid var(--site-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <Briefcase size={20} color="#fff" />
+          <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#fff' }}>1. DADOS DA ENTIDADE (Editável)</h2>
         </header>
         <div style={{ padding: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
           <InputField label="CNPJ" value={entidadeData.cnpj} onChange={(v) => handleEntidadeUpdate('cnpj', v)} />
@@ -199,7 +199,7 @@ export default function ProcessoPage() {
           <InputField label="Data de Abertura do CNPJ" type="date" value={entidadeData.data_abertura_cnpj} onChange={(v) => handleEntidadeUpdate('data_abertura_cnpj', v)} />
           
           <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--site-border)', paddingTop: 20, marginTop: 10 }}>
-            <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--site-text-secondary)', textTransform: 'uppercase', marginBottom: 16 }}>Endereço Completo</h3>
+            <h3 style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--site-text-secondary)', textTransform: 'uppercase', marginBottom: 16 }}>Endereço Completo</h3>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
               <InputField label="CEP" value={entidadeData.cep} onChange={(v) => handleEntidadeUpdate('cep', v)} />
               <InputField label="Logradouro" value={entidadeData.logradouro} onChange={(v) => handleEntidadeUpdate('logradouro', v)} />
@@ -236,8 +236,10 @@ export default function ProcessoPage() {
       {/* 6. CONCLUSÃO (FORMATO OFICIAL) */}
       <section style={{ marginBottom: 40, border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-xl)', overflow: 'hidden', background: '#fff' }}>
         <header style={{ background: 'var(--site-primary)', color: '#fff', padding: '16px 24px', borderBottom: '1px solid var(--site-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <FileSignature size={20} color="#fff" />
-          <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#fff' }}>6. CONCLUSÃO (FORMATO OFICIAL)</h2>
+          <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--site-gold)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800 }}>
+            6
+          </div>
+          <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#fff' }}>CONCLUSÃO (FORMATO OFICIAL)</h2>
         </header>
         <div style={{ padding: '32px 40px', background: 'rgba(197,171,118,0.03)' }}>
           <div style={{ background: '#fff', border: '1px solid rgba(197,171,118,0.3)', padding: 32, borderRadius: 'var(--site-radius-lg)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', fontFamily: '"Times New Roman", Times, serif', fontSize: '1.1rem', lineHeight: 1.8, color: '#222', position: 'relative' }}>
@@ -262,7 +264,7 @@ export default function ProcessoPage() {
             </p>
           </div>
           <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12 }}>
-            <span style={{ fontSize: '0.85rem', color: 'var(--site-text-tertiary)', fontWeight: 600 }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--site-text-secondary)', fontWeight: 700 }}>
               <AlertCircle size={14} style={{ display: 'inline', position: 'relative', top: 2, marginRight: 4 }} />
               O envio para a administração requer assinatura e pagamento ativo.
             </span>
@@ -282,7 +284,7 @@ export default function ProcessoPage() {
 function InputField({ label, value, onChange, readonly = false, type = 'text' }: { label: string, value?: string, onChange?: (val: string) => void, readonly?: boolean, type?: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--site-text-tertiary)', textTransform: 'uppercase' }}>{label}</label>
+      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-text-secondary)', textTransform: 'uppercase' }}>{label}</label>
       <input 
         type={type} 
         value={value || ''} 
@@ -309,11 +311,11 @@ function DocumentSection({ number, title, items, data, handleUpdate }: {
 }) {
   return (
     <section style={{ marginBottom: 40, border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-xl)', overflow: 'hidden', background: '#fff' }}>
-      <header style={{ background: 'var(--site-surface-warm)', padding: '16px 24px', borderBottom: '1px solid var(--site-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--site-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800 }}>
+      <header style={{ background: 'var(--site-primary)', padding: '16px 24px', borderBottom: '1px solid var(--site-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--site-gold)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800 }}>
           {number}
         </div>
-        <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>{title}</h2>
+        <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#fff' }}>{title}</h2>
       </header>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         {items.map((item, index) => {
@@ -333,7 +335,7 @@ function DocumentSection({ number, title, items, data, handleUpdate }: {
                 {/* Content */}
                 <div style={{ flex: 1 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16, flexWrap: 'wrap', gap: 12 }}>
-                    <h3 style={{ fontSize: '0.95rem', fontWeight: 700, margin: 0, color: 'var(--site-text-primary)', maxWidth: '70%' }}>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0, color: 'var(--site-text-primary)', maxWidth: '70%' }}>
                       {item.title}
                     </h3>
                     
@@ -377,22 +379,22 @@ function DocumentSection({ number, title, items, data, handleUpdate }: {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--site-text-tertiary)' }}>Código de Controle</label>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-text-secondary)' }}>Código de Controle</label>
                       <input type="text" placeholder="Ex: DOC-2026-001" value={itemData.codigo || ''} onChange={(e) => handleUpdate(item.id, 'codigo', e.target.value)} style={inputStyle} />
                     </div>
                     
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--site-text-tertiary)' }}>Data de Emissão</label>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-text-secondary)' }}>Data de Emissão</label>
                       <input type="date" value={itemData.data_emissao || ''} onChange={(e) => handleUpdate(item.id, 'data_emissao', e.target.value)} style={inputStyle} />
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--site-text-tertiary)' }}>Data de Validade <span style={{ fontWeight: 400 }}>(se houver)</span></label>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-text-secondary)' }}>Data de Validade <span style={{ fontWeight: 500 }}>(se houver)</span></label>
                       <input type="date" value={itemData.data_validade || ''} onChange={(e) => handleUpdate(item.id, 'data_validade', e.target.value)} style={inputStyle} />
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--site-text-tertiary)' }}>Upload do Documento</label>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-text-secondary)' }}>Upload do Documento</label>
                       <label style={{ 
                         border: '1px dashed var(--site-border)', 
                         padding: '10px', 
@@ -415,7 +417,7 @@ function DocumentSection({ number, title, items, data, handleUpdate }: {
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: '1 / -1' }}>
-                      <label style={{ fontSize: '0.7rem', fontWeight: 600, color: 'var(--site-text-tertiary)' }}>Análise da Situação Atual</label>
+                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-text-secondary)' }}>Análise da Situação Atual</label>
                       <textarea 
                         placeholder="Descreva observações sobre o documento..." 
                         value={itemData.analise || ''} 
