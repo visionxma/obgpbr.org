@@ -139,12 +139,68 @@ export default function ProcessoPage() {
         razao_social: entidadeData.razao_social || 'Não Informado',
         nome_fantasia: entidadeData.nome_fantasia || 'Não Informado',
         endereco: enderecoGeral || 'Não Informado',
+        logradouro: entidadeData.logradouro || '',
+        numero: entidadeData.numero_endereco || '',
+        bairro: entidadeData.bairro || '',
+        municipio: entidadeData.municipio || '',
+        estado: entidadeData.estado || '',
+        municipio_uf: [entidadeData.municipio, entidadeData.estado].filter(Boolean).join('/') || 'Não Informado',
+        cep: entidadeData.cep || '',
         data_abertura: entidadeData.data_abertura_cnpj || 'Não Informado',
         email: entidadeData.email_osc || 'Não Informado',
         telefone: entidadeData.telefone || 'Não Informado',
+        responsavel: entidadeData.responsavel || 'Não Informado',
         numero_relatorio: `OBGP${new Date().getFullYear()}${perfil.id.substring(0, 4).toUpperCase()}`,
         codigo_controle: `RC${new Date().getTime().toString(36).toUpperCase()}`,
-        data_hoje: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+        data_hoje: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
+
+        // Passando checklists traduzidos para o formato do template
+        habilitacao_juridica: HABILITACAO_JURIDICA.map(i => {
+          const item = data[i.id] || {};
+          return { 
+            label: i.title, 
+            status: item.status === 'conforme' ? 'CONFORME' : (item.status === 'nao_se_aplica' ? 'N/A' : 'PENDENTE'),
+            codigo: item.codigo || '—',
+            emissao: item.data_emissao ? new Date(item.data_emissao).toLocaleDateString('pt-BR') : '—',
+            validade: item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '—',
+            analise: item.analise || '—'
+          };
+        }),
+        regularidade_fiscal: REGULARIDADE_FISCAL.map(i => {
+          const item = data[i.id] || {};
+          return { 
+            label: i.title, 
+            status: item.status === 'conforme' ? 'CONFORME' : (item.status === 'nao_se_aplica' ? 'N/A' : 'PENDENTE'),
+            codigo: item.codigo || '—',
+            emissao: item.data_emissao ? new Date(item.data_emissao).toLocaleDateString('pt-BR') : '—',
+            validade: item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '—',
+            analise: item.analise || '—'
+          };
+        }),
+        qualificacao_economica: QUALIFICACAO_FINANCEIRA.map(i => {
+          const item = data[i.id] || {};
+          return { 
+            label: i.title, 
+            status: item.status === 'conforme' ? 'CONFORME' : (item.status === 'nao_se_aplica' ? 'N/A' : 'PENDENTE'),
+            codigo: item.codigo || '—',
+            emissao: item.data_emissao ? new Date(item.data_emissao).toLocaleDateString('pt-BR') : '—',
+            validade: item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '—',
+            analise: item.analise || '—'
+          };
+        }),
+        qualificacao_tecnica: QUALIFICACAO_TECNICA.map(i => {
+          const item = data[i.id] || {};
+          return { 
+            label: i.title, 
+            status: item.status === 'conforme' ? 'CONFORME' : (item.status === 'nao_se_aplica' ? 'N/A' : 'PENDENTE'),
+            codigo: item.codigo || '—',
+            emissao: item.data_emissao ? new Date(item.data_emissao).toLocaleDateString('pt-BR') : '—',
+            validade: item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '—',
+            analise: item.analise || '—'
+          };
+        }),
+        
+        status_final: 'EM ANÁLISE'
       };
       
       const blob = await gerarRelatorioDocx(docxData);

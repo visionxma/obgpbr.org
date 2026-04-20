@@ -7,8 +7,9 @@ import {
   ArrowLeft, CheckCircle, XCircle, Clock, ExternalLink,
   FileText, BookOpen, ClipboardList, AlertCircle, Save,
   Building2, Phone, MapPin, Hash, ShieldCheck, ChevronDown, ChevronUp,
-  Edit2, X, Mail, Home, User, Award, CreditCard, PenLine, Download
+  Edit2, X, Mail, Home, User, Award, CreditCard, PenLine, Download, FileSignature
 } from 'lucide-react';
+import { gerarRelatorioDocx } from '@/lib/docxGenerator';
 
 /* ── Types ──────────────────────────────────────── */
 interface OscPerfil {
@@ -51,7 +52,11 @@ interface Assinatura {
   signed_at: string; valida: boolean;
 }
 interface ChecklistItem {
-  id: string; label: string; checked: boolean; doc_url: string | null; doc_nome: string | null;
+  id: string; label: string; checked: boolean; 
+  doc_url?: string | null; doc_nome?: string | null;
+  codigo?: string | null; data_emissao?: string | null; 
+  data_validade?: string | null; analise?: string | null;
+  status?: string | null;
 }
 interface Relatorio {
   id: string; osc_id: string; numero: string | null;
@@ -67,6 +72,62 @@ interface Relatorio {
   created_at: string;
   arquivo_docx_path?: string | null;
 }
+
+/* ── Constants ── */
+const HABILITACAO_JURIDICA = [
+  { id: '2.1', title: 'Cartão CNPJ' },
+  { id: '2.2', title: 'QSA Cartão CNPJ' },
+  { id: '2.3', title: 'Cadastro Contribuinte Municipal/Estadual' },
+  { id: '2.4', title: 'Alvará de Licença e Funcionamento' },
+  { id: '2.5', title: 'Estatuto Social' },
+  { id: '2.6', title: 'Ata Constituição/Fundação' },
+  { id: '2.7', title: 'Ata Eleição e Posse atual' },
+  { id: '2.8', title: 'Relação de Membros atual' },
+  { id: '2.9', title: 'Comprovante de Endereço da Entidade' },
+  { id: '2.10', title: 'RG/CPF do Representante Legal' },
+  { id: '2.11', title: 'Comprovante de Endereço do Representante Legal' },
+];
+
+const REGULARIDADE_FISCAL = [
+  { id: '3.1', title: 'CND Federal' },
+  { id: '3.2', title: 'CND Estadual' },
+  { id: '3.3', title: 'CNDA Estadual' },
+  { id: '3.4', title: 'CND Municipal' },
+  { id: '3.5', title: 'CRF FGTS' },
+  { id: '3.6', title: 'CND Trabalhista' },
+  { id: '3.7', title: 'CND CAEMA' },
+];
+
+const QUALIFICACAO_FINANCEIRA = [
+  { id: '4.1', title: 'Certidão de Falência e Concordata' },
+  { id: '4.2', title: 'Registro e Regularidade do Contador' },
+  { id: '4.3', title: 'Demonstrações Financeiras (Balanço Social) último dois exercícios (ITG 2002)' },
+  { id: '4.3.1', title: 'Termo de abertura' },
+  { id: '4.3.2', title: 'Balanço Patrimonial' },
+  { id: '4.3.3', title: 'Demonstração do Superávit e Déficit' },
+  { id: '4.3.4', title: 'Demonstração das Mutações do Patrimônio Líquido' },
+  { id: '4.3.5', title: 'Demonstração dos Fluxos de Caixa' },
+  { id: '4.3.6', title: 'Notas Explicativas dos dois últimos exercícios sociais' },
+  { id: '4.3.7', title: 'Termo de encerramento' },
+  { id: '4.4', title: 'Ata de aprovação de contas com parecer do Conselho Fiscal dos últimos dois exercícios sociais da entidade' },
+];
+
+const QUALIFICACAO_TECNICA = [
+  { id: '5.1.1', title: 'Termo de Compromisso de Destinação de Recursos MPTMA' },
+  { id: '5.1.2', title: 'Termo de Contrato (Prefeitura de Presidente Médici/MA)' },
+  { id: '5.1.3', title: 'Termo de Contrato (Prefeitura de Presidente Médici/MA)' },
+  { id: '5.1.4', title: 'Acordo de Cooperação Técnica (Cachoeira Grande/MA)' },
+  { id: '5.1.4.1', title: 'Aditivo Acordo de Cooperação Técnica (Prefeitura Municipal de Cachoeira Grande/MA)' },
+  { id: '5.1.5', title: 'Acordo de Cooperação Técnica (Prefeitura Municipal de Morros/MA)' },
+  { id: '5.1.6', title: 'Termo de Contrato (Prefeitura Municipal de Lago do Junco/MA)' },
+  { id: '5.1.7', title: 'Declaração de Parceria (Defensoria Pública do Estado/MA)' },
+  { id: '5.1.8', title: 'Termo de Fomento Prefeitura Municipal de Primeira Cruz/MA' },
+  { id: '5.1.9', title: 'Declaração de Cooperação e Parceria Prefeitura Municipal de Icatu/MA' },
+  { id: '5.1.10', title: 'Declaração de Parceria e Atuação Conjunta Movimento Nacional da População de Rua MNPR' },
+  { id: '5.1.11', title: 'Contrato Ministério do Desenvolvimento e Assistência Social, Família e Combate a Fome' },
+  { id: '5.1', title: 'Registro e Regularidade da Entidade em Conselho Classe (se houver)' },
+  { id: '5.2', title: 'Registro e Regularidade do Profissional RT da Entidade em Conselho Classe (se houver)' },
+];
 
 /* ── Helpers ────────────────────────────────────── */
 const TIPO_LABELS: Record<string, string> = {
@@ -397,6 +458,83 @@ export default function OscDetailPage() {
     const { error } = await supabase.from('osc_prestacao_contas').update({ status }).eq('id', pId);
     if (!error) setPrestacoes(prev => prev.map(p => p.id === pId ? { ...p, status } : p));
     setPrstSaving(null);
+  };
+
+  /* ── Generate DOCX Report ── */
+  const handleGenerateAdminDocx = async () => {
+    if (!perfil || !relatorio) return;
+    try {
+      const enderecoGeral = [perfil.logradouro, perfil.numero_endereco, perfil.bairro, perfil.municipio, perfil.estado].filter(Boolean).join(', ');
+      
+      const docxData = {
+        cnpj: perfil.cnpj || 'Não Informado',
+        natureza_juridica: perfil.natureza_juridica || 'Não Informado',
+        razao_social: perfil.razao_social || 'Não Informado',
+        nome_fantasia: (perfil as any).nome_fantasia || 'Não Informado',
+        endereco: enderecoGeral || 'Não Informado',
+        logradouro: perfil.logradouro || '',
+        numero: perfil.numero_endereco || '',
+        bairro: perfil.bairro || '',
+        municipio: perfil.municipio || '',
+        estado: perfil.estado || '',
+        municipio_uf: [perfil.municipio, perfil.estado].filter(Boolean).join('/') || 'Não Informado',
+        cep: perfil.cep || '',
+        data_abertura: perfil.data_abertura_cnpj || 'Não Informado',
+        email: perfil.email_osc || 'Não Informado',
+        telefone: perfil.telefone || 'Não Informado',
+        responsavel: perfil.responsavel || 'Não Informado',
+        numero_relatorio: relatorio.numero || `OBGP${new Date().getFullYear()}${perfil.id.substring(0, 4).toUpperCase()}`,
+        codigo_controle: `RC${new Date().getTime().toString(36).toUpperCase()}`,
+        data_hoje: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
+        
+        // Checklist data enriched
+        habilitacao_juridica: relatorio.habilitacao_juridica?.map(i => ({ 
+          label: i.label || (HABILITACAO_JURIDICA.find((h: any) => h.id === i.id)?.title) || '', 
+          status: i.checked ? 'CONFORME' : 'PENDENTE',
+          codigo: i.codigo || '—',
+          emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
+          validade: i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—',
+          analise: i.analise || '—'
+        })),
+        regularidade_fiscal: relatorio.regularidade_fiscal?.map(i => ({ 
+          label: i.label || (REGULARIDADE_FISCAL.find((h: any) => h.id === i.id)?.title) || '',
+          status: i.checked ? 'CONFORME' : 'PENDENTE',
+          codigo: i.codigo || '—',
+          emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
+          validade: i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—',
+          analise: i.analise || '—'
+        })),
+        qualificacao_economica: relatorio.qualificacao_economica?.map(i => ({ 
+          label: i.label || (QUALIFICACAO_FINANCEIRA.find((h: any) => h.id === i.id)?.title) || '',
+          status: i.checked ? 'CONFORME' : 'PENDENTE',
+          codigo: i.codigo || '—',
+          emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
+          validade: i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—',
+          analise: i.analise || '—'
+        })),
+        qualificacao_tecnica: relatorio.qualificacao_tecnica?.map(i => ({ 
+          label: i.label || (QUALIFICACAO_TECNICA.find((h: any) => h.id === i.id)?.title) || '',
+          status: i.checked ? 'CONFORME' : 'PENDENTE',
+          codigo: i.codigo || '—',
+          emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
+          validade: i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—',
+          analise: i.analise || '—'
+        })),
+        
+        status_final: relatorio.status === 'aprovado' ? 'APROVADO' : 'EM ANÁLISE',
+        observacao_admin: relatorio.observacao_admin || 'Nenhuma observação extra.'
+      };
+      
+      const blob = await gerarRelatorioDocx(docxData);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `RELATORIO_CONFORMIDADE_${perfil.osc_id}.docx`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (e: any) {
+      alert(`Erro ao gerar relatório: ${e.message}`);
+    }
   };
 
   /* ── Render helpers ── */
@@ -1152,17 +1290,26 @@ export default function OscDetailPage() {
                     onClick={handleSaveRelatorio} disabled={savingRel}>
                     {savingRel ? '...' : <><Save size={13} /> Salvar</>}
                   </button>
+                  
+                  <button className="admin-btn"
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '7px 16px', fontSize: '0.82rem', background: '#0D364F', color: '#fff', border: 'none', fontWeight: 800, cursor: 'context-menu' }}
+                    onClick={handleGenerateAdminDocx}
+                    title="Gerar Relatório Docx preenchido com dados atuais"
+                  >
+                    <FileSignature size={13} /> Gerar Relatório (DOCX)
+                  </button>
+
                   {relatorio.arquivo_docx_path && (
                     <button className="admin-btn"
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '7px 16px', fontSize: '0.82rem', background: '#2563eb', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '7px 16px', fontSize: '0.82rem', background: 'var(--admin-primary)', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
                       onClick={async () => {
                         const { data } = await supabase.storage.from('osc-docs').createSignedUrl(relatorio.arquivo_docx_path!, 3600);
                         if (data?.signedUrl) window.open(data.signedUrl, '_blank');
                         else alert('Documento não disponível ou expirado.');
                       }}
-                      title="Download do Documento Word"
+                      title="Download do Relatório enviado pela OSC"
                     >
-                      <Download size={13} /> DOCX
+                      <Download size={13} /> Ver Original (DOCX)
                     </button>
                   )}
                 </div>

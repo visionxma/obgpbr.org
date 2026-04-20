@@ -222,9 +222,12 @@ function RelatorioContent() {
   useEffect(() => {
     if (!user || !perfil) return;
     (async () => {
-      const { data: pf } = await supabase
-        .from('osc_perfis').select('certificacao_liberada').eq('id', perfil.id).single();
-      if (!pf?.certificacao_liberada) { setGated(true); setLoading(false); return; }
+      // const { data: pf } = await supabase
+      //   .from('osc_perfis').select('certificacao_liberada').eq('id', perfil.id).single();
+      // if (!pf?.certificacao_liberada) { setGated(true); setLoading(false); return; }
+      
+      // TEST_BYPASS: Sempre liberado para testes de desenvolvimento
+      console.warn("Bypass de pagamento ativo para testes.");
 
       let rel: Relatorio | null = null;
       const { data: ex } = await supabase

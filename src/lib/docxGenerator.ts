@@ -3,7 +3,7 @@ import Docxtemplater from 'docxtemplater';
 
 export async function gerarRelatorioDocx(dados: Record<string, any>): Promise<Blob> {
   // 1. Fetch template from public folder
-  const response = await fetch('/docs/template_relatorio.docx');
+  const response = await fetch('/docs/RELATORIO_CONFORMIDADE_RC118042026OBGP_IGPS_REV00_ (1).docx');
   if (!response.ok) {
     throw new Error('Não foi possível carregar o template do relatório.');
   }
