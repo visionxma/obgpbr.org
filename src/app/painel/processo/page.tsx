@@ -157,14 +157,18 @@ export default function ProcessoPage() {
           <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>1. DADOS DA ENTIDADE</h2>
         </header>
         <div style={{ padding: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-          <InputField label="CNPJ" value="12.345.678/0001-90" readonly />
-          <InputField label="Natureza Jurídica" value="399-9 - Associação Privada" readonly />
-          <InputField label="Razão Social" value="Organização Brasil Gestão de Parcerias" readonly />
-          <InputField label="Nome Fantasia" value="OBGP BRASIL" readonly />
-          <InputField label="Endereço" value="Av. L, nº 10 D, Qd. 32 - Morada do Sol, Paço do Lumiar/MA" readonly />
-          <InputField label="Data de Abertura do CNPJ" value="15/04/2010" readonly />
-          <InputField label="E-mail" value="contato.org.obgp@gmail.com" readonly />
-          <InputField label="Telefone" value="(98) 9 8710-0001" readonly />
+          <InputField label="CNPJ" value={perfil?.cnpj || 'Não informado'} readonly />
+          <InputField label="Natureza Jurídica" value={perfil?.natureza_juridica || 'Não informado'} readonly />
+          <InputField label="Razão Social" value={perfil?.razao_social || 'Não informado'} readonly />
+          <InputField label="Nome Fantasia" value={(perfil as any)?.nome_fantasia || 'Não informado'} readonly />
+          <InputField 
+            label="Endereço" 
+            value={[perfil?.logradouro, perfil?.numero_endereco, perfil?.bairro, perfil?.municipio, perfil?.estado].filter(Boolean).join(', ') || 'Não informado'} 
+            readonly 
+          />
+          <InputField label="Data de Abertura do CNPJ" value={perfil?.data_abertura_cnpj || 'Não informado'} readonly />
+          <InputField label="E-mail" value={perfil?.email_osc || 'Não informado'} readonly />
+          <InputField label="Telefone" value={perfil?.telefone || 'Não informado'} readonly />
         </div>
       </section>
 
