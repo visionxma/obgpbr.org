@@ -133,9 +133,14 @@ function OscsContent() {
     try {
       // Deletar registros filhos primeiro (evitar FK constraint)
       if (oscIds.length) {
-        await supabase.from('osc_documentos').delete().in('osc_id', oscIds);
-        await supabase.from('notificacoes').delete().in('osc_id', oscIds);
-        await supabase.from('certificacao_pagamentos').delete().in('osc_id', oscIds);
+        await Promise.all([
+          supabase.from('osc_documentos').delete().in('osc_id', oscIds),
+          supabase.from('notificacoes').delete().in('osc_id', oscIds),
+          supabase.from('certificacao_pagamentos').delete().in('osc_id', oscIds),
+          supabase.from('relatorios_conformidade').delete().in('osc_id', oscIds),
+          supabase.from('osc_prestacao_contas').delete().in('osc_id', oscIds),
+          supabase.from('osc_formularios').delete().in('osc_id', oscIds)
+        ]);
       }
 
       // Deletar o perfil principal
@@ -146,7 +151,7 @@ function OscsContent() {
       setSelected(new Set());
     } catch (err: any) {
       console.error('Erro ao excluir OSC:', err);
-      setErrorMsg(`Erro ao excluir: ${err?.message ?? 'Tente novamente.'}`);
+      setErrorMsg(`Erro ao excluir: ${err?.message ?? 'A exclusão permanente falhou possivelmente devido à falta de Políticas DELETE (RLS). Execute o SQL fornecido.'}`);
     } finally {
       setActionLoading(false);
     }
@@ -164,9 +169,14 @@ function OscsContent() {
     try {
       if (ids.length) {
         // Deletar registros filhos primeiro
-        await supabase.from('osc_documentos').delete().in('osc_id', oscIds);
-        await supabase.from('notificacoes').delete().in('osc_id', oscIds);
-        await supabase.from('certificacao_pagamentos').delete().in('osc_id', oscIds);
+        await Promise.all([
+          supabase.from('osc_documentos').delete().in('osc_id', oscIds),
+          supabase.from('notificacoes').delete().in('osc_id', oscIds),
+          supabase.from('certificacao_pagamentos').delete().in('osc_id', oscIds),
+          supabase.from('relatorios_conformidade').delete().in('osc_id', oscIds),
+          supabase.from('osc_prestacao_contas').delete().in('osc_id', oscIds),
+          supabase.from('osc_formularios').delete().in('osc_id', oscIds)
+        ]);
 
         const { error } = await supabase.from('osc_perfis').delete().in('id', ids);
         if (error) throw error;
@@ -174,7 +184,7 @@ function OscsContent() {
       await loadData();
     } catch (err: any) {
       console.error('Erro ao esvaziar lixeira:', err);
-      setErrorMsg(`Erro ao esvaziar: ${err?.message ?? 'Tente novamente.'}`);
+      setErrorMsg(`Erro ao esvaziar: ${err?.message ?? 'A exclusão permanente falhou possivelmente devido à falta de Políticas DELETE (RLS). Execute o SQL fornecido.'}`);
     } finally {
       setActionLoading(false);
     }
