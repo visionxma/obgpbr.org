@@ -291,7 +291,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <span style={{
                     position: 'absolute', top: 4, right: 4,
                     width: 16, height: 16, borderRadius: '50%',
-                    background: '#dc2626', color: '#fff',
+                    background: 'var(--admin-gold)', color: '#0D1F2D',
                     fontSize: '0.6rem', fontWeight: 800,
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     lineHeight: 1, border: '1.5px solid var(--admin-surface)',
@@ -303,7 +303,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {notifOpen && (
                 <div style={{
                   position: 'absolute', top: 'calc(100% + 8px)', right: 0,
-                  width: 340, background: 'var(--admin-card)', border: '1px solid var(--admin-border)',
+                  width: 340, background: 'var(--admin-surface)', border: '1px solid var(--admin-border)',
                   borderRadius: 14, boxShadow: '0 8px 32px rgba(0,0,0,0.14)', zIndex: 200, overflow: 'hidden',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', borderBottom: '1px solid var(--admin-border)' }}>
