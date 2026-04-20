@@ -24,6 +24,9 @@ export default function PublicLayout({ children, navRightSlot }: { children: Rea
   const [activeSection, setActiveSection] = useState('');
 
   const isActive = (path: string) => {
+    // If the link is strictly for Painel OSC, it should light up for ANY route within /painel
+    if (path === '/painel' && pathname?.startsWith('/painel')) return true;
+    
     const [pagePath, hash] = path.split('#');
     if (pathname !== pagePath) return false;
     if (hash) return activeSection === hash;

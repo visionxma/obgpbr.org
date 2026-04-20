@@ -41,6 +41,9 @@ interface Formulario {
 interface Pagamento {
   id: string; status: string; valor: number;
   metodo_pagamento: string | null; paid_at: string | null; created_at: string;
+  arquivo_comprovante_path: string | null;
+  arquivo_comprovante_nome: string | null;
+  arquivo_comprovante_at: string | null;
 }
 interface Assinatura {
   id: string; role: 'admin_rt' | 'contador' | 'superadmin';
@@ -163,6 +166,9 @@ export default function OscDetailPage() {
   const [certNumero, setCertNumero] = useState<string | null>(null);
   const [certEmitidaAt, setCertEmitidaAt] = useState<string | null>(null);
   const [togglingLiberar, setTogglingLiberar] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+  const [confirmMsg, setConfirmMsg] = useState('');
+  const [comprovanteUrl, setComprovanteUrl] = useState<string | null>(null);
 
   // Two-step approval
   const [assinaturas, setAssinaturas] = useState<Assinatura[]>([]);
@@ -197,7 +203,7 @@ export default function OscDetailPage() {
         supabase.from('osc_prestacao_contas').select('id, titulo, periodo, valor_total, arquivo_url, status, created_at').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }),
         supabase.from('osc_formularios').select('id, titulo, tipo, status, updated_at').eq('osc_id', pf.osc_id),
         supabase.from('relatorios_conformidade').select('*').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
-        supabase.from('certificacao_pagamentos').select('id, status, valor, metodo_pagamento, paid_at, created_at').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('certificacao_pagamentos').select('id, status, valor, metodo_pagamento, paid_at, created_at, arquivo_comprovante_path, arquivo_comprovante_nome, arquivo_comprovante_at').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       ]);
 
       setDocs((docsRes.data ?? []) as Documento[]);
@@ -215,7 +221,16 @@ export default function OscDetailPage() {
           .eq('relatorio_id', r.id);
         setAssinaturas((assinRes ?? []) as Assinatura[]);
       }
-      if (pagRes.data) setPagamento(pagRes.data as Pagamento);
+      if (pagRes.data) {
+        const pag = pagRes.data as Pagamento;
+        setPagamento(pag);
+        if (pag.arquivo_comprovante_path) {
+          const { data: signed } = await supabase.storage
+            .from('osc-docs')
+            .createSignedUrl(pag.arquivo_comprovante_path, 7200);
+          if (signed?.signedUrl) setComprovanteUrl(signed.signedUrl);
+        }
+      }
       setLoading(false);
     };
     load();
@@ -228,6 +243,29 @@ export default function OscDetailPage() {
     const { error } = await supabase.from('osc_perfis').update({ certificacao_liberada: next }).eq('id', perfil.id);
     if (!error) setCertLiberada(next);
     setTogglingLiberar(false);
+  };
+
+  /* ── Confirmar pagamento via comprovante ── */
+  const handleConfirmarPagamento = async () => {
+    if (!pagamento || !perfil) return;
+    setConfirming(true);
+    setConfirmMsg('');
+
+    const { data, error } = await supabase.rpc('confirmar_pagamento_admin', {
+      p_pagamento_id: pagamento.id,
+      p_osc_id: perfil.osc_id,
+    });
+
+    if (error || data?.ok === false) {
+      setConfirmMsg(`error:${error?.message ?? data?.erro ?? 'Erro ao confirmar.'}`);
+    } else {
+      setPagamento(prev => prev ? { ...prev, status: 'pago', paid_at: new Date().toISOString() } : prev);
+      setCertLiberada(true);
+      if (data?.certificado_numero) setCertNumero(data.certificado_numero);
+      setConfirmMsg('ok:Pagamento confirmado! Certificação liberada para a OSC.');
+      setTimeout(() => setConfirmMsg(''), 5000);
+    }
+    setConfirming(false);
   };
 
   /* ── Two-step signature ── */
@@ -462,6 +500,8 @@ export default function OscDetailPage() {
             )}
           </div>
           <div className="glass-card-body">
+            <MsgBanner msg={confirmMsg} />
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px 28px', alignItems: 'start' }}>
 
               {/* Payment status */}
@@ -471,7 +511,7 @@ export default function OscDetailPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
                     <span className={`adm-badge ${pagamento.status === 'pago' ? 'aprovado' : pagamento.status === 'cancelado' ? 'rejeitado' : 'enviado'}`} style={{ fontSize: '0.72rem' }}>
                       <CreditCard size={11} />
-                      {pagamento.status === 'pago' ? 'Pago' : pagamento.status === 'cancelado' ? 'Cancelado' : 'Pendente'}
+                      {pagamento.status === 'pago' ? 'Pago' : pagamento.status === 'aguardando_pagamento' ? 'Aguardando validação' : pagamento.status === 'cancelado' ? 'Cancelado' : 'Pendente'}
                     </span>
                     <span style={{ fontSize: '0.82rem', color: 'var(--admin-text-secondary)', fontWeight: 600 }}>
                       {fmtCurrency(pagamento.valor)}
@@ -502,7 +542,7 @@ export default function OscDetailPage() {
                     {togglingLiberar ? '...' : certLiberada ? '✓ Liberado' : '✗ Bloqueado'}
                   </button>
                   <span style={{ fontSize: '0.72rem', color: 'var(--admin-text-tertiary)' }}>
-                    {certLiberada ? 'OSC pode preencher o relatório' : 'Clique para liberar'}
+                    {certLiberada ? 'OSC pode preencher o relatório' : 'Clique para liberar manualmente'}
                   </span>
                 </div>
               </div>
@@ -522,6 +562,75 @@ export default function OscDetailPage() {
                 </div>
               )}
             </div>
+
+            {/* ── Comprovante PIX ── */}
+            {pagamento?.arquivo_comprovante_path && (
+              <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--admin-border)' }}>
+                <div style={labelStyle}>Comprovante PIX enviado pela OSC</div>
+                <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'var(--admin-surface)', border: '1px solid var(--admin-border)', borderRadius: 10 }}>
+                  {/* Ícone tipo arquivo */}
+                  <div style={{ width: 42, height: 42, borderRadius: 10, background: 'var(--admin-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FileText size={18} style={{ color: 'var(--admin-primary)' }} />
+                  </div>
+
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--admin-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {pagamento.arquivo_comprovante_nome ?? 'comprovante'}
+                    </div>
+                    {pagamento.arquivo_comprovante_at && (
+                      <div style={{ fontSize: '0.72rem', color: 'var(--admin-text-tertiary)', marginTop: 2 }}>
+                        Enviado em {new Date(pagamento.arquivo_comprovante_at).toLocaleString('pt-BR')}
+                      </div>
+                    )}
+                    <div style={{ fontSize: '0.72rem', marginTop: 3 }}>
+                      <span className={`adm-badge ${pagamento.status === 'pago' ? 'aprovado' : 'enviado'}`} style={{ fontSize: '0.65rem' }}>
+                        {pagamento.status === 'pago' ? 'Pagamento validado' : 'Aguardando validação'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Botões de ação */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    {comprovanteUrl && (
+                      <a
+                        href={comprovanteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="admin-btn admin-btn-secondary"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 8, fontSize: '0.78rem', textDecoration: 'none' }}
+                      >
+                        <ExternalLink size={13} /> Visualizar
+                      </a>
+                    )}
+                    {pagamento.status !== 'pago' && !certLiberada && (
+                      <button
+                        onClick={handleConfirmarPagamento}
+                        disabled={confirming}
+                        className="adm-btn-approve"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 16px', fontSize: '0.82rem', fontWeight: 700, borderRadius: 8 }}
+                      >
+                        <CheckCircle size={14} />
+                        {confirming ? 'Confirmando...' : 'Confirmar Pagamento'}
+                      </button>
+                    )}
+                    {pagamento.status === 'pago' && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.78rem', fontWeight: 700, color: '#15803d' }}>
+                        <CheckCircle size={14} /> Pagamento confirmado
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Aviso quando não há comprovante ainda */}
+            {pagamento && !pagamento.arquivo_comprovante_path && pagamento.status !== 'pago' && (
+              <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--admin-border)', display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.78rem', color: 'var(--admin-text-tertiary)', fontStyle: 'italic' }}>
+                <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                OSC ainda não enviou o comprovante PIX pelo painel.
+              </div>
+            )}
           </div>
         </div>
       )}
