@@ -74,6 +74,38 @@ export default function ProcessoPage() {
     }));
   };
 
+  const [entidadeData, setEntidadeData] = useState<Record<string, string>>({});
+
+  React.useEffect(() => {
+    if (perfil) {
+      setEntidadeData({
+        cnpj: perfil.cnpj || '',
+        natureza_juridica: perfil.natureza_juridica || '',
+        razao_social: perfil.razao_social || '',
+        nome_fantasia: (perfil as any).nome_fantasia || '',
+        cep: perfil.cep || '',
+        logradouro: perfil.logradouro || '',
+        numero_endereco: perfil.numero_endereco || '',
+        bairro: perfil.bairro || '',
+        municipio: perfil.municipio || '',
+        estado: perfil.estado || '',
+        data_abertura_cnpj: perfil.data_abertura_cnpj || '',
+        email_osc: perfil.email_osc || '',
+        telefone: perfil.telefone || '',
+        responsavel: perfil.responsavel || '',
+      });
+    }
+  }, [perfil]);
+
+  const handleEntidadeUpdate = (field: string, value: string) => {
+    setEntidadeData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleConsultarPagamentoEEnviar = () => {
+    // Exemplo de integração: a ação enviará para o Admin somente após a liquidação do Selo
+    alert('Aviso: O envio deste processo para a Administração requer a confirmação do pagamento referente à certificação (Selo OSC). O sistema validará a compensação antes da geração oficial.');
+  };
+
   const currentProgress = 35; // Mock progress for visual tracking
 
   return (
@@ -102,13 +134,13 @@ export default function ProcessoPage() {
               <div>
                 <span style={{ fontSize: '0.8rem', color: 'var(--site-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status do Processo</span>
                 <div style={{ fontSize: '1rem', fontWeight: 700, color: '#d97706', display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                  <CircleDashed size={16} /> Em Andamento
+                  <CircleDashed size={16} /> Em Andamento (Edição)
                 </div>
               </div>
               <div>
                 <span style={{ fontSize: '0.8rem', color: 'var(--site-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Situação da Conformidade</span>
                 <div style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--site-text-primary)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                  <Search size={16} color="var(--site-text-tertiary)" /> Em Análise Documental
+                  <Search size={16} color="var(--site-text-tertiary)" /> Aguardando Preenchimento e Pagamento
                 </div>
               </div>
             </div>
@@ -154,21 +186,29 @@ export default function ProcessoPage() {
       <section style={{ marginBottom: 40, border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-xl)', overflow: 'hidden', background: '#fff' }}>
         <header style={{ background: 'var(--site-surface-warm)', padding: '16px 24px', borderBottom: '1px solid var(--site-border)', display: 'flex', alignItems: 'center', gap: 12 }}>
           <Briefcase size={20} color="var(--site-text-primary)" />
-          <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>1. DADOS DA ENTIDADE</h2>
+          <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0 }}>1. DADOS DA ENTIDADE (Editável)</h2>
         </header>
         <div style={{ padding: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-          <InputField label="CNPJ" value={perfil?.cnpj || 'Não informado'} readonly />
-          <InputField label="Natureza Jurídica" value={perfil?.natureza_juridica || 'Não informado'} readonly />
-          <InputField label="Razão Social" value={perfil?.razao_social || 'Não informado'} readonly />
-          <InputField label="Nome Fantasia" value={(perfil as any)?.nome_fantasia || 'Não informado'} readonly />
-          <InputField 
-            label="Endereço" 
-            value={[perfil?.logradouro, perfil?.numero_endereco, perfil?.bairro, perfil?.municipio, perfil?.estado].filter(Boolean).join(', ') || 'Não informado'} 
-            readonly 
-          />
-          <InputField label="Data de Abertura do CNPJ" value={perfil?.data_abertura_cnpj || 'Não informado'} readonly />
-          <InputField label="E-mail" value={perfil?.email_osc || 'Não informado'} readonly />
-          <InputField label="Telefone" value={perfil?.telefone || 'Não informado'} readonly />
+          <InputField label="CNPJ" value={entidadeData.cnpj} onChange={(v) => handleEntidadeUpdate('cnpj', v)} />
+          <InputField label="Natureza Jurídica" value={entidadeData.natureza_juridica} onChange={(v) => handleEntidadeUpdate('natureza_juridica', v)} />
+          <InputField label="Razão Social" value={entidadeData.razao_social} onChange={(v) => handleEntidadeUpdate('razao_social', v)} />
+          <InputField label="Nome Fantasia" value={entidadeData.nome_fantasia} onChange={(v) => handleEntidadeUpdate('nome_fantasia', v)} />
+          <InputField label="E-mail" value={entidadeData.email_osc} onChange={(v) => handleEntidadeUpdate('email_osc', v)} type="email" />
+          <InputField label="Telefone" value={entidadeData.telefone} onChange={(v) => handleEntidadeUpdate('telefone', v)} />
+          <InputField label="Representante Legal" value={entidadeData.responsavel} onChange={(v) => handleEntidadeUpdate('responsavel', v)} />
+          <InputField label="Data de Abertura do CNPJ" type="date" value={entidadeData.data_abertura_cnpj} onChange={(v) => handleEntidadeUpdate('data_abertura_cnpj', v)} />
+          
+          <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--site-border)', paddingTop: 20, marginTop: 10 }}>
+            <h3 style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--site-text-secondary)', textTransform: 'uppercase', marginBottom: 16 }}>Endereço Completo</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20 }}>
+              <InputField label="CEP" value={entidadeData.cep} onChange={(v) => handleEntidadeUpdate('cep', v)} />
+              <InputField label="Logradouro" value={entidadeData.logradouro} onChange={(v) => handleEntidadeUpdate('logradouro', v)} />
+              <InputField label="Número" value={entidadeData.numero_endereco} onChange={(v) => handleEntidadeUpdate('numero_endereco', v)} />
+              <InputField label="Bairro" value={entidadeData.bairro} onChange={(v) => handleEntidadeUpdate('bairro', v)} />
+              <InputField label="Município" value={entidadeData.municipio} onChange={(v) => handleEntidadeUpdate('municipio', v)} />
+              <InputField label="Estado (UF)" value={entidadeData.estado} onChange={(v) => handleEntidadeUpdate('estado', v)} />
+            </div>
+          </div>
         </div>
       </section>
 
@@ -221,9 +261,13 @@ export default function ProcessoPage() {
               A autenticidade do documento deve ser validável por meio de código de verificação e acesso ao website oficial.
             </p>
           </div>
-          <div style={{ marginTop: 24, display: 'flex', justifyContent: 'flex-end' }}>
-            <button className="btn btn-gold" style={{ padding: '14px 28px', fontSize: '1rem' }}>
-              <CheckCircle2 size={18} /> Validar e Gerar Relatório Oficial
+          <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12 }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--site-text-tertiary)', fontWeight: 600 }}>
+              <AlertCircle size={14} style={{ display: 'inline', position: 'relative', top: 2, marginRight: 4 }} />
+              O envio para a administração requer assinatura e pagamento ativo.
+            </span>
+            <button onClick={handleConsultarPagamentoEEnviar} className="btn btn-gold" style={{ padding: '14px 28px', fontSize: '1rem' }}>
+              <CheckCircle2 size={18} /> Validar, Verificar Pagamento e Enviar Processo
             </button>
           </div>
         </div>
@@ -235,13 +279,14 @@ export default function ProcessoPage() {
 
 /* ── COMPONENTES INTERNOS ── */
 
-function InputField({ label, value, readonly = false }: { label: string, value?: string, readonly?: boolean }) {
+function InputField({ label, value, onChange, readonly = false, type = 'text' }: { label: string, value?: string, onChange?: (val: string) => void, readonly?: boolean, type?: string }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--site-text-tertiary)', textTransform: 'uppercase' }}>{label}</label>
       <input 
-        type="text" 
+        type={type} 
         value={value || ''} 
+        onChange={e => onChange?.(e.target.value)}
         readOnly={readonly}
         style={{
           padding: '10px 14px',
