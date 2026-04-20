@@ -65,6 +65,7 @@ interface Relatorio {
   submitted_at: string | null;
   reviewed_at: string | null;
   created_at: string;
+  arquivo_docx_path?: string | null;
 }
 
 /* ── Helpers ────────────────────────────────────── */
@@ -1155,7 +1156,7 @@ export default function OscDetailPage() {
                     <button className="admin-btn"
                       style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '7px 16px', fontSize: '0.82rem', background: '#2563eb', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
                       onClick={async () => {
-                        const { data } = await supabase.storage.from('osc-docs').createSignedUrl(relatorio.arquivo_docx_path, 3600);
+                        const { data } = await supabase.storage.from('osc-docs').createSignedUrl(relatorio.arquivo_docx_path!, 3600);
                         if (data?.signedUrl) window.open(data.signedUrl, '_blank');
                         else alert('Documento não disponível ou expirado.');
                       }}
