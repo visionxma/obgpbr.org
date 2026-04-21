@@ -86,6 +86,13 @@ export default function SeloOscPage() {
               'Desvio de recursos provenientes de emendas parlamentares',
               'Inexistência de sede física ou estrutura compatível com as atividades declaradas',
               'Falta de mecanismos de monitoramento e avaliação de resultados e impacto social',
+              'Descaracterização da Imunidade/Isenção: realização de atividades econômicas não segregadas que geram lucro não reinvestido na finalidade social, atraindo tributação indevida (IRPJ/CSLL)',
+              'Pendência de Regularidade Fiscal (CNDs): ausência de certidões negativas de débitos (Receita Federal, FGTS, Trabalhista), o que bloqueia automaticamente o recebimento de qualquer recurso público',
+              'Omissão na Entrega de Obrigações Acessórias: falha no envio da ECF (Escrituração Contábil Fiscal) ou DCTF, resultando em multas pesadas e suspensão do CNPJ',
+              'Ausência de Seguros Obrigatórios: falta de contratação de seguros de vida ou acidentes para voluntários e funcionários, conforme exigido pela Lei do Voluntariado e MROSC',
+              'Falta de Plano de Trabalho Detalhado: execução de gastos sem um Plano de Trabalho aprovado que vincule cada centavo a uma meta mensurável',
+              'Inexistência de Cadastro no CNEAS/CEBAS: falta de certificações específicas (como na Assistência Social) que permitem isenções previdenciárias patronais',
+              'Pagamento de Multas e Juros com Recurso da Parceria: uso de dinheiro público para pagar multas por atraso, o que é vedado pelo MROSC',
             ].map((item, i) => (
               <div key={i} style={{
                 display: 'flex', alignItems: 'flex-start', gap: 14,
