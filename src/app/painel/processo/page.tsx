@@ -282,35 +282,24 @@ export default function ProcessoPage() {
 
       setMensagemEnviando('Sincronizando modelo ao painel Administrativo...');
 
-      const repPayload = {
-        osc_id: perfil.osc_id,
-        numero: docxData.numero_relatorio,
-        status: 'em_analise',
-        dados_entidade: entidadeData,
-        habilitacao_juridica: data,
-        outros_registros: data,
-        submitted_at: new Date().toISOString(),
-        arquivo_docx_path: pathArquivo
-      };
+      // API server-side com service role — bypassa RLS corretamente
+      const res = await fetch('/api/painel/submeter-processo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          osc_id: perfil.osc_id,
+          relatorioId,
+          numero: docxData.numero_relatorio,
+          dados_entidade: entidadeData,
+          habilitacao_juridica: data,
+          arquivo_docx_path: pathArquivo,
+        }),
+      });
 
-      if (relatorioId) {
-        await supabase.from('relatorios_conformidade').update(repPayload).eq('id', relatorioId);
-      } else {
-        await supabase.from('relatorios_conformidade').insert(repPayload);
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Erro ao sincronizar com o painel administrativo.');
       }
-
-      // Atualiza status_selo no osc_perfis para que o admin visualize
-      await supabase
-        .from('osc_perfis')
-        .update({
-          status_selo: 'em_analise',
-          razao_social: entidadeData.razao_social || undefined,
-          cnpj: entidadeData.cnpj || undefined,
-          municipio: entidadeData.municipio || undefined,
-          estado: entidadeData.estado || undefined,
-          responsavel: entidadeData.responsavel || undefined,
-        })
-        .eq('osc_id', perfil.osc_id);
 
       setMensagemEnviando('');
       setEnviando(false);

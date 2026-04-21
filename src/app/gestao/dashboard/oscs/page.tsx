@@ -63,64 +63,14 @@ function OscsContent() {
   const loadData = useCallback(async () => {
     setLoading(true);
 
-    const [perfisRes, relRes] = await Promise.all([
-      supabase
-        .from('osc_perfis')
-        .select('id, osc_id, responsavel, razao_social, cnpj, municipio, estado, status_selo, created_at, deleted_at')
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('relatorios_conformidade')
-        .select('osc_id, status, dados_entidade, submitted_at')
-        .not('submitted_at', 'is', null),
-    ]);
+    const { data } = await supabase
+      .from('osc_perfis')
+      .select('id, osc_id, responsavel, razao_social, cnpj, municipio, estado, status_selo, created_at, deleted_at')
+      .order('created_at', { ascending: false });
 
-    const perfis = (perfisRes.data ?? []) as OscPerfil[];
-    const relatorios = (relRes.data ?? []) as {
-      osc_id: string; status: string; submitted_at: string;
-      dados_entidade: Record<string, string> | null;
-    }[];
-
-    // Sincroniza automaticamente: qualquer OSC com relatório submetido mas
-    // ainda marcada como 'pendente' em osc_perfis é corrigida no banco e na UI
-    const syncPromises: Promise<any>[] = [];
-    for (const rel of relatorios) {
-      const perfil = perfis.find(p => p.osc_id === rel.osc_id);
-      if (!perfil) continue;
-
-      const relStatus = rel.status === 'em_analise' || rel.status === 'aprovado' || rel.status === 'rejeitado'
-        ? rel.status : 'em_analise';
-
-      const needsSync =
-        perfil.status_selo === 'pendente' ||
-        (!perfil.razao_social && rel.dados_entidade?.razao_social) ||
-        (!perfil.cnpj && rel.dados_entidade?.cnpj);
-
-      if (needsSync) {
-        const update: Record<string, string> = { status_selo: relStatus };
-        const d = rel.dados_entidade ?? {};
-        if (d.razao_social) update.razao_social = d.razao_social;
-        if (d.cnpj) update.cnpj = d.cnpj;
-        if (d.municipio) update.municipio = d.municipio;
-        if (d.estado) update.estado = d.estado;
-        if (d.responsavel) update.responsavel = d.responsavel;
-
-        syncPromises.push(
-          Promise.resolve(supabase.from('osc_perfis').update(update).eq('osc_id', rel.osc_id))
-        );
-        // Aplica na UI imediatamente sem esperar o banco
-        perfil.status_selo = relStatus;
-        if (d.razao_social) perfil.razao_social = d.razao_social;
-        if (d.cnpj) perfil.cnpj = d.cnpj;
-        if (d.municipio) perfil.municipio = d.municipio;
-        if (d.estado) perfil.estado = d.estado;
-        if (d.responsavel) perfil.responsavel = d.responsavel;
-      }
-    }
-
-    if (syncPromises.length > 0) Promise.all(syncPromises); // fire-and-forget
-
-    setAll(perfis.filter(o => !o.deleted_at));
-    setTrashCount(perfis.filter(o => !!o.deleted_at).length);
+    const rows = (data ?? []) as OscPerfil[];
+    setAll(rows.filter(o => !o.deleted_at));
+    setTrashCount(rows.filter(o => !!o.deleted_at).length);
     setLoading(false);
   }, []);
 
