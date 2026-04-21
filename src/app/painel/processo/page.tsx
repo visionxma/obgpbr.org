@@ -1,7 +1,7 @@
 'use client';
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  ShieldCheck, UploadCloud, CheckCircle2, Clock, Check, AlertCircle, Briefcase, ChevronLeft, ChevronRight, Loader2
+  ShieldCheck, UploadCloud, CheckCircle2, Clock, Check, AlertCircle, Briefcase, ChevronLeft, ChevronRight, Loader2, FileUp, Sparkles
 } from 'lucide-react';
 import { usePainel } from '../PainelContext';
 import { supabase } from '@/lib/supabase';
@@ -26,7 +26,7 @@ const REGULARIDADE_FISCAL = [
   { id: '3.2', title: 'CND Estadual' },
   { id: '3.3', title: 'CNDA Estadual' },
   { id: '3.4', title: 'CND Municipal' },
-  { id: '3.5', title: 'CRF FGTS' },
+  { id: '3.5', title: 'CR FGTS' },
   { id: '3.6', title: 'CND Trabalhista' },
   { id: '3.7', title: 'CND CAEMA' },
 ];
@@ -34,7 +34,6 @@ const REGULARIDADE_FISCAL = [
 const QUALIFICACAO_FINANCEIRA = [
   { id: '4.1', title: 'Certidão de Falência e Concordata' },
   { id: '4.2', title: 'Registro e Regularidade do Contador' },
-  { id: '4.3', title: 'Demonstrações Financeiras (Balanço Social) último dois exercícios (ITG 2002)' },
   { id: '4.3.1', title: 'Termo de abertura' },
   { id: '4.3.2', title: 'Balanço Patrimonial' },
   { id: '4.3.3', title: 'Demonstração do Superávit e Déficit' },
@@ -42,7 +41,7 @@ const QUALIFICACAO_FINANCEIRA = [
   { id: '4.3.5', title: 'Demonstração dos Fluxos de Caixa' },
   { id: '4.3.6', title: 'Notas Explicativas dos dois últimos exercícios sociais' },
   { id: '4.3.7', title: 'Termo de encerramento' },
-  { id: '4.4', title: 'Ata de aprovação de contas com parecer do Conselho Fiscal dos últimos dois exercícios sociais da entidade' },
+  { id: '4.4', title: 'Ata aprovando prestação de contas com parecer do Conselho Fiscal dos últimos dois exercícios sociais da entidade' },
 ];
 
 const QUALIFICACAO_TECNICA = [
@@ -53,12 +52,25 @@ const QUALIFICACAO_TECNICA = [
   { id: '5.5', title: 'Acordo de Cooperação Técnica' },
 ];
 
+const OUTROS_REGISTROS = [
+  { id: '6.1', title: 'Atestado de Existência e Regular Funcionamento – AERFE MP/MA (se houver)' },
+  { id: '6.2', title: 'Cadastro Nacional de Entidades de Assistência Social - CNEAS (se houver)' },
+  { id: '6.3', title: 'Cadastro Nacional de Estabelecimento de Saúde – CNES (se houver)' },
+  { id: '6.4', title: 'Conselho Municipal da Assistência Social – CMAS (se houver)' },
+  { id: '6.5', title: 'Conselho Municipal dos Direitos da Criança e Adolescente - CMDCA (se houver)' },
+  { id: '6.6', title: 'Alvará de autorização sanitária (se houver)' },
+  { id: '6.7', title: 'Sistema de Cadastramento Unificado de Fornecedores - SICAF (se houver)' },
+  { id: '6.8', title: 'Registro e Regularidade no Conselho Classe (se houver)' },
+  { id: '6.9', title: 'Registro e Regularidade do Profissional RT no Conselho Classe (se houver)' },
+];
+
 const WIZARD_STEPS = [
   { label: 'Dados da Entidade' },
   { label: 'Habilitação Jurídica' },
   { label: 'Regularidade Fiscal' },
   { label: 'Qual. Econômica' },
   { label: 'Qual. Técnica' },
+  { label: 'Outros Registros' },
   { label: 'Finalização' },
 ];
 
@@ -72,6 +84,39 @@ export default function ProcessoPage() {
   const [relatorioId, setRelatorioId] = useState<string | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [mensagemEnviando, setMensagemEnviando] = useState('');
+  const [importando, setImportando] = useState(false);
+  const [importError, setImportError] = useState('');
+  const [importSuccess, setImportSuccess] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImportarDocumento = async (file: File) => {
+    setImportando(true);
+    setImportError('');
+    setImportSuccess(false);
+    try {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch('/api/painel/importar-documento', { method: 'POST', body: form });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || 'Erro ao processar documento.');
+      const d = json.dados as Record<string, string>;
+      setEntidadeData(prev => {
+        const updated = { ...prev };
+        const fields: (keyof typeof updated)[] = [
+          'cnpj','razao_social','nome_fantasia','natureza_juridica','data_abertura_cnpj',
+          'email_osc','telefone','responsavel','cep','logradouro','numero_endereco','bairro','municipio','estado'
+        ];
+        for (const f of fields) {
+          if (d[f] && d[f].trim()) updated[f] = d[f].trim();
+        }
+        return updated;
+      });
+      setImportSuccess(true);
+    } catch (e: any) {
+      setImportError(e.message);
+    }
+    setImportando(false);
+  };
 
   useEffect(() => {
     if (!perfil) return;
@@ -152,7 +197,7 @@ export default function ProcessoPage() {
 
   const handleNext = async () => {
     await saveProgress();
-    setStep(s => Math.min(s + 1, 6));
+    setStep(s => Math.min(s + 1, 7));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -218,6 +263,10 @@ export default function ProcessoPage() {
           const item = data[i.id] || {};
           return { label: i.title, status: item.status === 'conforme' ? 'CONFORME' : (item.status === 'nao_se_aplica' ? 'N/A' : 'PENDENTE'), codigo: item.codigo || '—', emissao: item.data_emissao ? new Date(item.data_emissao).toLocaleDateString('pt-BR') : '—', validade: item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '—', analise: item.analise || '—' };
         }),
+        outros_registros: OUTROS_REGISTROS.map(i => {
+          const item = data[i.id] || {};
+          return { label: i.title, status: item.status === 'conforme' ? 'CONFORME' : (item.status === 'nao_se_aplica' ? 'N/A' : 'PENDENTE'), codigo: item.codigo || '—', emissao: item.data_emissao ? new Date(item.data_emissao).toLocaleDateString('pt-BR') : '—', validade: item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '—', analise: item.analise || '—' };
+        }),
         status_final: 'EM ANÁLISE'
       };
 
@@ -239,6 +288,7 @@ export default function ProcessoPage() {
         status: 'em_analise',
         dados_entidade: entidadeData,
         habilitacao_juridica: data,
+        outros_registros: data,
         submitted_at: new Date().toISOString(),
         arquivo_docx_path: pathArquivo
       };
@@ -260,7 +310,7 @@ export default function ProcessoPage() {
     }
   };
 
-  const progress = Math.round(((step - 1) / 5) * 100);
+  const progress = Math.round(((step - 1) / 6) * 100);
 
   if (loadingData) {
     return (
@@ -326,6 +376,60 @@ export default function ProcessoPage() {
             <Briefcase size={20} color="#fff" />
             <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#fff' }}>1. DADOS DA ENTIDADE</h2>
           </header>
+
+          {/* IMPORT ZONE */}
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--site-border)', background: 'var(--site-surface-warm)' }}>
+            <p style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--site-text-secondary)', textTransform: 'uppercase', marginBottom: 12 }}>
+              <Sparkles size={13} style={{ display: 'inline', marginRight: 6, position: 'relative', top: 1 }} />
+              Preenchimento automático via documento
+            </p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+              style={{ display: 'none' }}
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleImportarDocumento(f); e.target.value = ''; }}
+            />
+            <div
+              onClick={() => !importando && fileInputRef.current?.click()}
+              onDragOver={e => e.preventDefault()}
+              onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) handleImportarDocumento(f); }}
+              style={{
+                border: `2px dashed ${importError ? '#dc2626' : importSuccess ? '#16a34a' : 'var(--site-gold)'}`,
+                borderRadius: 'var(--site-radius-lg)',
+                padding: '20px 28px',
+                display: 'flex', alignItems: 'center', gap: 16,
+                cursor: importando ? 'not-allowed' : 'pointer',
+                background: importSuccess ? 'rgba(22,163,74,0.04)' : 'rgba(197,171,118,0.06)',
+                transition: 'all 0.2s',
+              }}
+            >
+              {importando ? (
+                <Loader2 size={28} style={{ animation: 'spin 1s linear infinite', flexShrink: 0, color: 'var(--site-gold)' }} />
+              ) : importSuccess ? (
+                <CheckCircle2 size={28} style={{ flexShrink: 0, color: '#16a34a' }} />
+              ) : (
+                <FileUp size={28} style={{ flexShrink: 0, color: 'var(--site-gold)' }} />
+              )}
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '0.9rem', color: importError ? '#dc2626' : importSuccess ? '#16a34a' : 'var(--site-text-primary)' }}>
+                  {importando
+                    ? 'Analisando documento com IA...'
+                    : importError
+                    ? importError
+                    : importSuccess
+                    ? 'Dados preenchidos automaticamente! Revise abaixo.'
+                    : 'Clique ou arraste um PDF / DOCX com os dados da entidade'}
+                </div>
+                {!importando && !importSuccess && !importError && (
+                  <div style={{ fontSize: '0.78rem', color: 'var(--site-text-secondary)', marginTop: 3 }}>
+                    O documento será lido por IA e os campos serão preenchidos automaticamente.
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           <div style={{ padding: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
             <InputField label="CNPJ" value={entidadeData.cnpj} onChange={(v) => handleEntidadeUpdate('cnpj', v)} />
             <InputField label="Natureza Jurídica" value={entidadeData.natureza_juridica} onChange={(v) => handleEntidadeUpdate('natureza_juridica', v)} />
@@ -367,9 +471,13 @@ export default function ProcessoPage() {
       )}
 
       {step === 6 && (
+        <DocumentSection number="6" title="OUTROS REGISTROS" items={OUTROS_REGISTROS} data={data} handleUpdate={handleUpdate} />
+      )}
+
+      {step === 7 && (
         <section style={{ marginBottom: 32, border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-xl)', overflow: 'hidden', background: '#fff' }}>
           <header style={{ background: 'var(--site-primary)', color: '#fff', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--site-gold)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800 }}>6</div>
+            <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--site-gold)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800 }}>7</div>
             <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#fff' }}>CONCLUSÃO (FORMATO OFICIAL)</h2>
           </header>
           <div style={{ padding: '32px 40px', background: 'rgba(197,171,118,0.03)' }}>
@@ -378,19 +486,20 @@ export default function ProcessoPage() {
                 <ShieldCheck size={120} />
               </div>
               <p style={{ textAlign: 'justify', marginBottom: 20 }}>
-                Após análise documental, constata-se que a entidade, incluindo identificação completa (nome e CNPJ), apresenta a seguinte conformidade:
+                Após análise documental, constata-se que a entidade, incluindo identificação completa (nome e CNPJ), apresenta a seguinte conformidade aos requisitos para gestão de parcerias:
               </p>
               <ul style={{ listStyleType: 'none', paddingLeft: 0, marginBottom: 20 }}>
                 <li style={{ marginBottom: 8 }}><strong>Habilitação Jurídica</strong> – 100% conforme</li>
                 <li style={{ marginBottom: 8 }}><strong>Regularidade Fiscal, Social e Trabalhista</strong> – 100% conforme</li>
                 <li style={{ marginBottom: 8 }}><strong>Qualificação Econômico-Financeira</strong> – 100% conforme</li>
                 <li style={{ marginBottom: 8 }}><strong>Qualificação Técnica</strong> – 100% conforme</li>
+                <li style={{ marginBottom: 8 }}><strong>Outros Registros</strong> – 100% conforme</li>
               </ul>
               <p style={{ textAlign: 'justify', marginBottom: 20 }}>
                 Portanto, recomenda-se certificação independente através do <strong>"SELO OSC GESTÃO DE PARCERIAS"</strong>.
               </p>
               <p style={{ textAlign: 'justify', fontSize: '0.9rem', color: '#666', borderTop: '1px solid #eee', paddingTop: 16, marginTop: 32 }}>
-                A autenticidade do documento deve ser validável por meio de código de verificação e acesso ao website oficial.
+                A autenticidade do documento pode ser conferida através do website: https://obgpbr.org/selo-osc, mediante código de verificação e controle.
               </p>
             </div>
             <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12 }}>
@@ -417,7 +526,7 @@ export default function ProcessoPage() {
             <ChevronLeft size={18} /> Voltar
           </button>
         )}
-        {step < 6 && (
+        {step < 7 && (
           <button onClick={handleNext} disabled={saving} className="btn btn-gold" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 28px', fontSize: '0.95rem', fontWeight: 700, opacity: saving ? 0.7 : 1 }}>
             {saving ? (
               <><Loader2 size={18} className="spin-anim" /> Salvando...</>
