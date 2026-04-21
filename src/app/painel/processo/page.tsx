@@ -299,6 +299,19 @@ export default function ProcessoPage() {
         await supabase.from('relatorios_conformidade').insert(repPayload);
       }
 
+      // Atualiza status_selo no osc_perfis para que o admin visualize
+      await supabase
+        .from('osc_perfis')
+        .update({
+          status_selo: 'em_analise',
+          razao_social: entidadeData.razao_social || undefined,
+          cnpj: entidadeData.cnpj || undefined,
+          municipio: entidadeData.municipio || undefined,
+          estado: entidadeData.estado || undefined,
+          responsavel: entidadeData.responsavel || undefined,
+        })
+        .eq('osc_id', perfil.osc_id);
+
       setMensagemEnviando('');
       setEnviando(false);
       alert('Relatório gerado em DOCX, assinado e enviado ao Comitê Administrativo com sucesso! O processo passará por análise oficial.');
