@@ -137,10 +137,18 @@ export async function POST(req: NextRequest) {
       const result = await mammoth.extractRawText({ buffer });
       text = result.value;
     } else {
-      const { PDFParse } = await import('pdf-parse');
-      const parser = new PDFParse({ data: buffer });
-      const result = await parser.getText();
-      text = result.text;
+      // Extrai texto legível de PDF via decodificação de strings no buffer
+      // Funciona para PDFs com texto embutido (não escaneados)
+      const raw = buffer.toString('latin1');
+      const chunks: string[] = [];
+      // captura sequências de texto entre parênteses (formato PDF text stream)
+      const parenRe = /\(([^)\\]{3,})\)/g;
+      let m: RegExpExecArray | null;
+      while ((m = parenRe.exec(raw)) !== null) {
+        const s = m[1].replace(/\\n/g, '\n').replace(/\\r/g, '').replace(/\\\\/g, '\\');
+        if (/[a-zA-ZÀ-ÿ0-9@./\-]/.test(s)) chunks.push(s);
+      }
+      text = chunks.join(' ');
     }
 
     if (!text || text.trim().length < 10) {
