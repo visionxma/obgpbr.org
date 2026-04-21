@@ -496,79 +496,55 @@ export default function OscDetailPage() {
   const handleGenerateAdminDocx = async () => {
     if (!perfil || !relatorio) return;
     try {
-      const enderecoGeral = [perfil.logradouro, perfil.numero_endereco, perfil.bairro, perfil.municipio, perfil.estado].filter(Boolean).join(', ');
-      
+      // Use dados_entidade from the relatório (what the user submitted from OSC panel)
+      // Fall back to perfil fields if dados_entidade is empty
+      const de = relatorio.dados_entidade ?? {};
+      const enderecoGeral = [
+        de.logradouro || perfil.logradouro,
+        de.numero_endereco || perfil.numero_endereco,
+        de.bairro || perfil.bairro,
+        de.municipio || perfil.municipio,
+        de.estado || perfil.estado,
+      ].filter(Boolean).join(', ');
+
+      // Helper to convert checklist items to the array format the generator expects
+      function toDocxRows(rawField: any, sectionDef: { id: string; title: string }[]) {
+        const items = buildChecklistItems(rawField, sectionDef);
+        return items.map(i => ({
+          label: i.label,
+          status: i.checked ? 'CONFORME' : (i.status === 'nao_se_aplica' ? 'N/A' : 'PENDENTE'),
+          codigo: i.codigo || '—',
+          emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
+          validade: i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—',
+          analise: i.analise || '—',
+        }));
+      }
+
       const docxData = {
-        cnpj: perfil.cnpj || 'Não Informado',
-        natureza_juridica: perfil.natureza_juridica || 'Não Informado',
-        razao_social: perfil.razao_social || 'Não Informado',
-        nome_fantasia: (perfil as any).nome_fantasia || 'Não Informado',
+        // Entity data — prioritize what the user filled in the OSC panel
+        cnpj: de.cnpj || perfil.cnpj || 'Não Informado',
+        natureza_juridica: de.natureza_juridica || perfil.natureza_juridica || 'Não Informado',
+        razao_social: de.razao_social || perfil.razao_social || 'Não Informado',
+        nome_fantasia: de.nome_fantasia || (perfil as any).nome_fantasia || 'Não Informado',
         endereco: enderecoGeral || 'Não Informado',
-        logradouro: perfil.logradouro || '',
-        numero: perfil.numero_endereco || '',
-        bairro: perfil.bairro || '',
-        municipio: perfil.municipio || '',
-        estado: perfil.estado || '',
-        municipio_uf: [perfil.municipio, perfil.estado].filter(Boolean).join('/') || 'Não Informado',
-        cep: perfil.cep || '',
-        data_abertura: perfil.data_abertura_cnpj || 'Não Informado',
-        email: perfil.email_osc || 'Não Informado',
-        telefone: perfil.telefone || 'Não Informado',
-        responsavel: perfil.responsavel || 'Não Informado',
+        data_abertura: de.data_abertura_cnpj || perfil.data_abertura_cnpj || 'Não Informado',
+        email: de.email_osc || perfil.email_osc || 'Não Informado',
+        telefone: de.telefone || perfil.telefone || 'Não Informado',
+        responsavel: de.responsavel || perfil.responsavel || 'Não Informado',
+        // Report metadata
+        municipio_uf: [de.municipio || perfil.municipio, de.estado || perfil.estado].filter(Boolean).join('/') || 'Não Informado',
         numero_relatorio: relatorio.numero || `OBGP${new Date().getFullYear()}${perfil.id.substring(0, 4).toUpperCase()}`,
         codigo_controle: `RC${new Date().getTime().toString(36).toUpperCase()}`,
         data_hoje: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
-        
-        // Checklist data enriched — buildChecklistItems handles both Array and Record formats
-        // Checklist data enriched
-        ...buildChecklistItems(relatorio.habilitacao_juridica, HABILITACAO_JURIDICA).reduce((acc: any, i, idx) => {
-          acc[`hj_2_${idx + 1}_status`] = i.checked ? 'CONFORME' : 'PENDENTE';
-          acc[`hj_2_${idx + 1}_codigo`] = i.codigo || '—';
-          acc[`hj_2_${idx + 1}_emissao`] = i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—';
-          acc[`hj_2_${idx + 1}_validade`] = i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—';
-          return acc;
-        }, {}),
-
-        ...buildChecklistItems(relatorio.regularidade_fiscal, REGULARIDADE_FISCAL).reduce((acc: any, i, idx) => {
-          acc[`rf_3_${idx + 1}_status`] = i.checked ? 'CONFORME' : 'PENDENTE';
-          acc[`rf_3_${idx + 1}_codigo`] = i.codigo || '—';
-          acc[`rf_3_${idx + 1}_emissao`] = i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—';
-          acc[`rf_3_${idx + 1}_validade`] = i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—';
-          return acc;
-        }, {}),
-
-        ...buildChecklistItems(relatorio.qualificacao_economica, QUALIFICACAO_FINANCEIRA).reduce((acc: any, i, idx) => {
-          acc[`qe_4_${idx + 1}_status`] = i.checked ? 'CONFORME' : 'PENDENTE';
-          acc[`qe_4_${idx + 1}_codigo`] = i.codigo || '—';
-          acc[`qe_4_${idx + 1}_emissao`] = i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—';
-          acc[`qe_4_${idx + 1}_validade`] = i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—';
-          return acc;
-        }, {}),
-
-        ...buildChecklistItems(relatorio.qualificacao_tecnica, QUALIFICACAO_TECNICA).reduce((acc: any, i, idx) => {
-          acc[`qt_5_${idx + 1}_status`] = i.checked ? 'CONFORME' : 'PENDENTE';
-          acc[`qt_5_${idx + 1}_codigo`] = i.codigo || '—';
-          acc[`qt_5_${idx + 1}_emissao`] = i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—';
-          acc[`qt_5_${idx + 1}_validade`] = i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—';
-          return acc;
-        }, {}),
-
-        ...buildChecklistItems(relatorio.outros_registros, OUTROS_REGISTROS).reduce((acc: any, i, idx) => {
-          acc[`or_6_${idx + 1}_status`] = i.checked ? 'CONFORME' : 'PENDENTE';
-          acc[`or_6_${idx + 1}_codigo`] = i.codigo || '—';
-          acc[`or_6_${idx + 1}_emissao`] = i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—';
-          acc[`or_6_${idx + 1}_validade`] = i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—';
-          return acc;
-        }, {}),
-
-        hj_conforme: (() => { const arr = buildChecklistItems(relatorio.habilitacao_juridica, HABILITACAO_JURIDICA); return Math.round((arr.filter(i => i.checked).length / arr.length) * 100); })(),
-        rf_conforme: (() => { const arr = buildChecklistItems(relatorio.regularidade_fiscal, REGULARIDADE_FISCAL); return Math.round((arr.filter(i => i.checked).length / arr.length) * 100); })(),
-        qe_conforme: (() => { const arr = buildChecklistItems(relatorio.qualificacao_economica, QUALIFICACAO_FINANCEIRA); return Math.round((arr.filter(i => i.checked).length / arr.length) * 100); })(),
-        qt_conforme: (() => { const arr = buildChecklistItems(relatorio.qualificacao_tecnica, QUALIFICACAO_TECNICA); return Math.round((arr.filter(i => i.checked).length / arr.length) * 100); })(),
-        or_conforme: (() => { const arr = buildChecklistItems(relatorio.outros_registros, OUTROS_REGISTROS); return arr.length > 0 ? Math.round((arr.filter(i => i.checked).length / arr.length) * 100) : 0; })(),
-
+        // Checklist sections as arrays (the new docxGenerator expects this format)
+        habilitacao_juridica: toDocxRows(relatorio.habilitacao_juridica, HABILITACAO_JURIDICA),
+        regularidade_fiscal: toDocxRows(relatorio.regularidade_fiscal, REGULARIDADE_FISCAL),
+        qualificacao_economica: toDocxRows(relatorio.qualificacao_economica, QUALIFICACAO_FINANCEIRA),
+        qualificacao_tecnica: toDocxRows(relatorio.qualificacao_tecnica, QUALIFICACAO_TECNICA),
+        outros_registros: toDocxRows(relatorio.outros_registros, OUTROS_REGISTROS),
+        // Conclusion
         status_final: relatorio.status === 'aprovado' ? 'APROVADO' : 'EM ANÁLISE',
-        observacao_admin: relatorio.observacao_admin || 'Nenhuma observação extra.'
+        observacao_admin: relatorio.observacao_admin || 'Nenhuma observação extra.',
       };
       
       const blob = await gerarRelatorioDocx(docxData);
