@@ -61,11 +61,12 @@ interface ChecklistItem {
 interface Relatorio {
   id: string; osc_id: string; numero: string | null;
   status: 'em_preenchimento' | 'em_analise' | 'aprovado' | 'reprovado';
-  dados_entidade: Record<string, string>;
-  habilitacao_juridica: ChecklistItem[];
-  regularidade_fiscal: ChecklistItem[];
-  qualificacao_economica: ChecklistItem[];
-  qualificacao_tecnica: ChecklistItem[];
+  dados_entidade: Record<string, string> | null;
+  habilitacao_juridica: any;
+  regularidade_fiscal: any;
+  qualificacao_economica: any;
+  qualificacao_tecnica: any;
+  outros_registros?: any;
   observacao_admin: string | null;
   submitted_at: string | null;
   reviewed_at: string | null;
@@ -93,7 +94,7 @@ const REGULARIDADE_FISCAL = [
   { id: '3.2', title: 'CND Estadual' },
   { id: '3.3', title: 'CNDA Estadual' },
   { id: '3.4', title: 'CND Municipal' },
-  { id: '3.5', title: 'CRF FGTS' },
+  { id: '3.5', title: 'CR FGTS' },
   { id: '3.6', title: 'CND Trabalhista' },
   { id: '3.7', title: 'CND CAEMA' },
 ];
@@ -101,7 +102,6 @@ const REGULARIDADE_FISCAL = [
 const QUALIFICACAO_FINANCEIRA = [
   { id: '4.1', title: 'Certidão de Falência e Concordata' },
   { id: '4.2', title: 'Registro e Regularidade do Contador' },
-  { id: '4.3', title: 'Demonstrações Financeiras (Balanço Social) último dois exercícios (ITG 2002)' },
   { id: '4.3.1', title: 'Termo de abertura' },
   { id: '4.3.2', title: 'Balanço Patrimonial' },
   { id: '4.3.3', title: 'Demonstração do Superávit e Déficit' },
@@ -109,25 +109,57 @@ const QUALIFICACAO_FINANCEIRA = [
   { id: '4.3.5', title: 'Demonstração dos Fluxos de Caixa' },
   { id: '4.3.6', title: 'Notas Explicativas dos dois últimos exercícios sociais' },
   { id: '4.3.7', title: 'Termo de encerramento' },
-  { id: '4.4', title: 'Ata de aprovação de contas com parecer do Conselho Fiscal dos últimos dois exercícios sociais da entidade' },
+  { id: '4.4', title: 'Ata aprovando prestação de contas com parecer do Conselho Fiscal dos últimos dois exercícios sociais da entidade' },
 ];
 
 const QUALIFICACAO_TECNICA = [
-  { id: '5.1.1', title: 'Termo de Compromisso de Destinação de Recursos MPTMA' },
-  { id: '5.1.2', title: 'Termo de Contrato (Prefeitura de Presidente Médici/MA)' },
-  { id: '5.1.3', title: 'Termo de Contrato (Prefeitura de Presidente Médici/MA)' },
-  { id: '5.1.4', title: 'Acordo de Cooperação Técnica (Cachoeira Grande/MA)' },
-  { id: '5.1.4.1', title: 'Aditivo Acordo de Cooperação Técnica (Prefeitura Municipal de Cachoeira Grande/MA)' },
-  { id: '5.1.5', title: 'Acordo de Cooperação Técnica (Prefeitura Municipal de Morros/MA)' },
-  { id: '5.1.6', title: 'Termo de Contrato (Prefeitura Municipal de Lago do Junco/MA)' },
-  { id: '5.1.7', title: 'Declaração de Parceria (Defensoria Pública do Estado/MA)' },
-  { id: '5.1.8', title: 'Termo de Fomento Prefeitura Municipal de Primeira Cruz/MA' },
-  { id: '5.1.9', title: 'Declaração de Cooperação e Parceria Prefeitura Municipal de Icatu/MA' },
-  { id: '5.1.10', title: 'Declaração de Parceria e Atuação Conjunta Movimento Nacional da População de Rua MNPR' },
-  { id: '5.1.11', title: 'Contrato Ministério do Desenvolvimento e Assistência Social, Família e Combate a Fome' },
-  { id: '5.1', title: 'Registro e Regularidade da Entidade em Conselho Classe (se houver)' },
-  { id: '5.2', title: 'Registro e Regularidade do Profissional RT da Entidade em Conselho Classe (se houver)' },
+  { id: '5.1', title: 'Termo de Contrato' },
+  { id: '5.2', title: 'Convênio' },
+  { id: '5.3', title: 'Termo de Colaboração' },
+  { id: '5.4', title: 'Termo de Fomento' },
+  { id: '5.5', title: 'Acordo de Cooperação Técnica' },
 ];
+
+const OUTROS_REGISTROS = [
+  { id: '6.1', title: 'Atestado de Existência e Regular Funcionamento – AERFE MP/MA (se houver)' },
+  { id: '6.2', title: 'Cadastro Nacional de Entidades de Assistência Social - CNEAS (se houver)' },
+  { id: '6.3', title: 'Cadastro Nacional de Estabelecimento de Saúde – CNES (se houver)' },
+  { id: '6.4', title: 'Conselho Municipal da Assistência Social – CMAS (se houver)' },
+  { id: '6.5', title: 'Conselho Municipal dos Direitos da Criança e Adolescente - CMDCA (se houver)' },
+  { id: '6.6', title: 'Alvará de autorização sanitária (se houver)' },
+  { id: '6.7', title: 'Sistema de Cadastramento Unificado de Fornecedores - SICAF (se houver)' },
+  { id: '6.8', title: 'Registro e Regularidade no Conselho Classe (se houver)' },
+  { id: '6.9', title: 'Registro e Regularidade do Profissional RT no Conselho Classe (se houver)' },
+];
+
+/* Converte o campo habilitacao_juridica (Record OU Array) em ChecklistItem[] para uma seção */
+function buildChecklistItems(
+  rawField: any,
+  section: { id: string; title: string }[]
+): ChecklistItem[] {
+  if (!rawField) return section.map(s => ({ id: s.id, label: s.title, checked: false }));
+
+  // Se vier como array (formato legado), usa direto
+  if (Array.isArray(rawField)) {
+    return rawField as ChecklistItem[];
+  }
+
+  // Formato atual: Record<id, {status, codigo, data_emissao, ...}>
+  const rec = rawField as Record<string, any>;
+  return section.map(s => {
+    const d = rec[s.id] ?? {};
+    return {
+      id: s.id,
+      label: s.title,
+      checked: d.status === 'conforme',
+      codigo: d.codigo ?? null,
+      data_emissao: d.data_emissao ?? null,
+      data_validade: d.data_validade ?? null,
+      analise: d.analise ?? null,
+      status: d.status ?? null,
+    };
+  });
+}
 
 /* ── Helpers ────────────────────────────────────── */
 const TIPO_LABELS: Record<string, string> = {
@@ -487,33 +519,41 @@ export default function OscDetailPage() {
         codigo_controle: `RC${new Date().getTime().toString(36).toUpperCase()}`,
         data_hoje: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
         
-        // Checklist data enriched
-        habilitacao_juridica: relatorio.habilitacao_juridica?.map(i => ({ 
-          label: i.label || (HABILITACAO_JURIDICA.find((h: any) => h.id === i.id)?.title) || '', 
+        // Checklist data enriched — buildChecklistItems handles both Array and Record formats
+        habilitacao_juridica: buildChecklistItems(relatorio.habilitacao_juridica, HABILITACAO_JURIDICA).map(i => ({
+          label: i.label,
           status: i.checked ? 'CONFORME' : 'PENDENTE',
           codigo: i.codigo || '—',
           emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
           validade: i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—',
           analise: i.analise || '—'
         })),
-        regularidade_fiscal: relatorio.regularidade_fiscal?.map(i => ({ 
-          label: i.label || (REGULARIDADE_FISCAL.find((h: any) => h.id === i.id)?.title) || '',
+        regularidade_fiscal: buildChecklistItems(relatorio.regularidade_fiscal, REGULARIDADE_FISCAL).map(i => ({
+          label: i.label,
           status: i.checked ? 'CONFORME' : 'PENDENTE',
           codigo: i.codigo || '—',
           emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
           validade: i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—',
           analise: i.analise || '—'
         })),
-        qualificacao_economica: relatorio.qualificacao_economica?.map(i => ({ 
-          label: i.label || (QUALIFICACAO_FINANCEIRA.find((h: any) => h.id === i.id)?.title) || '',
+        qualificacao_economica: buildChecklistItems(relatorio.qualificacao_economica, QUALIFICACAO_FINANCEIRA).map(i => ({
+          label: i.label,
           status: i.checked ? 'CONFORME' : 'PENDENTE',
           codigo: i.codigo || '—',
           emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
           validade: i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—',
           analise: i.analise || '—'
         })),
-        qualificacao_tecnica: relatorio.qualificacao_tecnica?.map(i => ({ 
-          label: i.label || (QUALIFICACAO_TECNICA.find((h: any) => h.id === i.id)?.title) || '',
+        qualificacao_tecnica: buildChecklistItems(relatorio.qualificacao_tecnica, QUALIFICACAO_TECNICA).map(i => ({
+          label: i.label,
+          status: i.checked ? 'CONFORME' : 'PENDENTE',
+          codigo: i.codigo || '—',
+          emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
+          validade: i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—',
+          analise: i.analise || '—'
+        })),
+        outros_registros: buildChecklistItems(relatorio.outros_registros, OUTROS_REGISTROS).map(i => ({
+          label: i.label,
           status: i.checked ? 'CONFORME' : 'PENDENTE',
           codigo: i.codigo || '—',
           emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
@@ -1237,10 +1277,11 @@ export default function OscDetailPage() {
           municipio: 'Município', estado: 'UF', cep: 'CEP', data_abertura_cnpj: 'Data Abertura CNPJ',
         };
         const secoes = [
-          { num: 2, label: 'Habilitação Jurídica', items: relatorio.habilitacao_juridica ?? [] },
-          { num: 3, label: 'Regularidade Fiscal, Social e Trabalhista', items: relatorio.regularidade_fiscal ?? [] },
-          { num: 4, label: 'Qualificação Econômico-financeira', items: relatorio.qualificacao_economica ?? [] },
-          { num: 5, label: 'Qualificação Técnica', items: relatorio.qualificacao_tecnica ?? [] },
+          { num: 2, label: 'Habilitação Jurídica', items: buildChecklistItems(relatorio.habilitacao_juridica, HABILITACAO_JURIDICA) },
+          { num: 3, label: 'Regularidade Fiscal, Social e Trabalhista', items: buildChecklistItems(relatorio.regularidade_fiscal, REGULARIDADE_FISCAL) },
+          { num: 4, label: 'Qualificação Econômico-financeira', items: buildChecklistItems(relatorio.qualificacao_economica, QUALIFICACAO_FINANCEIRA) },
+          { num: 5, label: 'Qualificação Técnica', items: buildChecklistItems(relatorio.qualificacao_tecnica, QUALIFICACAO_TECNICA) },
+          { num: 6, label: 'Outros Registros', items: buildChecklistItems(relatorio.outros_registros, OUTROS_REGISTROS) },
         ];
         return (
           <div className="glass-card" style={{ marginTop: 24 }}>
@@ -1315,7 +1356,7 @@ export default function OscDetailPage() {
                 </div>
               </div>
 
-              {relatorio.dados_entidade && Object.keys(relatorio.dados_entidade).length > 0 && (
+              {relatorio.dados_entidade && Object.keys(relatorio.dados_entidade ?? {}).length > 0 && (
                 <div style={{ marginBottom: 10, border: '1px solid var(--admin-border)', borderRadius: 10, overflow: 'hidden' }}>
                   <button onClick={() => setOpenRelSection(openRelSection === 1 ? 0 : 1)}
                     style={{ width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'var(--admin-surface)', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '0.82rem', color: 'var(--admin-text-primary)' }}>
@@ -1324,7 +1365,7 @@ export default function OscDetailPage() {
                   </button>
                   {openRelSection === 1 && (
                     <div style={{ padding: '12px 16px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px 20px', borderTop: '1px solid var(--admin-border)' }}>
-                      {Object.entries(relatorio.dados_entidade).filter(([, v]) => v).map(([k, v]) => (
+                      {Object.entries(relatorio.dados_entidade ?? {}).filter(([, v]) => v).map(([k, v]) => (
                         <div key={k}>
                           <div style={{ fontSize: '0.65rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--admin-text-tertiary)', marginBottom: 2 }}>
                             {DADOS_LABELS[k] ?? k}

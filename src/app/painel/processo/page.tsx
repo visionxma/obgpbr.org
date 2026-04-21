@@ -103,8 +103,8 @@ export default function ProcessoPage() {
       setEntidadeData(prev => {
         const updated = { ...prev };
         const fields: (keyof typeof updated)[] = [
-          'cnpj','razao_social','nome_fantasia','natureza_juridica','data_abertura_cnpj',
-          'email_osc','telefone','responsavel','cep','logradouro','numero_endereco','bairro','municipio','estado'
+          'cnpj', 'razao_social', 'nome_fantasia', 'natureza_juridica', 'data_abertura_cnpj',
+          'email_osc', 'telefone', 'responsavel', 'cep', 'logradouro', 'numero_endereco', 'bairro', 'municipio', 'estado'
         ];
         for (const f of fields) {
           if (d[f] && d[f].trim()) updated[f] = d[f].trim();
@@ -418,14 +418,14 @@ export default function ProcessoPage() {
                   {importando
                     ? 'Analisando documento com IA...'
                     : importError
-                    ? importError
-                    : importSuccess
-                    ? 'Dados preenchidos automaticamente! Revise abaixo.'
-                    : 'Clique ou arraste um PDF / DOCX com os dados da entidade'}
+                      ? importError
+                      : importSuccess
+                        ? 'Dados preenchidos automaticamente! Revise abaixo.'
+                        : 'Clique ou arraste um PDF / DOCX com os dados da entidade'}
                 </div>
                 {!importando && !importSuccess && !importError && (
                   <div style={{ fontSize: '0.78rem', color: 'var(--site-text-secondary)', marginTop: 3 }}>
-                    O documento será lido por IA e os campos serão preenchidos automaticamente.
+                    O documento será lido e os campos serão preenchidos automaticamente.
                   </div>
                 )}
               </div>
