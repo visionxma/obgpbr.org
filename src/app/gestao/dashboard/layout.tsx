@@ -74,7 +74,16 @@ function SidebarNav({ sections, onNavigate }: {
           <div className="sidebar-nav-label">{section}</div>
           {items.map((item) => {
             const Icon = item.icon;
-            const isActive = currentPath === item.path;
+            let isActive = false;
+            if (item.path === '/gestao/dashboard') {
+              isActive = currentPath === item.path;
+            } else if (item.path === '/gestao/dashboard/oscs') {
+              isActive = currentPath.startsWith('/gestao/dashboard/oscs') && !currentPath.startsWith('/gestao/dashboard/oscs/lixeira');
+            } else if (item.path === '/gestao/dashboard/oscs/lixeira') {
+              isActive = currentPath === item.path;
+            } else {
+              isActive = currentPath === item.path || currentPath.startsWith(item.path + '/');
+            }
             
             return (
               <Link

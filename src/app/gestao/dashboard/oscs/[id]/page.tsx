@@ -520,47 +520,53 @@ export default function OscDetailPage() {
         data_hoje: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
         
         // Checklist data enriched — buildChecklistItems handles both Array and Record formats
-        habilitacao_juridica: buildChecklistItems(relatorio.habilitacao_juridica, HABILITACAO_JURIDICA).map(i => ({
-          label: i.label,
-          status: i.checked ? 'CONFORME' : 'PENDENTE',
-          codigo: i.codigo || '—',
-          emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
-          validade: i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—',
-          analise: i.analise || '—'
-        })),
-        regularidade_fiscal: buildChecklistItems(relatorio.regularidade_fiscal, REGULARIDADE_FISCAL).map(i => ({
-          label: i.label,
-          status: i.checked ? 'CONFORME' : 'PENDENTE',
-          codigo: i.codigo || '—',
-          emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
-          validade: i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—',
-          analise: i.analise || '—'
-        })),
-        qualificacao_economica: buildChecklistItems(relatorio.qualificacao_economica, QUALIFICACAO_FINANCEIRA).map(i => ({
-          label: i.label,
-          status: i.checked ? 'CONFORME' : 'PENDENTE',
-          codigo: i.codigo || '—',
-          emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
-          validade: i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—',
-          analise: i.analise || '—'
-        })),
-        qualificacao_tecnica: buildChecklistItems(relatorio.qualificacao_tecnica, QUALIFICACAO_TECNICA).map(i => ({
-          label: i.label,
-          status: i.checked ? 'CONFORME' : 'PENDENTE',
-          codigo: i.codigo || '—',
-          emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
-          validade: i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—',
-          analise: i.analise || '—'
-        })),
-        outros_registros: buildChecklistItems(relatorio.outros_registros, OUTROS_REGISTROS).map(i => ({
-          label: i.label,
-          status: i.checked ? 'CONFORME' : 'PENDENTE',
-          codigo: i.codigo || '—',
-          emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
-          validade: i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—',
-          analise: i.analise || '—'
-        })),
-        
+        // Checklist data enriched
+        ...buildChecklistItems(relatorio.habilitacao_juridica, HABILITACAO_JURIDICA).reduce((acc: any, i, idx) => {
+          acc[`hj_2_${idx + 1}_status`] = i.checked ? 'CONFORME' : 'PENDENTE';
+          acc[`hj_2_${idx + 1}_codigo`] = i.codigo || '—';
+          acc[`hj_2_${idx + 1}_emissao`] = i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—';
+          acc[`hj_2_${idx + 1}_validade`] = i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—';
+          return acc;
+        }, {}),
+
+        ...buildChecklistItems(relatorio.regularidade_fiscal, REGULARIDADE_FISCAL).reduce((acc: any, i, idx) => {
+          acc[`rf_3_${idx + 1}_status`] = i.checked ? 'CONFORME' : 'PENDENTE';
+          acc[`rf_3_${idx + 1}_codigo`] = i.codigo || '—';
+          acc[`rf_3_${idx + 1}_emissao`] = i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—';
+          acc[`rf_3_${idx + 1}_validade`] = i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—';
+          return acc;
+        }, {}),
+
+        ...buildChecklistItems(relatorio.qualificacao_economica, QUALIFICACAO_FINANCEIRA).reduce((acc: any, i, idx) => {
+          acc[`qe_4_${idx + 1}_status`] = i.checked ? 'CONFORME' : 'PENDENTE';
+          acc[`qe_4_${idx + 1}_codigo`] = i.codigo || '—';
+          acc[`qe_4_${idx + 1}_emissao`] = i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—';
+          acc[`qe_4_${idx + 1}_validade`] = i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—';
+          return acc;
+        }, {}),
+
+        ...buildChecklistItems(relatorio.qualificacao_tecnica, QUALIFICACAO_TECNICA).reduce((acc: any, i, idx) => {
+          acc[`qt_5_${idx + 1}_status`] = i.checked ? 'CONFORME' : 'PENDENTE';
+          acc[`qt_5_${idx + 1}_codigo`] = i.codigo || '—';
+          acc[`qt_5_${idx + 1}_emissao`] = i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—';
+          acc[`qt_5_${idx + 1}_validade`] = i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—';
+          return acc;
+        }, {}),
+
+        ...buildChecklistItems(relatorio.outros_registros, OUTROS_REGISTROS).reduce((acc: any, i, idx) => {
+          acc[`or_6_${idx + 1}_status`] = i.checked ? 'CONFORME' : 'PENDENTE';
+          acc[`or_6_${idx + 1}_codigo`] = i.codigo || '—';
+          acc[`or_6_${idx + 1}_emissao`] = i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—';
+          acc[`or_6_${idx + 1}_validade`] = i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—';
+          return acc;
+        }, {}),
+
+        hj_conforme: (() => { const arr = buildChecklistItems(relatorio.habilitacao_juridica, HABILITACAO_JURIDICA); return Math.round((arr.filter(i => i.checked).length / arr.length) * 100); })(),
+        rf_conforme: (() => { const arr = buildChecklistItems(relatorio.regularidade_fiscal, REGULARIDADE_FISCAL); return Math.round((arr.filter(i => i.checked).length / arr.length) * 100); })(),
+        qe_conforme: (() => { const arr = buildChecklistItems(relatorio.qualificacao_economica, QUALIFICACAO_FINANCEIRA); return Math.round((arr.filter(i => i.checked).length / arr.length) * 100); })(),
+        qt_conforme: (() => { const arr = buildChecklistItems(relatorio.qualificacao_tecnica, QUALIFICACAO_TECNICA); return Math.round((arr.filter(i => i.checked).length / arr.length) * 100); })(),
+        or_conforme: (() => { const arr = buildChecklistItems(relatorio.outros_registros, OUTROS_REGISTROS); return arr.length > 0 ? Math.round((arr.filter(i => i.checked).length / arr.length) * 100) : 0; })(),
+
         status_final: relatorio.status === 'aprovado' ? 'APROVADO' : 'EM ANÁLISE',
         observacao_admin: relatorio.observacao_admin || 'Nenhuma observação extra.'
       };
