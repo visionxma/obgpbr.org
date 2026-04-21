@@ -34,55 +34,81 @@ export default function SeloOscPage() {
         </div>
       </section>
 
-      {/* ═══ PROBLEMA — Alternating ═══ */}
+      {/* ═══ PROBLEMA ═══ */}
       <section className="section-padding">
         <div className="container">
-          <div className="row-alternate">
-            {/* Texto */}
-            <div>
-              <span className="section-label" style={{ display: 'block', marginBottom: 12 }}>Contexto</span>
-              <h2 style={{ marginBottom: 24, lineHeight: 1.25 }}>
-                O{' '}<span className="font-cursive" style={{ color: 'var(--site-gold-dark)' }}>problema</span>{' '}
-                que enfrentamos
-              </h2>
-              <p style={pStyle}>
-                A celebração de parcerias entre OSCs e a administração pública, regulada pela <strong style={{ color: 'var(--site-text-primary)' }}>Lei Federal nº 13.019/2014</strong> (MROSC), enfrenta entraves estruturais decorrentes da ausência de regularidade documental e conformidade institucional.
-              </p>
-              <p style={pStyle}>
-                Irregularidades identificadas pelo Ministério Público do Maranhão — como estatuto desatualizado, ausência de atas e inexistência de prestação de contas — evidenciam padrões de inobservância da governança mínima exigida.
-              </p>
-              <p style={pStyle}>
-                O conjunto dessas irregularidades compromete a elegibilidade das OSCs, limita o acesso a recursos públicos e agrava desigualdades nas políticas de fomento à sociedade civil.
-              </p>
-            </div>
-            {/* Visual */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {[
-                { icon: AlertTriangle, label: 'Estatuto desatualizado', desc: 'Documentação fora dos padrões exigidos', color: '#dc2626', bg: '#fef2f2' },
-                { icon: FileCheck, label: 'Ausência de prestação de contas', desc: 'Viola o dever de accountability', color: '#d97706', bg: '#fffbeb' },
-                { icon: Users, label: 'Falta de governança', desc: 'Reuniões e assembleias inexistentes', color: '#7c3aed', bg: '#f5f3ff' },
-                { icon: BookOpen, label: 'Carência técnica', desc: 'Dificuldade em planos de trabalho', color: 'var(--site-primary)', bg: 'var(--site-surface-blue)' },
-              ].map(({ icon: Icon, label, desc, color, bg }, i) => (
-                <div key={label} className={`stagger-${i + 1}`} style={{
-                  display: 'flex', gap: 16, alignItems: 'center',
-                  padding: '20px 22px', borderRadius: 'var(--site-radius-lg)',
-                  background: bg, border: '1px solid var(--site-border)',
+          <div style={{ maxWidth: 760, marginBottom: 48 }}>
+            <span className="section-label" style={{ display: 'block', marginBottom: 12 }}>Contexto</span>
+            <h2 style={{ marginBottom: 24, lineHeight: 1.25 }}>
+              O{' '}<span className="font-cursive" style={{ color: 'var(--site-gold-dark)' }}>problema</span>{' '}
+              que enfrentamos
+            </h2>
+            <p style={pStyle}>
+              A celebração de parcerias entre OSCs e a administração pública, regulada pela <strong style={{ color: 'var(--site-text-primary)' }}>Lei Federal nº 13.019/2014</strong> (MROSC), enfrenta entraves estruturais decorrentes da ausência de regularidade documental e conformidade institucional.
+            </p>
+            <p style={pStyle}>
+              Irregularidades identificadas pelo Ministério Público do Maranhão — como estatuto desatualizado, ausência de atas e inexistência de prestação de contas — evidenciam padrões de inobservância da governança mínima exigida.
+            </p>
+            <p style={{ ...pStyle, marginBottom: 0 }}>
+              O conjunto dessas irregularidades compromete a elegibilidade das OSCs, limita o acesso a recursos públicos e agrava desigualdades nas políticas de fomento à sociedade civil.
+            </p>
+          </div>
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: 12,
+          }}>
+            {[
+              'Desconhecimento das Normas Estatutárias',
+              'Estatuto Social desatualizado',
+              'Inobservância das finalidades estatutárias e dos deveres funcionais dos membros eleitos',
+              'Ausência de controle administrativo e gerencial na Associação',
+              'Ausência de cobrança de taxa associativa',
+              'Ausência de reuniões do corpo diretivo e fiscal da Entidade',
+              'Ausência de convocação de Assembleia Geral com os associados',
+              'Ausência de prestação de contas',
+              'Ausência de regramento específico voltado à condução do processo eleitoral',
+              'Anistia de taxa associativa a cada eleição',
+              'Ausência de registros dos principais atos constitutivos (atas de eleição, posse e atualização estatutária)',
+              'Concentração de poder e falta de segregação de funções',
+              'Contratação de parentes ou pessoas ligadas (Nepotismo)',
+              'Pagamento de salários a dirigentes com recursos públicos sem previsão legal ou estatutária',
+              'Ausência de transparência ativa (falta de publicação de dados em site oficial)',
+              'Desvio de finalidade (uso de recursos para fins diversos do pactuado)',
+              'Inexecução total ou parcial do objeto da parceria',
+              'Fracionamento de despesa para burlar processos de cotação ou licitação',
+              'Pagamento com documentação inidônea (notas fiscais frias ou recibos genéricos)',
+              'Mistura de patrimônio (confusão patrimonial entre bens da entidade e dos dirigentes)',
+              'Pagamento de despesas fora do período de vigência da parceria',
+              'Ausência de movimentação financeira em conta bancária específica e exclusiva',
+              'Contratação de "funcionários fantasmas"',
+              'Desvio de recursos provenientes de emendas parlamentares',
+              'Inexistência de sede física ou estrutura compatível com as atividades declaradas',
+              'Falta de mecanismos de monitoramento e avaliação de resultados e impacto social',
+            ].map((item, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'flex-start', gap: 14,
+                padding: '16px 18px',
+                borderRadius: 'var(--site-radius-lg)',
+                background: '#fff',
+                border: '1px solid var(--site-border)',
+                boxShadow: 'var(--site-shadow-xs)',
+              }}>
+                <div style={{
+                  minWidth: 28, height: 28, borderRadius: '50%',
+                  background: 'var(--site-primary)',
+                  color: 'var(--site-gold)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.7rem', fontWeight: 800, flexShrink: 0, marginTop: 1,
                 }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 'var(--site-radius-md)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    background: 'white', color, flexShrink: 0,
-                    boxShadow: 'var(--site-shadow-xs)',
-                  }}>
-                    <Icon size={20} />
-                  </div>
-                  <div>
-                    <div style={{ fontWeight: 600, fontSize: 'var(--text-sm)', marginBottom: 2 }}>{label}</div>
-                    <div style={{ fontSize: 'var(--text-xs)', color: 'var(--site-text-tertiary)' }}>{desc}</div>
-                  </div>
+                  {i + 1}
                 </div>
-              ))}
-            </div>
+                <span style={{ fontSize: 'var(--text-sm)', lineHeight: 1.5, color: 'var(--site-text-primary)', fontWeight: 500 }}>
+                  {item}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       </section>
