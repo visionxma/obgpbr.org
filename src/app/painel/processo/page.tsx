@@ -615,14 +615,6 @@ function DocumentSection({ number, title, items, data, handleUpdate }: {
                       <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-text-secondary)' }}>Data de Validade <span style={{ fontWeight: 500 }}>(se houver)</span></label>
                       <input type="date" value={itemData.data_validade || ''} onChange={(e) => handleUpdate(item.id, 'data_validade', e.target.value)} style={inputStyle} />
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                      <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-text-secondary)' }}>Upload do Documento</label>
-                      <label style={{ border: '1px dashed var(--site-border)', padding: '10px', borderRadius: 'var(--site-radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', background: 'var(--site-surface-warm)', fontSize: '0.8rem', fontWeight: 600, color: 'var(--site-primary)' }}>
-                        <UploadCloud size={16} />
-                        {itemData.file ? 'Documento Anexado' : 'Selecionar Arquivo'}
-                        <input type="file" style={{ display: 'none' }} onChange={(e) => handleUpdate(item.id, 'file', e.target.files?.[0]?.name || '')} />
-                      </label>
-                    </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6, gridColumn: '1 / -1' }}>
                       <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-text-secondary)' }}>Análise da Situação Atual</label>
                       <textarea
