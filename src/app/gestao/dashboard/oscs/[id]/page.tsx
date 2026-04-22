@@ -10,6 +10,7 @@ import {
   Edit2, X, Mail, Home, User, Award, CreditCard, PenLine, Download, FileSignature
 } from 'lucide-react';
 import { gerarRelatorioDocx } from '@/lib/docxGenerator';
+import DiagSeloCard from '@/components/admin/DiagSeloCard';
 
 /* ── Types ──────────────────────────────────────── */
 interface OscPerfil {
@@ -795,6 +796,9 @@ export default function OscDetailPage() {
           </div>
         </div>
       )}
+
+      {/* Motor de Diagnóstico do Selo OSC (Dashboard UI) */}
+      <DiagSeloCard relatorio={relatorio} />
 
       {/* Two-column: profile info + status management */}
       <div className="content-grid cols-2" style={{ marginBottom: 28, alignItems: 'start' }}>
