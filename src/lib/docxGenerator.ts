@@ -342,10 +342,14 @@ export async function gerarRelatorioDocx(dados: Record<string, any>): Promise<Bl
     // Skip header rows (containing "Descrição documento")
     if (cell1Text.includes('descrição documento') || cell1Text.includes('descri')) continue;
 
+    // Must have at least some text to match against, prevent empty string matching hijacking!
+    if (cell1Text.length === 0) continue;
+
     // Try to match by label
     let matched: SectionMapping | undefined;
     for (const [key, val] of labelMap.entries()) {
-      if (cell1Text.includes(key) || key.includes(cell1Text)) {
+      // Direct inclusion OR reverse inclusion but only if the text is substantial (avoid "a" matching)
+      if (cell1Text.includes(key) || (cell1Text.length > 5 && key.includes(cell1Text))) {
         matched = val;
         labelMap.delete(key); // Remove to avoid duplicate matches
         break;

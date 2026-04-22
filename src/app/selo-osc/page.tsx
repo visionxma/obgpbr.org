@@ -1,5 +1,5 @@
 import PublicLayout from '../components/PublicLayout';
-import { ShieldCheck, Scale, TrendingUp, FileCheck, Users, Award, ArrowRight, AlertTriangle, BookOpen } from 'lucide-react';
+import { ShieldCheck, Scale, TrendingUp, FileCheck, Users, Award, ArrowRight, BookOpen } from 'lucide-react';
 
 export const metadata = { title: 'Selo OSC Gestão de Parcerias | OBGP' };
 
@@ -34,24 +34,37 @@ export default function SeloOscPage() {
         </div>
       </section>
 
-      {/* ═══ PROBLEMA ═══ */}
+      {/* ═══ DIAGNÓSTICO MP/MA ═══ */}
       <section className="section-padding">
         <div className="container">
           <div style={{ maxWidth: 760, marginBottom: 48 }}>
-            <span className="section-label" style={{ display: 'block', marginBottom: 12 }}>Contexto</span>
+            <span className="section-label" style={{ display: 'block', marginBottom: 12 }}>Diagnóstico</span>
             <h2 style={{ marginBottom: 24, lineHeight: 1.25 }}>
-              O{' '}<span className="font-cursive" style={{ color: 'var(--site-gold-dark)' }}>problema</span>{' '}
-              que enfrentamos
+              O que o{' '}<span className="font-cursive" style={{ color: 'var(--site-gold-dark)' }}>MP/MA</span>{' '}
+              identificou
             </h2>
             <p style={pStyle}>
-              A celebração de parcerias entre OSCs e a administração pública, regulada pela <strong style={{ color: 'var(--site-text-primary)' }}>Lei Federal nº 13.019/2014</strong> (MROSC), enfrenta entraves estruturais decorrentes da ausência de regularidade documental e conformidade institucional.
-            </p>
-            <p style={pStyle}>
-              Irregularidades identificadas pelo Ministério Público do Maranhão — como estatuto desatualizado, ausência de atas e inexistência de prestação de contas — evidenciam padrões de inobservância da governança mínima exigida.
+              O Ministério Público do Maranhão, no exercício de suas atribuições de controle externo, identificou um conjunto de irregularidades recorrentes nas entidades sem fins lucrativos — padrões que comprometem diretamente a elegibilidade das OSCs para celebrar parcerias com a administração pública, nos termos da <strong style={{ color: 'var(--site-text-primary)' }}>Lei Federal nº 13.019/2014</strong> (MROSC).
             </p>
             <p style={{ ...pStyle, marginBottom: 0 }}>
-              O conjunto dessas irregularidades compromete a elegibilidade das OSCs, limita o acesso a recursos públicos e agrava desigualdades nas políticas de fomento à sociedade civil.
+              Essas irregularidades limitam o acesso das organizações a recursos públicos e agravam desigualdades nas políticas de fomento à sociedade civil — cenário que o <strong style={{ color: 'var(--site-text-primary)' }}>Selo OSC Gestão de Parcerias</strong> foi concebido para enfrentar de forma estruturada e preventiva.
             </p>
+          </div>
+
+          {/* Fonte */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '12px 18px',
+            borderRadius: 'var(--site-radius-md)',
+            background: 'var(--site-surface-gold)',
+            border: '1px solid var(--site-gold)',
+            marginBottom: 32,
+            maxWidth: 760,
+          }}>
+            <BookOpen size={16} style={{ color: 'var(--site-gold-dark)', flexShrink: 0 }} />
+            <span style={{ fontSize: 'var(--text-sm)', color: 'var(--site-text-primary)', lineHeight: 1.5 }}>
+              <strong>Fonte:</strong> Apresentação institucional do Ministério Público do Estado do Maranhão — irregularidades observadas nas OSCs do estado.
+            </span>
           </div>
 
           <div style={{
@@ -71,28 +84,6 @@ export default function SeloOscPage() {
               'Ausência de regramento específico voltado à condução do processo eleitoral',
               'Anistia de taxa associativa a cada eleição',
               'Ausência de registros dos principais atos constitutivos (atas de eleição, posse e atualização estatutária)',
-              'Concentração de poder e falta de segregação de funções',
-              'Contratação de parentes ou pessoas ligadas (Nepotismo)',
-              'Pagamento de salários a dirigentes com recursos públicos sem previsão legal ou estatutária',
-              'Ausência de transparência ativa (falta de publicação de dados em site oficial)',
-              'Desvio de finalidade (uso de recursos para fins diversos do pactuado)',
-              'Inexecução total ou parcial do objeto da parceria',
-              'Fracionamento de despesa para burlar processos de cotação ou licitação',
-              'Pagamento com documentação inidônea (notas fiscais frias ou recibos genéricos)',
-              'Mistura de patrimônio (confusão patrimonial entre bens da entidade e dos dirigentes)',
-              'Pagamento de despesas fora do período de vigência da parceria',
-              'Ausência de movimentação financeira em conta bancária específica e exclusiva',
-              'Contratação de "funcionários fantasmas"',
-              'Desvio de recursos provenientes de emendas parlamentares',
-              'Inexistência de sede física ou estrutura compatível com as atividades declaradas',
-              'Falta de mecanismos de monitoramento e avaliação de resultados e impacto social',
-              'Descaracterização da Imunidade/Isenção: realização de atividades econômicas não segregadas que geram lucro não reinvestido na finalidade social, atraindo tributação indevida (IRPJ/CSLL)',
-              'Pendência de Regularidade Fiscal (CNDs): ausência de certidões negativas de débitos (Receita Federal, FGTS, Trabalhista), o que bloqueia automaticamente o recebimento de qualquer recurso público',
-              'Omissão na Entrega de Obrigações Acessórias: falha no envio da ECF (Escrituração Contábil Fiscal) ou DCTF, resultando em multas pesadas e suspensão do CNPJ',
-              'Ausência de Seguros Obrigatórios: falta de contratação de seguros de vida ou acidentes para voluntários e funcionários, conforme exigido pela Lei do Voluntariado e MROSC',
-              'Falta de Plano de Trabalho Detalhado: execução de gastos sem um Plano de Trabalho aprovado que vincule cada centavo a uma meta mensurável',
-              'Inexistência de Cadastro no CNEAS/CEBAS: falta de certificações específicas (como na Assistência Social) que permitem isenções previdenciárias patronais',
-              'Pagamento de Multas e Juros com Recurso da Parceria: uso de dinheiro público para pagar multas por atraso, o que é vedado pelo MROSC',
             ].map((item, i) => (
               <div key={i} style={{
                 display: 'flex', alignItems: 'flex-start', gap: 14,
