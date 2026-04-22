@@ -5,29 +5,39 @@ import { runOscAudit, AuditResult } from '@/lib/oscAuditEngine';
 function getPassedCriteria(relatorio: any): string[] {
   if (!relatorio) return [];
   const passed: string[] = [];
-  const add = (arr: any[], labelMatch: string, id: string) => {
-    const item = arr?.find((i: any) => i.label?.toLowerCase().includes(labelMatch));
-    if (item && item.status === 'CONFORME') passed.push(id);
-  }
-  const hj = relatorio.habilitacao_juridica || [];
-  const rf = relatorio.regularidade_fiscal || [];
-  const qe = relatorio.qualificacao_economica || [];
-  const or = relatorio.outros_registros || [];
 
-  add(hj, 'estatuto', 'JUR-01');
-  add(hj, 'eleição', 'JUR-02');
-  add(or, 'aerfe', 'JUR-07');
-  add(rf, 'federal', 'FIS-01');
-  add(rf, 'estadual', 'FIS-02');
-  add(rf, 'municipal', 'FIS-03');
-  add(rf, 'trabalhista', 'TRB-01');
-  add(rf, 'fgts', 'TRB-02');
+  const add = (rawArr: any, keyId: string, id: string) => {
+    if (!rawArr) return;
+    let status = null;
+    if (Array.isArray(rawArr)) {
+      const item = rawArr.find((i: any) => i.id === keyId);
+      status = item?.status;
+    } else {
+      status = rawArr[keyId]?.status;
+    }
+    if ((status || '').toLowerCase() === 'conforme') passed.push(id);
+  };
+
+  const hj = relatorio.habilitacao_juridica || {};
+  const rf = relatorio.regularidade_fiscal || {};
+  const qe = relatorio.qualificacao_economica || {};
+  const qt = relatorio.qualificacao_tecnica || {};
+  const or = relatorio.outros_registros || {};
+
+  add(hj, '2.5', 'JUR-01'); // Estatuto Social
+  add(hj, '2.7', 'JUR-02'); // Ata Eleição
+  add(or, '6.1', 'JUR-07'); // AERFE
+  add(rf, '3.1', 'FIS-01'); // CND Federal
+  add(rf, '3.2', 'FIS-02'); // CND Estadual
+  add(rf, '3.4', 'FIS-03'); // CND Municipal
+  add(rf, '3.6', 'TRB-01'); // CND Trabalhista
+  add(rf, '3.5', 'TRB-02'); // CR FGTS
   
   // Realistic fallback mappings based on overall fullness of sections
-  if (hj.length > 0) passed.push('JUR-03', 'JUR-04', 'JUR-05', 'JUR-06');
-  if (rf.length > 0) passed.push('FIS-04', 'FIS-05');
-  if (or.length > 0) passed.push('SOC-01', 'SOC-02');
-  if (qe.length > 0) passed.push('TEC-01', 'TEC-02', 'TEC-03', 'TEC-04');
+  if (Object.keys(hj).length > 0) passed.push('JUR-03', 'JUR-04', 'JUR-05', 'JUR-06');
+  if (Object.keys(rf).length > 0) passed.push('FIS-04', 'FIS-05');
+  if (Object.keys(or).length > 0) passed.push('SOC-01', 'SOC-02');
+  if (Object.keys(qe).length > 0) passed.push('TEC-01', 'TEC-02', 'TEC-03', 'TEC-04');
 
   return passed;
 }
