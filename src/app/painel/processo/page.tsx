@@ -198,11 +198,13 @@ export default function ProcessoPage() {
   const handleNext = async () => {
     await saveProgress();
     setStep(s => Math.min(s + 1, 7));
+    document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBack = () => {
     setStep(s => Math.max(s - 1, 1));
+    document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -325,7 +327,7 @@ export default function ProcessoPage() {
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60, fontFamily: 'var(--font-sans)', color: 'var(--site-text-primary)' }}>
+    <div id="painel-top" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60, fontFamily: 'var(--font-sans)', color: 'var(--site-text-primary)' }}>
       <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } .spin-anim { animation: spin 1s linear infinite; }`}</style>
 
       {/* HEADER */}
@@ -337,7 +339,7 @@ export default function ProcessoPage() {
       </div>
 
       {/* PROGRESS TRACKER */}
-      <div style={{ background: 'var(--site-primary)', borderRadius: 'var(--site-radius-xl)', padding: '24px 32px', marginBottom: 32, boxShadow: '0 12px 32px rgba(13,54,79,0.15)', color: '#fff' }}>
+      <div style={{ background: 'var(--site-primary)', borderRadius: 'var(--site-radius-xl)', padding: '24px 32px', marginBottom: 24, boxShadow: '0 12px 32px rgba(13,54,79,0.15)', color: '#fff' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h2 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: '#fff' }}>PAINEL DE ACOMPANHAMENTO</h2>
@@ -369,6 +371,24 @@ export default function ProcessoPage() {
             })}
           </div>
         </div>
+      </div>
+
+      {/* TOP NAVIGATION (DUPLICATE) */}
+      <div style={{ display: 'flex', justifyContent: step === 1 ? 'flex-end' : 'space-between', alignItems: 'center', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid var(--site-border)' }}>
+        {step > 1 && (
+          <button onClick={handleBack} className="btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', fontSize: '0.85rem', background: 'var(--site-surface-warm)', color: 'var(--site-text-primary)', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', fontWeight: 700 }}>
+            <ChevronLeft size={16} /> Voltar
+          </button>
+        )}
+        {step < 7 && (
+          <button onClick={handleNext} disabled={saving} className="btn btn-gold" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 24px', fontSize: '0.9rem', fontWeight: 700, opacity: saving ? 0.7 : 1 }}>
+            {saving ? (
+              <><Loader2 size={16} className="spin-anim" /> Salvando...</>
+            ) : (
+              <>Salvar e Avançar <ChevronRight size={16} /></>
+            )}
+          </button>
+        )}
       </div>
 
       {/* STEP CONTENT */}
