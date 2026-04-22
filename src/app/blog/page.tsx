@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import PublicLayout from '../components/PublicLayout';
 import { supabase } from '@/lib/supabase';
 import {
-  Calendar, Clock, Tag, Loader2, BookOpen, User,
+  Calendar, Clock, Tag, Loader2, BookOpen, User, Search, ArrowRight
 } from 'lucide-react';
 
 interface BlogPost {
@@ -19,7 +19,55 @@ interface BlogPost {
   published_at: string | null;
   is_published: boolean;
   created_at: string;
+  cta_text?: string;
+  cta_link?: string;
 }
+
+const STATIC_POSTS: BlogPost[] = [
+  {
+    id: 'art-1',
+    title: 'Programa Instituição Legal: Maranhão Avança na Regularização das OSCs',
+    summary: 'Com a aprovação da MP 500/2025, o Governo do Maranhão e a SRS lançam o "Dia D" para tirar entidades da informalidade e habilitá-lan a receber recursos.',
+    content: '',
+    image_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=500&fit=crop',
+    category: 'MROSC',
+    author: 'Equipe OBGP',
+    read_time: 4,
+    published_at: '2026-02-21T12:00:00Z',
+    is_published: true,
+    created_at: '2026-02-21T12:00:00Z',
+    cta_text: 'Ler Matéria Completa',
+    cta_link: 'https://forms.gle/exemplo_dia_d', // Link do Forms
+  },
+  {
+    id: 'art-2',
+    title: 'Selo OSC: O Mecanismo de Certificação que Sua Entidade Precisa',
+    summary: 'Entenda como o Selo atesta a regularidade e capacidade institucional das Organizações da Sociedade Civil para firmar parcerias públicas.',
+    content: '',
+    image_url: 'https://images.unsplash.com/photo-1573165231977-3f0e27806045?w=800&h=500&fit=crop',
+    category: 'Certificação',
+    author: 'Diretoria Executiva',
+    read_time: 3,
+    published_at: '2026-03-10T12:00:00Z',
+    is_published: true,
+    created_at: '2026-03-10T12:00:00Z',
+    cta_text: 'Ver Critérios do Selo',
+    cta_link: '/selo-osc',
+  },
+  {
+    id: 'art-3',
+    title: 'As 11 Principais Irregularidades Identificadas pelo MP-MA',
+    summary: 'Um guia prático sobre os erros mais comuns em estatutos, governança e obrigações fiscais que impedem o acesso a recursos do estado.',
+    content: '',
+    image_url: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=800&h=500&fit=crop',
+    category: 'Legislação',
+    author: 'Consultoria Jurídica',
+    read_time: 5,
+    published_at: '2026-04-05T12:00:00Z',
+    is_published: true,
+    created_at: '2026-04-05T12:00:00Z',
+  }
+];
 
 function formatDate(dateStr: string | null) {
   if (!dateStr) return '';
@@ -30,24 +78,26 @@ function formatDate(dateStr: string | null) {
 
 export default function BlogPage() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('Todas');
   const [loading, setLoading] = useState(true);
 
+  const categories = ['Todas', 'MROSC', 'Legislação', 'Certificação', 'Eventos'];
+
   useEffect(() => {
-    (async () => {
-      try {
-        const { data } = await supabase
-          .from('blog_posts')
-          .select('*')
-          .eq('is_published', true)
-          .order('published_at', { ascending: false });
-        setPosts((data as BlogPost[]) || []);
-      } catch {
-        setPosts([]);
-      } finally {
-        setLoading(false);
-      }
-    })();
+    // Simulando loading e injetando static posts em vez do supabase
+    const timer = setTimeout(() => {
+      setPosts(STATIC_POSTS);
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
+
+  const filteredPosts = posts.filter(p => {
+    const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase()) || (p.summary && p.summary.toLowerCase().includes(search.toLowerCase()));
+    const matchesCat = category === 'Todas' || p.category === category;
+    return matchesSearch && matchesCat;
+  });
 
   return (
     <PublicLayout>
@@ -66,6 +116,44 @@ export default function BlogPage() {
         </div>
       </section>
 
+      {/* ═══ BARRA DE FILTRO ═══ */}
+      <section style={{ padding: '24px 0', borderBottom: '1px solid var(--site-border)', background: 'var(--site-surface-blue)' }}>
+        <div className="container" style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setCategory(cat)}
+                style={{
+                  padding: '8px 16px', borderRadius: 'var(--site-radius-full)', border: 'none', cursor: 'pointer',
+                  fontSize: '0.85rem', fontWeight: 600, whiteSpace: 'nowrap', transition: 'all .2s',
+                  background: category === cat ? 'var(--site-primary)' : 'white',
+                  color: category === cat ? 'white' : 'var(--site-text-secondary)',
+                  boxShadow: category === cat ? '0 2px 8px rgba(30,58,138,.3)' : '0 1px 2px rgba(0,0,0,.05)'
+                }}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          <div style={{ position: 'relative', minWidth: 260, flex: 1, maxWidth: 360 }}>
+            <Search size={16} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--site-text-tertiary)' }} />
+            <input
+              type="text"
+              placeholder="Buscar artigos..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{
+                width: '100%', padding: '10px 14px 10px 40px', borderRadius: 'var(--site-radius-full)',
+                border: '1px solid var(--site-border)', outline: 'none', fontSize: '0.9rem',
+                color: 'var(--site-text-primary)'
+              }}
+            />
+          </div>
+        </div>
+      </section>
+
       {/* ═══ CONTEÚDO ═══ */}
       <section className="section-padding">
         <div className="container">
@@ -76,10 +164,10 @@ export default function BlogPage() {
                 style={{ animation: 'spin 1s linear infinite', color: 'var(--site-primary)' }}
               />
             </div>
-          ) : posts.length === 0 ? (
+          ) : filteredPosts.length === 0 ? (
             <EmptyState />
           ) : (
-            <PostGrid posts={posts} />
+            <PostGrid posts={filteredPosts} />
           )}
         </div>
       </section>
@@ -186,6 +274,13 @@ function FeaturedPost({ post }: { post: BlogPost }) {
             {post.summary}
           </p>
         )}
+        {post.cta_text && (
+          <div style={{ marginBottom: 28 }}>
+            <a href={post.cta_link || '#'} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ display: 'inline-flex', padding: '10px 20px', fontSize: '0.85rem' }}>
+              {post.cta_text} <ArrowRight size={14} style={{ marginLeft: 6 }} />
+            </a>
+          </div>
+        )}
         <PostMeta post={post} />
       </div>
     </article>
@@ -231,11 +326,18 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
             color: 'var(--site-text-secondary)',
             lineHeight: 'var(--leading-relaxed)',
             fontSize: 'var(--text-sm)',
-            marginBottom: 16,
+            marginBottom: 20,
             flex: 1,
           }}>
             {post.summary}
           </p>
+        )}
+        {post.cta_text && (
+          <div style={{ marginBottom: 24 }}>
+            <a href={post.cta_link || '#'} className="btn btn-outline-primary" style={{ padding: '8px 16px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center' }}>
+              {post.cta_text} <ArrowRight size={13} style={{ marginLeft: 6 }} />
+            </a>
+          </div>
         )}
         <PostMeta post={post} />
       </div>
