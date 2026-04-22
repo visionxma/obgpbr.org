@@ -27,7 +27,7 @@ const STATIC_POSTS: BlogPost[] = [
   {
     id: 'art-1',
     title: 'Programa Instituição Legal: Maranhão Avança na Regularização das OSCs',
-    summary: 'Com a aprovação da MP 500/2025, o Governo do Maranhão e a SRS lançam o "Dia D" para tirar entidades da informalidade e habilitá-lan a receber recursos.',
+    summary: 'Com a aprovação da MP 500/2025, o Governo do Maranhão e a SRS lançam o "Dia D" para tirar entidades da informalidade e habilitá-las a receber recursos.',
     content: '',
     image_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=500&fit=crop',
     category: 'MROSC',
