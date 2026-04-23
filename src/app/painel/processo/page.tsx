@@ -77,6 +77,7 @@ const WIZARD_STEPS = [
 export default function ProcessoPage() {
   const { perfil, loading: contextLoading } = usePainel();
   const [step, setStep] = useState(1);
+  const [showCnpjStep, setShowCnpjStep] = useState(true);
   const [data, setData] = useState<Record<string, any>>({});
   const [entidadeData, setEntidadeData] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -251,12 +252,79 @@ export default function ProcessoPage() {
         responsavel: perfil.responsavel || '',
       });
       setStep(1);
+      setShowCnpjStep(true);
       alert('Processo reiniciado com sucesso.');
     } catch (e: any) {
       console.error(e);
       alert(`Erro ao reiniciar processo: ${e.message}`);
     }
     setResetting(false);
+  };
+
+  const formatCNPJ = (val: string) => {
+    const v = val.replace(/\D/g, '').substring(0, 14);
+    if (v.length <= 2) return v;
+    if (v.length <= 5) return `${v.substring(0, 2)}.${v.substring(2)}`;
+    if (v.length <= 8) return `${v.substring(0, 2)}.${v.substring(2, 5)}.${v.substring(5)}`;
+    if (v.length <= 12) return `${v.substring(0, 2)}.${v.substring(2, 5)}.${v.substring(5, 8)}/${v.substring(8)}`;
+    return `${v.substring(0, 2)}.${v.substring(2, 5)}.${v.substring(5, 8)}/${v.substring(8, 12)}-${v.substring(12, 14)}`;
+  };
+
+  const handleConsultarCNPJ = async (cnpjInput: string) => {
+    const cleanCnpj = cnpjInput.replace(/\D/g, '');
+    if (cleanCnpj.length !== 14) {
+      alert('Por favor, insira um CNPJ válido com 14 dígitos.');
+      return;
+    }
+
+    setLoadingData(true);
+    try {
+      // Usando BrasilAPI (melhor alternativa gratuita e estável)
+      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
+      if (!res.ok) throw new Error('Não foi possível localizar este CNPJ na Receita Federal.');
+      
+      const d = await res.json();
+      
+      const newData = {
+        ...entidadeData,
+        cnpj: cnpjInput,
+        razao_social: d.razao_social || '',
+        nome_fantasia: d.nome_fantasia || '',
+        natureza_juridica: d.natureza_juridica || '',
+        data_abertura_cnpj: d.data_inicio_atividade || '',
+        email_osc: d.email || '',
+        telefone: d.ddd_telefone_1 ? `(${d.ddd_telefone_1.substring(0,2)}) ${d.ddd_telefone_1.substring(2)}` : '',
+        cep: d.cep || '',
+        logradouro: d.logradouro || '',
+        numero_endereco: d.numero || '',
+        bairro: d.bairro || '',
+        municipio: d.municipio || '',
+        estado: d.uf || '',
+      };
+
+      setEntidadeData(newData);
+      setShowCnpjStep(false);
+      
+      // Auto-save após consulta
+      if (perfil) {
+        const payload = {
+          osc_id: perfil.osc_id,
+          dados_entidade: newData,
+          status: 'em_preenchimento',
+        };
+        if (relatorioId) {
+          await supabase.from('relatorios_conformidade').update(payload).eq('id', relatorioId);
+        } else {
+          const { data: inserted } = await supabase.from('relatorios_conformidade').insert(payload).select('id').single();
+          if (inserted) setRelatorioId(inserted.id);
+        }
+      }
+
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setLoadingData(false);
+    }
   };
 
   const handleConsultarPagamentoEEnviar = async () => {
@@ -369,9 +437,51 @@ export default function ProcessoPage() {
 
   if (loadingData) {
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 300, gap: 16, color: 'var(--site-text-secondary)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '60vh', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
         <Loader2 size={32} className="spin-anim" />
-        <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Carregando seu processo...</span>
+        <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Buscando dados na Receita Federal...</span>
+      </div>
+    );
+  }
+
+  // ETAPA ZERO: CONSULTA DE CNPJ
+  if (showCnpjStep && !relatorioId) {
+    return (
+      <div style={{ maxWidth: 600, margin: '60px auto', animation: 'panelPageIn .3s ease' }}>
+        <div className="panel-card" style={{ padding: 40, textAlign: 'center' }}>
+          <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
+            <div style={{ width: 64, height: 64, background: 'rgba(197,171,118,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--site-gold)' }}>
+              <ShieldCheck size={32} />
+            </div>
+          </div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--site-primary)', marginBottom: 8, fontFamily: 'var(--font-heading)' }}>Consulta de CNPJ</h2>
+          <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.95rem', marginBottom: 32 }}>Insira o CNPJ da sua OSC para iniciar o processo com preenchimento automático oficial.</p>
+          
+          <div style={{ textAlign: 'left', marginBottom: 24 }}>
+            <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--site-primary)', display: 'block', marginBottom: 8 }}>CNPJ da Instituição</label>
+            <input 
+              type="text" 
+              placeholder="00.000.000/0000-00"
+              className="panel-input"
+              style={{ fontSize: '1.2rem', padding: '16px 20px', textAlign: 'center', letterSpacing: '0.05em', fontWeight: 700 }}
+              value={entidadeData.cnpj}
+              onChange={(e) => setEntidadeData({...entidadeData, cnpj: formatCNPJ(e.target.value)})}
+            />
+          </div>
+
+          <button 
+            className="panel-btn panel-btn-primary" 
+            style={{ width: '100%', padding: 16, fontSize: '1rem' }}
+            onClick={() => handleConsultarCNPJ(entidadeData.cnpj)}
+            disabled={entidadeData.cnpj.replace(/\D/g, '').length !== 14}
+          >
+            Consultar e Iniciar
+          </button>
+
+          <p style={{ marginTop: 24, fontSize: '0.8rem', color: 'rgba(0,0,0,0.4)' }}>
+            Os dados serão recuperados diretamente da base de dados da Receita Federal do Brasil.
+          </p>
+        </div>
       </div>
     );
   }
@@ -531,7 +641,7 @@ export default function ProcessoPage() {
           </div>
 
           <div style={{ padding: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
-            <InputField label="CNPJ" value={entidadeData.cnpj} onChange={(v) => handleEntidadeUpdate('cnpj', v)} />
+            <InputField label="CNPJ" value={entidadeData.cnpj} onChange={(v) => handleEntidadeUpdate('cnpj', formatCNPJ(v))} />
             <InputField label="Natureza Jurídica" value={entidadeData.natureza_juridica} onChange={(v) => handleEntidadeUpdate('natureza_juridica', v)} />
             <InputField label="Razão Social" value={entidadeData.razao_social} onChange={(v) => handleEntidadeUpdate('razao_social', v)} />
             <InputField label="Nome Fantasia" value={entidadeData.nome_fantasia} onChange={(v) => handleEntidadeUpdate('nome_fantasia', v)} />
