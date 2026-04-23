@@ -29,7 +29,7 @@ function resolve<T>(map: Record<string, T>, pathname: string): T | null {
 }
 
 function OscIdBadge() {
-  const { perfil } = usePainel();
+  const { perfil, userEmail } = usePainel();
   if (!perfil) return null;
   return (
     <div style={{
@@ -41,6 +41,9 @@ function OscIdBadge() {
     }}>
       <span style={{ fontSize: '0.55rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.1em', color: 'rgba(197,171,118,.55)' }}>OSC</span>
       <span style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--site-gold)', letterSpacing: '.03em', fontFamily: 'var(--font-heading)' }}>{perfil.osc_id}</span>
+      {userEmail && (
+        <span style={{ fontSize: '0.55rem', color: 'rgba(255,255,255,0.4)', marginTop: 2, fontWeight: 500 }}>{userEmail}</span>
+      )}
     </div>
   );
 }

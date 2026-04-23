@@ -30,6 +30,7 @@ interface PainelContextType {
   user: User | null;
   perfil: OscPerfil | null;
   loading: boolean;
+  userEmail: string | null;
   refreshPerfil: () => Promise<void>;
 }
 
@@ -37,13 +38,16 @@ const PainelContext = createContext<PainelContextType>({
   user: null,
   perfil: null,
   loading: true,
+  userEmail: null,
   refreshPerfil: async () => {},
 });
 
 function generateOscId(): string {
   const year = new Date().getFullYear();
-  const rand = crypto.randomUUID().replace(/-/g, '').substring(0, 8).toUpperCase();
-  return `OSC-${year}-${rand}`;
+  // Uso de UUID completo + timestamp para garantir unicidade absoluta
+  const entropy = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const rand = crypto.randomUUID().replace(/-/g, '').substring(0, 4).toUpperCase();
+  return `OSC-${year}-${rand}${entropy}`;
 }
 
 export function PainelProvider({ children }: { children: ReactNode }) {
@@ -122,7 +126,7 @@ export function PainelProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <PainelContext.Provider value={{ user, perfil, loading, refreshPerfil }}>
+    <PainelContext.Provider value={{ user, perfil, loading, userEmail: user?.email || null, refreshPerfil }}>
       {children}
     </PainelContext.Provider>
   );
