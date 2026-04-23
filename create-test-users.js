@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const sb = createClient('https://kyhvqydnvaselautwcrm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt5aHZxeWRudmFzZWxhdXR3Y3JtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjQ5NjUzNiwiZXhwIjoyMDkyMDcyNTM2fQ._HuMaM8GAtC1KoHs87O_yvL43sysFzY2cwIljypB4os', { auth: { autoRefreshToken: false, persistSession: false } });
+const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { autoRefreshToken: false, persistSession: false } });
 
 (async () => {
   console.log('Creating Admin...');
