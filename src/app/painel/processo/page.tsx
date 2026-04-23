@@ -157,12 +157,19 @@ export default function ProcessoPage() {
 
         if (existing) {
           setRelatorioId(existing.id);
-          setEntidadeData(existing.dados_entidade && Object.keys(existing.dados_entidade).length > 0
+          const loadedEntidade = existing.dados_entidade && Object.keys(existing.dados_entidade).length > 0
             ? existing.dados_entidade
-            : defaultEntidade);
+            : defaultEntidade;
+          setEntidadeData(loadedEntidade);
           setData(existing.habilitacao_juridica || {});
+          
+          // Se já tem CNPJ preenchido de forma válida, pula a consulta
+          if (loadedEntidade.cnpj && loadedEntidade.cnpj.replace(/\D/g, '').length === 14) {
+            setShowCnpjStep(false);
+          }
         } else {
           setEntidadeData(defaultEntidade);
+          setShowCnpjStep(true);
         }
       } catch (err) {
         console.error('Erro ao carregar dados do processo:', err);
@@ -461,11 +468,11 @@ export default function ProcessoPage() {
     );
   }
 
-  // ETAPA ZERO: CONSULTA DE CNPJ
-  if (showCnpjStep && !relatorioId) {
+  // ETAPA ZERO: CONSULTA DE CNPJ (Prioritária e sem cabeçalho do painel)
+  if (showCnpjStep && (!entidadeData.cnpj || entidadeData.cnpj.length < 14)) {
     return (
       <div style={{ maxWidth: 600, margin: '60px auto', animation: 'panelPageIn .3s ease' }}>
-        <div className="panel-card" style={{ padding: 40, textAlign: 'center' }}>
+        <div className="panel-card" style={{ padding: 40, textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.1)' }}>
           <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
             <div style={{ width: 64, height: 64, background: 'rgba(197,171,118,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--site-gold)' }}>
               <ShieldCheck size={32} />
@@ -481,7 +488,7 @@ export default function ProcessoPage() {
               placeholder="00.000.000/0000-00"
               className="panel-input"
               style={{ fontSize: '1.2rem', padding: '16px 20px', textAlign: 'center', letterSpacing: '0.05em', fontWeight: 700 }}
-              value={entidadeData.cnpj}
+              value={entidadeData.cnpj || ''}
               onChange={(e) => setEntidadeData({...entidadeData, cnpj: formatCNPJ(e.target.value)})}
             />
           </div>
@@ -490,7 +497,7 @@ export default function ProcessoPage() {
             className="panel-btn panel-btn-primary" 
             style={{ width: '100%', padding: 16, fontSize: '1rem' }}
             onClick={() => handleConsultarCNPJ(entidadeData.cnpj)}
-            disabled={entidadeData.cnpj.replace(/\D/g, '').length !== 14}
+            disabled={!entidadeData.cnpj || entidadeData.cnpj.replace(/\D/g, '').length !== 14}
           >
             Consultar e Iniciar
           </button>
