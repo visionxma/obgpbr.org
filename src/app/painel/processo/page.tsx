@@ -82,6 +82,7 @@ export default function ProcessoPage() {
   const [saving, setSaving] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [relatorioId, setRelatorioId] = useState<string | null>(null);
+  const [resetting, setResetting] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [mensagemEnviando, setMensagemEnviando] = useState('');
   const [importando, setImportando] = useState(false);
@@ -218,6 +219,44 @@ export default function ProcessoPage() {
     setStep(s => Math.max(s - 1, 1));
     document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  
+  const handleResetProcess = async () => {
+    if (!perfil || !relatorioId) return;
+    if (!confirm('ATENÇÃO: Isso apagará TODOS os dados preenchidos até agora e reiniciará o processo do zero. Esta ação não pode ser desfeita. Deseja continuar?')) return;
+    
+    setResetting(true);
+    try {
+      const { error } = await supabase.from('relatorios_conformidade').delete().eq('id', relatorioId);
+      if (error) throw error;
+      
+      // Limpa estados locais
+      setRelatorioId(null);
+      setData({});
+      // Volta para os dados padrão do perfil
+      setEntidadeData({
+        cnpj: perfil.cnpj || '',
+        natureza_juridica: perfil.natureza_juridica || '',
+        razao_social: perfil.razao_social || '',
+        nome_fantasia: (perfil as any).nome_fantasia || '',
+        cep: perfil.cep || '',
+        logradouro: perfil.logradouro || '',
+        numero_endereco: perfil.numero_endereco || '',
+        bairro: perfil.bairro || '',
+        municipio: perfil.municipio || '',
+        estado: perfil.estado || '',
+        data_abertura_cnpj: perfil.data_abertura_cnpj || '',
+        email_osc: perfil.email_osc || '',
+        telefone: perfil.telefone || '',
+        responsavel: perfil.responsavel || '',
+      });
+      setStep(1);
+      alert('Processo reiniciado com sucesso.');
+    } catch (e: any) {
+      console.error(e);
+      alert(`Erro ao reiniciar processo: ${e.message}`);
+    }
+    setResetting(false);
   };
 
   const handleConsultarPagamentoEEnviar = async () => {
@@ -356,11 +395,25 @@ export default function ProcessoPage() {
     <div id="painel-top" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60, fontFamily: 'var(--font-sans)', color: 'var(--site-text-primary)' }}>
 
       {/* HEADER */}
-      <div style={{ marginBottom: 24 }}>
-        <h1 className="panel-page-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <ShieldCheck size={28} color="var(--site-gold)" /> Meu Processo — Relatório de Conformidade
-        </h1>
-        <p className="panel-page-subtitle">Acompanhamento e estruturação documental oficial para a certificação do Selo OSC.</p>
+      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+        <div>
+          <h1 className="panel-page-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <ShieldCheck size={28} color="var(--site-gold)" /> Meu Processo — Relatório de Conformidade
+          </h1>
+          <p className="panel-page-subtitle">Acompanhamento e estruturação documental oficial para a certificação do Selo OSC.</p>
+        </div>
+        {relatorioId && (
+          <button 
+            onClick={handleResetProcess} 
+            disabled={resetting}
+            style={{ padding: '8px 14px', fontSize: '0.75rem', fontWeight: 700, color: '#dc2626', background: 'rgba(220,38,38,0.05)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
+            onMouseOver={e => e.currentTarget.style.background = 'rgba(220,38,38,0.1)'}
+            onMouseOut={e => e.currentTarget.style.background = 'rgba(220,38,38,0.05)'}
+          >
+            {resetting ? <Loader2 size={13} className="spin-anim" /> : <AlertCircle size={13} />}
+            Reiniciar Processo
+          </button>
+        )}
       </div>
 
       {/* PROGRESS TRACKER */}
