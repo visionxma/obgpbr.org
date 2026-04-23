@@ -162,7 +162,7 @@ export default function ProcessoPage() {
             : defaultEntidade;
           setEntidadeData(loadedEntidade);
           setData(existing.habilitacao_juridica || {});
-          
+
           // Se já tem CNPJ preenchido de forma válida, pula a consulta
           if (loadedEntidade.cnpj && loadedEntidade.cnpj.replace(/\D/g, '').length === 14) {
             setShowCnpjStep(false);
