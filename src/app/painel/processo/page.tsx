@@ -290,14 +290,15 @@ export default function ProcessoPage() {
       const controller = new AbortController();
       const id = setTimeout(() => controller.abort(), 8000); // 8 segundos de timeout
 
-      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`, {
+      const res = await fetch(`/api/painel/consultar-cnpj?cnpj=${cleanCnpj}`, {
         signal: controller.signal
       });
       clearTimeout(id);
 
-      if (res.status === 404) throw new Error('CNPJ não encontrado na base da Receita Federal.');
-      if (res.status === 429) throw new Error('Muitas consultas em pouco tempo. Tente novamente em alguns segundos.');
-      if (!res.ok) throw new Error('O serviço da Receita Federal está instável no momento. Tente novamente mais tarde.');
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || 'Erro ao consultar CNPJ. Tente novamente.');
+      }
       
       const d = await res.json();
       
