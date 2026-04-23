@@ -241,26 +241,26 @@ export default function ProcessoPage() {
       // Limpa estados locais
       setRelatorioId(null);
       setData({});
-      // Volta para os dados padrão do perfil
+      // Volta para os dados padrão do perfil MAS limpa o CNPJ para forçar a consulta
       setEntidadeData({
-        cnpj: perfil.cnpj || '',
-        natureza_juridica: perfil.natureza_juridica || '',
-        razao_social: perfil.razao_social || '',
-        nome_fantasia: (perfil as any).nome_fantasia || '',
-        cep: perfil.cep || '',
-        logradouro: perfil.logradouro || '',
-        numero_endereco: perfil.numero_endereco || '',
-        bairro: perfil.bairro || '',
-        municipio: perfil.municipio || '',
-        estado: perfil.estado || '',
-        data_abertura_cnpj: perfil.data_abertura_cnpj || '',
-        email_osc: perfil.email_osc || '',
-        telefone: perfil.telefone || '',
-        responsavel: perfil.responsavel || '',
+        cnpj: '', // Limpa para obrigar a nova consulta
+        natureza_juridica: '',
+        razao_social: '',
+        nome_fantasia: '',
+        cep: '',
+        logradouro: '',
+        numero_endereco: '',
+        bairro: '',
+        municipio: '',
+        estado: '',
+        data_abertura_cnpj: '',
+        email_osc: '',
+        telefone: '',
+        responsavel: '',
       });
       setStep(1);
       setShowCnpjStep(true);
-      alert('Processo reiniciado com sucesso.');
+      alert('Processo reiniciado. Por favor, consulte o CNPJ para começar.');
     } catch (e: any) {
       console.error(e);
       alert(`Erro ao reiniciar processo: ${e.message}`);
@@ -469,7 +469,7 @@ export default function ProcessoPage() {
   }
 
   // ETAPA ZERO: CONSULTA DE CNPJ (Prioritária e sem cabeçalho do painel)
-  if (showCnpjStep && (!entidadeData.cnpj || entidadeData.cnpj.length < 14)) {
+  if (showCnpjStep) {
     return (
       <div style={{ maxWidth: 600, margin: '60px auto', animation: 'panelPageIn .3s ease' }}>
         <div className="panel-card" style={{ padding: 40, textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.1)' }}>
