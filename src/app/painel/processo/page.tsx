@@ -279,21 +279,38 @@ export default function ProcessoPage() {
 
     setLoadingData(true);
     try {
-      // Usando BrasilAPI (melhor alternativa gratuita e estável)
-      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`);
-      if (!res.ok) throw new Error('Não foi possível localizar este CNPJ na Receita Federal.');
+      // Usando BrasilAPI (v1) com tratamento de erro aprimorado
+      const controller = new AbortController();
+      const id = setTimeout(() => controller.abort(), 8000); // 8 segundos de timeout
+
+      const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cleanCnpj}`, {
+        signal: controller.signal
+      });
+      clearTimeout(id);
+
+      if (res.status === 404) throw new Error('CNPJ não encontrado na base da Receita Federal.');
+      if (res.status === 429) throw new Error('Muitas consultas em pouco tempo. Tente novamente em alguns segundos.');
+      if (!res.ok) throw new Error('O serviço da Receita Federal está instável no momento. Tente novamente mais tarde.');
       
       const d = await res.json();
       
+      // Tentar encontrar o representante legal no QSA (Quadro de Sócios e Administradores)
+      let representante = '';
+      if (d.qsa && d.qsa.length > 0) {
+        // Geralmente o primeiro no QSA de uma OSC é o presidente ou administrador principal
+        representante = d.qsa[0].nome_socio || '';
+      }
+
       const newData = {
         ...entidadeData,
         cnpj: cnpjInput,
         razao_social: d.razao_social || '',
-        nome_fantasia: d.nome_fantasia || '',
+        nome_fantasia: d.nome_fantasia || d.razao_social || '',
         natureza_juridica: d.natureza_juridica || '',
         data_abertura_cnpj: d.data_inicio_atividade || '',
         email_osc: d.email || '',
-        telefone: d.ddd_telefone_1 ? `(${d.ddd_telefone_1.substring(0,2)}) ${d.ddd_telefone_1.substring(2)}` : '',
+        telefone: d.ddd_telefone_1 ? `(${d.ddd_telefone_1.substring(0,2)}) ${d.ddd_telefone_1.length > 10 ? d.ddd_telefone_1.substring(2,7) : d.ddd_telefone_1.substring(2,6)}-${d.ddd_telefone_1.length > 10 ? d.ddd_telefone_1.substring(7) : d.ddd_telefone_1.substring(6)}` : '',
+        responsavel: representante,
         cep: d.cep || '',
         logradouro: d.logradouro || '',
         numero_endereco: d.numero || '',
