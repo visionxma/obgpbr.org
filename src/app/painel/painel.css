@@ -713,3 +713,7 @@
 @media (max-width: 640px) {
   .pv2-content { padding: 20px 14px 36px; }
 }
+
+/* Utilities */
+@keyframes spin { 100% { transform: rotate(360deg); } }
+.spin-anim { animation: spin 1s linear infinite; }

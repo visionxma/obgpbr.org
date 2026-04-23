@@ -1,5 +1,5 @@
 'use client';
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { PainelProvider, usePainel } from './PainelContext';
@@ -45,10 +45,17 @@ function OscIdBadge() {
 }
 
 function PainelShell({ children }: { children: React.ReactNode }) {
-  const { loading } = usePainel();
+  const { user, loading } = usePainel();
   const pathname = usePathname();
+  const router = useRouter();
 
-  if (loading) {
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
+  if (loading || (!user && !loading)) {
     return (
       <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: 'var(--site-bg)' }}>
         <div style={{ textAlign: 'center' }}>

@@ -53,30 +53,42 @@ export function PainelProvider({ children }: { children: ReactNode }) {
   const initializedRef = useRef(false);
 
   const fetchOrCreate = async (u: User) => {
-    const { data } = await supabase
-      .from('osc_perfis')
-      .select('*')
-      .eq('user_id', u.id)
-      .single();
+    try {
+      const { data, error: fetchError } = await supabase
+        .from('osc_perfis')
+        .select('*')
+        .eq('user_id', u.id)
+        .maybeSingle();
 
-    if (data) {
-      setPerfil(data);
-      return;
+      if (fetchError) {
+        console.error('Erro ao buscar perfil:', fetchError);
+      }
+
+      if (data) {
+        setPerfil(data);
+        return;
+      }
+
+      const meta = u.user_metadata || {};
+      const { data: created, error: createError } = await supabase
+        .from('osc_perfis')
+        .insert({
+          user_id: u.id,
+          osc_id: generateOscId(),
+          responsavel: meta.nome || null,
+          razao_social: meta.organizacao || null,
+        })
+        .select('*')
+        .single();
+
+      if (createError) {
+        console.error('Erro ao criar perfil:', createError);
+      }
+
+      if (created) setPerfil(created);
+    } catch (err) {
+      console.error('Erro fatal no fetchOrCreate perfil:', err);
     }
-
-    const meta = u.user_metadata || {};
-    const { data: created } = await supabase
-      .from('osc_perfis')
-      .insert({
-        user_id: u.id,
-        osc_id: generateOscId(),
-        responsavel: meta.nome || null,
-        razao_social: meta.organizacao || null,
-      })
-      .select('*')
-      .single();
-
-    if (created) setPerfil(created);
   };
 
   const refreshPerfil = async () => {

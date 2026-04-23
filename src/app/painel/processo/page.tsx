@@ -75,7 +75,7 @@ const WIZARD_STEPS = [
 ];
 
 export default function ProcessoPage() {
-  const { perfil } = usePainel();
+  const { perfil, loading: contextLoading } = usePainel();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<Record<string, any>>({});
   const [entidadeData, setEntidadeData] = useState<Record<string, string>>({});
@@ -119,7 +119,12 @@ export default function ProcessoPage() {
   };
 
   useEffect(() => {
-    if (!perfil) return;
+    if (contextLoading) return;
+
+    if (!perfil) {
+      setLoadingData(false);
+      return;
+    }
 
     const defaultEntidade = {
       cnpj: perfil.cnpj || '',
@@ -139,26 +144,33 @@ export default function ProcessoPage() {
     };
 
     const load = async () => {
-      const { data: existing } = await supabase
-        .from('relatorios_conformidade')
-        .select('id, dados_entidade, habilitacao_juridica')
-        .eq('osc_id', perfil.osc_id)
-        .maybeSingle();
+      try {
+        const { data: existing, error } = await supabase
+          .from('relatorios_conformidade')
+          .select('id, dados_entidade, habilitacao_juridica')
+          .eq('osc_id', perfil.osc_id)
+          .maybeSingle();
 
-      if (existing) {
-        setRelatorioId(existing.id);
-        setEntidadeData(existing.dados_entidade && Object.keys(existing.dados_entidade).length > 0
-          ? existing.dados_entidade
-          : defaultEntidade);
-        setData(existing.habilitacao_juridica || {});
-      } else {
-        setEntidadeData(defaultEntidade);
+        if (error) throw error;
+
+        if (existing) {
+          setRelatorioId(existing.id);
+          setEntidadeData(existing.dados_entidade && Object.keys(existing.dados_entidade).length > 0
+            ? existing.dados_entidade
+            : defaultEntidade);
+          setData(existing.habilitacao_juridica || {});
+        } else {
+          setEntidadeData(defaultEntidade);
+        }
+      } catch (err) {
+        console.error('Erro ao carregar dados do processo:', err);
+      } finally {
+        setLoadingData(false);
       }
-      setLoadingData(false);
     };
 
     load();
-  }, [perfil]);
+  }, [perfil, contextLoading]);
 
   const handleUpdate = (id: string, field: string, value: string) => {
     setData(prev => ({ ...prev, [id]: { ...(prev[id] || {}), [field]: value } }));
@@ -319,16 +331,29 @@ export default function ProcessoPage() {
   if (loadingData) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 300, gap: 16, color: 'var(--site-text-secondary)' }}>
-        <Loader2 size={32} style={{ animation: 'spin 1s linear infinite' }} />
+        <Loader2 size={32} className="spin-anim" />
         <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Carregando seu processo...</span>
-        <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
+  if (!perfil) {
+    return (
+      <div style={{ padding: '40px 20px', textAlign: 'center', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-xl)', background: '#fff' }}>
+        <AlertCircle size={48} color="#dc2626" style={{ marginBottom: 16 }} />
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 8, color: 'var(--site-text-primary)' }}>Perfil não encontrado</h2>
+        <p style={{ color: 'var(--site-text-secondary)', marginBottom: 24, maxWidth: 400, margin: '0 auto 24px' }}>
+          Não foi possível identificar seu perfil de OSC. Certifique-se de que você está logado corretamente.
+        </p>
+        <button onClick={() => window.location.href = '/login'} className="btn btn-gold" style={{ padding: '12px 24px' }}>
+          Ir para Login
+        </button>
       </div>
     );
   }
 
   return (
     <div id="painel-top" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60, fontFamily: 'var(--font-sans)', color: 'var(--site-text-primary)' }}>
-      <style>{`@keyframes spin { 100% { transform: rotate(360deg); } } .spin-anim { animation: spin 1s linear infinite; }`}</style>
 
       {/* HEADER */}
       <div style={{ marginBottom: 24 }}>
