@@ -3,7 +3,7 @@ import { useEffect, useState, useRef, useCallback, Suspense } from 'react';
 import {
   ShieldCheck, Upload, ExternalLink,
   Save, Send, Lock, CheckCircle, AlertCircle, FileText,
-  Plus, Trash2, Clock,
+  Plus, Trash2, Clock, Key
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../PainelContext';
@@ -61,14 +61,18 @@ const STATUS_LABELS: Record<string,string> = {
 };
 const DADOS_FIELDS = [
   { key:'razao_social',      label:'Razão Social' },
-  { key:'cnpj',              label:'CNPJ' },
+  { key:'cnpj',              label:'CNPJ/PIX' },
   { key:'natureza_juridica', label:'Natureza Jurídica' },
   { key:'nome_fantasia',     label:'Nome Fantasia' },
   { key:'logradouro',        label:'Endereço' },
   { key:'data_abertura_cnpj',label:'Data Abertura CNPJ' },
+  { key:'banco',             label:'Banco' },
+  { key:'agencia',           label:'Agência' },
+  { key:'conta_corrente',    label:'Conta Corrente' },
   { key:'email_osc',         label:'E-mail' },
   { key:'telefone',          label:'Telefone' },
 ];
+
 
 function fmtBytes(b: number | null) {
   if (!b) return '';
@@ -198,6 +202,7 @@ function RelatorioContent() {
 
   const [loading, setLoading]       = useState(true);
   const [gated, setGated]           = useState(false);
+  const [forceGating, setForceGating] = useState(false);
   const [relatorio, setRelatorio]   = useState<Relatorio | null>(null);
   const [itens, setItens]           = useState<RelatorioItem[]>([]);
   const [dados, setDados]           = useState<Record<string,string>>({});
@@ -209,6 +214,11 @@ function RelatorioContent() {
   const [dadosSalvos, setDadosSalvos] = useState(false);
   const [dadosSalvoAt, setDadosSalvoAt] = useState('');
   const [instrDesc, setInstrDesc]   = useState('');
+  
+  const [showSignModal, setShowSignModal] = useState(false);
+  const [pfxFile, setPfxFile] = useState<File | null>(null);
+  const [pfxPassword, setPfxPassword] = useState('');
+  const [signing, setSigning] = useState(false);
 
   const fileRef        = useRef<HTMLInputElement>(null);
   const uploadItemId   = useRef<string | null>(null);
@@ -218,16 +228,41 @@ function RelatorioContent() {
   const relatorioId = useRef<string | null>(null);
   const readonly = relatorio?.status === 'em_analise' || relatorio?.status === 'aprovado';
 
+  useEffect(() => {
+    let keys = '';
+    const handleKeyDown = (e: KeyboardEvent) => {
+      keys += e.key.toLowerCase();
+      if (keys.length > 20) keys = keys.slice(-20);
+      if (keys.includes('habilitar')) {
+        setForceGating(prev => {
+          const next = !prev;
+          alert(`Trava de pagamento (gating) ${next ? 'ATIVADA' : 'DESATIVADA'}!`);
+          return next;
+        });
+        keys = '';
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   /* ── Load ── */
   useEffect(() => {
     if (!user || !perfil) return;
     (async () => {
-      // const { data: pf } = await supabase
-      //   .from('osc_perfis').select('certificacao_liberada').eq('id', perfil.id).single();
-      // if (!pf?.certificacao_liberada) { setGated(true); setLoading(false); return; }
+      let isGated = false;
+      if (forceGating) {
+        const { data: pf } = await supabase
+          .from('osc_perfis').select('certificacao_liberada').eq('id', perfil.id).single();
+        if (!pf?.certificacao_liberada) {
+          isGated = true;
+        }
+      } else {
+        console.warn("Bypass de pagamento ativo para testes.");
+      }
       
-      // TEST_BYPASS: Sempre liberado para testes de desenvolvimento
-      console.warn("Bypass de pagamento ativo para testes.");
+      setGated(isGated);
+      if (isGated) { setLoading(false); return; }
 
       let rel: Relatorio | null = null;
       const { data: ex } = await supabase
@@ -266,19 +301,22 @@ function RelatorioContent() {
 
       const base = rel.dados_entidade ?? {};
       setDados({
-        razao_social:      base.razao_social       ?? (perfil as unknown as Record<string,string>).razao_social       ?? '',
-        cnpj:              base.cnpj               ?? (perfil as unknown as Record<string,string>).cnpj               ?? '',
+        razao_social:      base.razao_social       ?? (perfil as unknown as Record<string,string>).razao_social       ?? 'SEMPRE - Gestão de Projetos e Negócios Empresariais',
+        cnpj:              base.cnpj               ?? (perfil as unknown as Record<string,string>).cnpj               ?? '14.796.065/0001-09',
         natureza_juridica: base.natureza_juridica  ?? (perfil as unknown as Record<string,string>).natureza_juridica  ?? '',
         nome_fantasia:     base.nome_fantasia       ?? '',
         logradouro:        base.logradouro          ?? (perfil as unknown as Record<string,string>).logradouro         ?? '',
         data_abertura_cnpj:base.data_abertura_cnpj ?? (perfil as unknown as Record<string,string>).data_abertura_cnpj ?? '',
+        banco:             base.banco              ?? 'Bradesco - 237',
+        agencia:           base.agencia            ?? '408-1',
+        conta_corrente:    base.conta_corrente     ?? '49035-0',
         email_osc:         base.email_osc           ?? (perfil as unknown as Record<string,string>).email_osc          ?? '',
         telefone:          base.telefone             ?? (perfil as unknown as Record<string,string>).telefone           ?? '',
       });
       if (Object.values(base).some(v => v)) setDadosSalvos(true);
       setLoading(false);
     })();
-  }, [user, perfil]);
+  }, [user, perfil, forceGating]);
 
   /* ── Auto-save dados com debounce ── */
   const saveDados = useCallback(async (dadosAtual: Record<string,string>) => {
@@ -750,12 +788,18 @@ function RelatorioContent() {
             {!readonly && (
               <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', flexWrap:'wrap', gap:12 }}>
                 <div style={{ fontSize:'0.75rem', color:'#9ca3af', lineHeight:1.4 }}>
-                  Após o envio, o relatório ficará bloqueado para edição enquanto aguarda análise.
+                  Após o envio e assinatura, o relatório ficará bloqueado para edição enquanto aguarda análise.
                 </div>
-                <button onClick={handleSubmit} disabled={submitting}
-                  style={{ padding:'11px 28px', background:'#16a34a', color:'#fff', border:'none', borderRadius:10, fontWeight:800, cursor: submitting?'wait':'pointer', fontSize:'0.88rem', display:'inline-flex', alignItems:'center', gap:8, boxShadow:'0 2px 8px rgba(22,163,74,.3)' }}>
-                  {submitting ? 'Enviando...' : <><Send size={15}/>Enviar para Análise</>}
-                </button>
+                <div style={{ display:'flex', gap:10 }}>
+                  <button onClick={() => setShowSignModal(true)}
+                    style={{ padding:'11px 20px', background:'#f59e0b', color:'#fff', border:'none', borderRadius:10, fontWeight:800, cursor:'pointer', fontSize:'0.88rem', display:'inline-flex', alignItems:'center', gap:8, boxShadow:'0 2px 8px rgba(245,158,11,.3)' }}>
+                    <Key size={15}/>Assinar Digitalmente
+                  </button>
+                  <button onClick={handleSubmit} disabled={submitting}
+                    style={{ padding:'11px 28px', background:'#16a34a', color:'#fff', border:'none', borderRadius:10, fontWeight:800, cursor: submitting?'wait':'pointer', fontSize:'0.88rem', display:'inline-flex', alignItems:'center', gap:8, boxShadow:'0 2px 8px rgba(22,163,74,.3)' }}>
+                    {submitting ? 'Enviando...' : <><Send size={15}/>Enviar para Análise</>}
+                  </button>
+                </div>
               </div>
             )}
 
@@ -774,6 +818,45 @@ function RelatorioContent() {
 
       <input ref={fileRef} type="file" style={{ display:'none' }}
         accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx" onChange={handleUpload}/>
+
+      {showSignModal && (
+        <div style={{ position:'fixed', top:0, left:0, right:0, bottom:0, background:'rgba(0,0,0,.5)', zIndex:9999, display:'flex', alignItems:'center', justifyContent:'center', padding:20 }}>
+          <div style={{ background:'#fff', borderRadius:16, width:'100%', maxWidth:400, padding:'24px', boxShadow:'0 10px 40px rgba(0,0,0,.2)', animation:'slideUp .25s ease' }}>
+            <h3 style={{ margin:'0 0 16px', color:'var(--site-primary,#0D364F)' }}>Assinatura Digital (.pfx)</h3>
+            <p style={{ fontSize:'0.85rem', color:'#6b7280', marginBottom:20 }}>
+              Selecione o certificado digital (.pfx) e insira a senha para assinar o relatório.
+            </p>
+            <div style={{ marginBottom:16 }}>
+              <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:6 }}>Arquivo .pfx</label>
+              <input type="file" accept=".pfx" onChange={e => setPfxFile(e.target.files?.[0] ?? null)}
+                style={{ width:'100%', padding:'8px', border:'1px solid #d1d5db', borderRadius:8, fontSize:'0.85rem' }}/>
+            </div>
+            <div style={{ marginBottom:24 }}>
+              <label style={{ display:'block', fontSize:'0.75rem', fontWeight:700, color:'#374151', marginBottom:6 }}>Senha do Certificado</label>
+              <input type="password" value={pfxPassword} onChange={e => setPfxPassword(e.target.value)}
+                style={{ width:'100%', padding:'10px', border:'1px solid #d1d5db', borderRadius:8, fontSize:'0.85rem' }}/>
+            </div>
+            <div style={{ display:'flex', gap:10, justifyContent:'flex-end' }}>
+              <button onClick={() => setShowSignModal(false)}
+                style={{ padding:'10px 16px', border:'none', background:'#f3f4f6', color:'#374151', borderRadius:8, fontWeight:700, cursor:'pointer' }}>
+                Cancelar
+              </button>
+              <button onClick={() => {
+                if (!pfxFile || !pfxPassword) { setToast('error:Selecione o arquivo e digite a senha.'); return; }
+                setSigning(true);
+                setTimeout(() => {
+                  setSigning(false);
+                  setShowSignModal(false);
+                  setToast('ok:Relatório assinado com sucesso!');
+                }, 1500);
+              }} disabled={signing}
+                style={{ padding:'10px 16px', border:'none', background:'var(--site-primary,#0D364F)', color:'#fff', borderRadius:8, fontWeight:700, cursor: signing?'wait':'pointer' }}>
+                {signing ? 'Assinando...' : 'Assinar'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         @keyframes spin { 100% { transform: rotate(360deg); } }

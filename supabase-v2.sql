@@ -191,7 +191,8 @@ BEGIN
     (p_relatorio_id,4,'4.4',  'Ata aprovando prestação de contas com parecer do conselho fiscal (últimos 2 exercícios)',  false,11),
     -- Seção 5 — Qualificação Técnica (fixos; instrumentos são adicionados dinamicamente)
     (p_relatorio_id,5,'5.1','Registro e Regularidade da Entidade em Conselho de Classe (se houver)',                      false,1),
-    (p_relatorio_id,5,'5.2','Registro e Regularidade do Profissional RT em Conselho de Classe (se houver)',               false,2)
+    (p_relatorio_id,5,'5.2','Registro e Regularidade do Profissional RT em Conselho de Classe (se houver)',               false,2),
+    (p_relatorio_id,5,'6.10','Utilidade Pública Municipal',                                                               false,3)
   ON CONFLICT (relatorio_id, codigo) DO NOTHING;
 END;
 $$;

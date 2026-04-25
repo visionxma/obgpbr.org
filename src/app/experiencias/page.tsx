@@ -32,6 +32,11 @@ const CERTIFICACOES = [
     instituicao: 'INSTITUTO VIDA E SAÚDE BRASIL - IVSBRASIL',
     certidao: 'CERTIDÃO DE REGISTRO DE ATESTADO DE CAPACIDADE TÉCNICA N.º 0008/2026, VÁLIDA ATÉ 09/07/2026.',
   },
+  {
+    id: 'RCA nº 0123/2026',
+    instituicao: 'INTECS',
+    certidao: 'CERTIDÃO DE REGISTRO DE ATESTADO DE CAPACIDADE TÉCNICA N.º 0022/2026, VÁLIDA ATÉ 09/07/2026.',
+  },
 ];
 
 const STATS = [
@@ -64,7 +69,21 @@ export default function ExperienciasPage() {
         .from('experiences').select('*')
         .eq('is_published', true)
         .order('created_at', { ascending: false });
-      setItems((data as Experience[]) || []);
+      const fetched = (data as Experience[]) || [];
+      const hasSempre = fetched.some(i => i.title.includes('SEMPRE'));
+      if (!hasSempre) {
+        fetched.push({
+          id: 'sempre-static',
+          title: 'SEMPRE - Gestão de Projetos e Negócios Empresariais',
+          description: 'Gestão de projetos e negócios empresariais, viabilizando oportunidades.',
+          image_url: null,
+          location: 'Nacional',
+          date: '2026',
+          is_published: true,
+          created_at: new Date().toISOString(),
+        });
+      }
+      setItems(fetched);
       setLoading(false);
     })();
   }, []);
