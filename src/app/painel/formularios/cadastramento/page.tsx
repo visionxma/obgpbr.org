@@ -56,6 +56,7 @@ export default function FormCadastramento() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
   const [cepLoading, setCepLoading] = useState(false);
+  const [cnpjLoading, setCnpjLoading] = useState(false);
 
   useEffect(() => {
     if (!perfil) { setLoading(false); return; }
@@ -108,6 +109,60 @@ export default function FormCadastramento() {
     set('cep', masked);
     clearErro('cep');
     if (digits(masked).length === 8) fetchCEP(digits(masked));
+  };
+
+  // CNPJ com busca automática via BrasilAPI
+  const handleCNPJChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const masked = maskCNPJ(e.target.value);
+    set('cnpj', masked);
+    clearErro('cnpj');
+    if (digits(masked).length === 14 && validateCNPJ(masked)) fetchCNPJ(digits(masked));
+  };
+
+  const fetchCNPJ = async (cnpjStr: string) => {
+    setCnpjLoading(true);
+    try {
+      const res = await fetch(`/api/painel/consultar-cnpj?cnpj=${cnpjStr}`);
+      const json = await res.json();
+      if (!json.error && !json.message) {
+        
+        // Mapeamento inteligente da Natureza Jurídica
+        let naturezaMapeada = '';
+        if (json.natureza_juridica) {
+          const natLower = json.natureza_juridica.toLowerCase();
+          if (natLower.includes('associação')) naturezaMapeada = 'Associação';
+          else if (natLower.includes('fundação')) naturezaMapeada = 'Fundação';
+          else if (natLower.includes('religiosa')) naturezaMapeada = 'Organização Religiosa';
+          else if (natLower.includes('cooperativa')) naturezaMapeada = 'Cooperativa';
+          else naturezaMapeada = 'Outro';
+        }
+
+        // Tentar extrair o responsável do QSA (Quadro de Sócios e Administradores)
+        const primeiroSocio = json.qsa && json.qsa.length > 0 ? json.qsa[0] : null;
+
+        setDados(prev => ({
+          ...prev,
+          nome: json.razao_social || prev.nome,
+          natureza: naturezaMapeada || prev.natureza,
+          data_fundacao: json.data_inicio_atividade || prev.data_fundacao,
+          cep: json.cep ? maskCEP(json.cep.toString()) : prev.cep,
+          logradouro: json.logradouro || prev.logradouro,
+          numero: json.numero || prev.numero,
+          bairro: json.bairro || prev.bairro,
+          cidade: json.municipio || prev.cidade,
+          estado: json.uf || prev.estado,
+          responsavel_telefone: json.ddd_telefone_1 ? maskTelefone(json.ddd_telefone_1) : prev.responsavel_telefone,
+          responsavel_email: json.email ? json.email.toLowerCase() : prev.responsavel_email,
+          responsavel_nome: primeiroSocio?.nome_socio || prev.responsavel_nome,
+          responsavel_cargo: primeiroSocio?.qualificacao_socio || prev.responsavel_cargo,
+        }));
+      } else {
+        setErro('cnpj', json.error || 'CNPJ não encontrado');
+      }
+    } catch {
+      setErro('cnpj', 'Erro ao buscar CNPJ');
+    }
+    setCnpjLoading(false);
   };
 
   const fetchCEP = async (cep: string) => {
@@ -218,15 +273,32 @@ export default function FormCadastramento() {
 
             <div className="panel-field">
               <label className="panel-label">CNPJ *</label>
-              <input
-                className={`panel-input${erros.cnpj ? ' input-error' : ''}`}
-                value={dados.cnpj ?? ''}
-                onChange={handleMasked('cnpj', maskCNPJ)}
-                onBlur={handleBlur('cnpj', validateCNPJ, 'CNPJ inválido')}
-                placeholder="00.000.000/0001-00"
-                inputMode="numeric"
-              />
-              {erros.cnpj && <span className="field-error">{erros.cnpj}</span>}
+              <div style={{ position: 'relative' }}>
+                <input
+                  className={`panel-input${erros.cnpj ? ' input-error' : ''}`}
+                  value={dados.cnpj ?? ''}
+                  onChange={handleCNPJChange}
+                  onBlur={handleBlur('cnpj', validateCNPJ, 'CNPJ inválido')}
+                  placeholder="00.000.000/0001-00"
+                  inputMode="numeric"
+                  style={{ paddingRight: cnpjLoading ? 36 : undefined }}
+                />
+                {cnpjLoading && (
+                  <Loader2
+                    size={15}
+                    style={{
+                      position: 'absolute', right: 10, top: '50%',
+                      transform: 'translateY(-50%)',
+                      animation: 'spin 1s linear infinite',
+                      color: 'var(--site-text-secondary)',
+                    }}
+                  />
+                )}
+              </div>
+              {erros.cnpj
+                ? <span className="field-error">{erros.cnpj}</span>
+                : <span className="field-hint"><CheckCircle size={11} /> Autopreenchimento ativo</span>
+              }
             </div>
 
             <div className="panel-field">

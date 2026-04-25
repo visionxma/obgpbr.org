@@ -53,22 +53,7 @@ function PainelShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/login');
-    }
-  }, [user, loading, router]);
-
-  if (loading || (!user && !loading)) {
-    return (
-      <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center', background: 'var(--site-bg)' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div className="panel-spinner" style={{ margin: '0 auto 12px' }} />
-          <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.85rem', fontWeight: 500 }}>Carregando...</p>
-        </div>
-      </div>
-    );
-  }
+  // Removido o bloqueio de login (useEffect push / loading check) para restaurar acesso público ao painel.
 
   const backNav = resolve(BACK_NAV, pathname);
 

@@ -169,7 +169,12 @@ export default function ProcessoPage() {
           }
         } else {
           setEntidadeData(defaultEntidade);
-          setShowCnpjStep(true);
+          // Pula a etapa de CNPJ se o perfil já tem um CNPJ válido
+          if (defaultEntidade.cnpj && defaultEntidade.cnpj.replace(/\D/g, '').length === 14) {
+            setShowCnpjStep(false);
+          } else {
+            setShowCnpjStep(true);
+          }
         }
       } catch (err) {
         console.error('Erro ao carregar dados do processo:', err);
