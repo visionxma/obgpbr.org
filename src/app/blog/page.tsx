@@ -42,7 +42,7 @@ const STATIC_POSTS: BlogPost[] = [
   {
     id: 'art-2',
     title: 'Selo OSC: O Mecanismo de Certificação que Sua Entidade Precisa',
-    summary: 'Entenda como o Selo atesta a regularidade e capacidade institucional das Organizações da Sociedade Civil para firmar parcerias públicas.',
+    summary: 'Entenda como o Selo atesta a regularidade e capacidade institucional das Organizações da Sociedade Civil para firmar parcerias entre a administração pública e as organizações da sociedade civil.',
     content: '',
     image_url: 'https://images.unsplash.com/photo-1573165231977-3f0e27806045?w=800&h=500&fit=crop',
     category: 'Certificação',

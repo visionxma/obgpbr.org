@@ -136,7 +136,7 @@ const DIFERENCIAIS = [
   {
     icon: TrendingUp,
     title: "Ciclo Completo",
-    text: "Da captação à prestação de contas: cobertura total de todas as etapas da parceria pública.",
+    text: "Da captação à prestação de contas: cobertura total de todas as etapas da parceria entre a administração pública e as organizações da sociedade civil.",
   },
   {
     icon: Lock,
@@ -196,7 +196,7 @@ const TICKER_DOUBLED = [...TICKER_ITEMS, ...TICKER_ITEMS];
 const HERO_BULLETS = [
   {
     icon: Zap,
-    text: "Ciclo completo da parceria pública — captação à prestação de contas",
+    text: "Ciclo completo da parceria entre a administração pública e as organizações da sociedade civil — captação à prestação de contas",
   },
   {
     icon: BadgeCheck,
@@ -471,7 +471,8 @@ export default function InicioPage() {
                 >
                   gestão
                 </span>{" "}
-                de parcerias públicas
+                de parcerias entre a administração pública e as organizações da
+                sociedade civil
               </h2>
 
               <p
@@ -673,7 +674,7 @@ export default function InicioPage() {
                 num: 8,
                 suffix: "",
                 label: "Serviços Especializados",
-                sub: "Ciclo completo de parcerias públicas",
+                sub: "Ciclo completo de parcerias entre a administração pública e as organizações da sociedade civil",
                 special: false,
               },
               {
@@ -977,7 +978,8 @@ export default function InicioPage() {
             </h2>
             <p>
               Da captação de recursos à prestação de contas — cobertura completa
-              para OSCs que firmam parcerias públicas.
+              para OSCs que firmam parcerias entre a administração pública e as
+              organizações da sociedade civil.
             </p>
             <div className="section-line" />
           </div>
@@ -1087,7 +1089,7 @@ export default function InicioPage() {
               >
                 {[
                   "Regularização jurídica, fiscal, trabalhista e técnica",
-                  "Aumento da segurança jurídica nas parcerias públicas",
+                  "Aumento da segurança jurídica nas parcerias entre a administração pública e as organizações da sociedade civil",
                   "Redução de risco de inabilitação em chamamentos",
                   "Melhoria da eficiência operacional e transparência",
                   "Fortalecimento da capacidade de captação de recursos",

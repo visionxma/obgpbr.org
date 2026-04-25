@@ -239,7 +239,7 @@ export const IRREGULARIDADES: Irregularidade[] = [
   {
     id: 14, eixo: 'operacional', risco: 'critico', bloqueia_selo: true,
     titulo: 'Remuneração de Dirigentes com Recursos Públicos sem Previsão Legal',
-    descricao: 'Pagamento de remuneração, pró-labore ou qualquer vantagem pessoal a dirigentes com recursos de parcerias públicas, sem autorização expressa no Plano de Trabalho e fundamentação legal, configurando desvio de finalidade.',
+    descricao: 'Pagamento de remuneração, pró-labore ou qualquer vantagem pessoal a dirigentes com recursos de parcerias entre a administração pública e as organizações da sociedade civil, sem autorização expressa no Plano de Trabalho e fundamentação legal, configurando desvio de finalidade.',
     fundamento: 'Art. 46 da Lei 13.019/2014; Art. 84, §2º do Decreto 8.726/2016; IN RFB 1.700/2017',
     acao_corretiva: 'Cessar imediatamente os pagamentos irregulares e devolver os valores ao concedente. Para parcerias futuras, incluir a remuneração de dirigentes no Plano de Trabalho somente se legalmente permitida, com fundamentação jurídica documentada.',
   },
