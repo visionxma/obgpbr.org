@@ -675,7 +675,7 @@
    ═══════════════════════════════════════════════ */
 
 .pv2-shell {
-  height: calc(100vh - 76px);
+  min-height: 100vh;
   overflow-y: auto;
   background: var(--site-bg, #f0f3f5);
   font-family: var(--font-body);

@@ -520,7 +520,7 @@ export default function ProcessoPage() {
   // ETAPA ZERO: CONSULTA DE CNPJ (Prioritária e sem cabeçalho do painel)
   if (showCnpjStep) {
     return (
-      <div style={{ maxWidth: 600, margin: '60px auto', animation: 'panelPageIn .3s ease' }}>
+      <div style={{ maxWidth: 600, margin: '0 auto', animation: 'panelPageIn .3s ease' }}>
         <div className="panel-card" style={{ padding: 40, textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.1)' }}>
           <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
             <div style={{ width: 64, height: 64, background: 'rgba(197,171,118,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--site-gold)' }}>
