@@ -136,6 +136,22 @@ export default function ProcessoPage() {
   const cnpjInputRef = useRef<HTMLInputElement>(null);
   const cnpjInputFormRef = useRef<HTMLInputElement>(null);
 
+  const [modal, setModal] = useState<{
+    show: boolean;
+    title: string;
+    message: string;
+    type: 'confirm' | 'alert';
+    onConfirm?: () => void;
+  }>({ show: false, title: '', message: '', type: 'alert' });
+
+  const showAlert = (title: string, message: string) => {
+    setModal({ show: true, title, message, type: 'alert' });
+  };
+
+  const showConfirm = (title: string, message: string, onConfirm: () => void) => {
+    setModal({ show: true, title, message, type: 'confirm', onConfirm });
+  };
+
   const handleImportarDocumento = async (file: File) => {
     setImportando(true);
     setImportError('');
@@ -278,20 +294,31 @@ export default function ProcessoPage() {
   const handleNext = async () => {
     if (step === 1) {
       const reqEntityFields = ['cnpj', 'natureza_juridica', 'razao_social', 'nome_fantasia', 'email_osc', 'telefone', 'responsavel', 'data_abertura_cnpj', 'cep', 'logradouro', 'numero_endereco', 'bairro', 'municipio', 'estado'];
-      const hasEmptyEntityField = reqEntityFields.some(f => !entidadeData[f] || entidadeData[f].trim() === '');
-      if (hasEmptyEntityField) {
+      const firstEmptyField = reqEntityFields.find(f => !entidadeData[f] || entidadeData[f].trim() === '');
+      if (firstEmptyField) {
         setShowValidationErrors(true);
-        document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
+        const element = document.getElementById(`field-${firstEmptyField}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          // Pequeno ajuste para considerar a navbar fixa se necessário
+        } else {
+          document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
+        }
         return;
       }
     }
     
     if (step >= 2 && step <= 5) {
       const itemsList = step === 2 ? HABILITACAO_JURIDICA : step === 3 ? REGULARIDADE_FISCAL : step === 4 ? QUALIFICACAO_FINANCEIRA : QUALIFICACAO_TECNICA;
-      const hasPendingDoc = itemsList.some(item => !data[item.id] || !data[item.id].status || data[item.id].status === 'pendente');
-      if (hasPendingDoc) {
+      const firstPending = itemsList.find(item => !data[item.id] || !data[item.id].status || data[item.id].status === 'pendente');
+      if (firstPending) {
         setShowValidationErrors(true);
-        document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
+        const element = document.getElementById(`doc-item-${firstPending.id}`);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else {
+          document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
+        }
         return;
       }
     }
@@ -308,23 +335,24 @@ export default function ProcessoPage() {
   };
   
   const handleResetProcesso = async () => {
-    if (!confirm('ATENÇÃO: Isso apagará todos os dados preenchidos e reiniciará o processo. Deseja continuar?')) return;
-    setResetting(true);
-    try {
-      if (relatorioId) {
-        await supabase.from('relatorios_conformidade').delete().eq('id', relatorioId);
+    showConfirm('Reiniciar Processo', 'ATENÇÃO: Isso apagará todos os dados preenchidos e reiniciará o processo. Deseja continuar?', async () => {
+      setResetting(true);
+      try {
+        if (relatorioId) {
+          await supabase.from('relatorios_conformidade').delete().eq('id', relatorioId);
+        }
+        localStorage.removeItem('obgp_guest_entidade');
+        localStorage.removeItem('obgp_guest_docs');
+        setRelatorioId(null);
+        setData({});
+        setEntidadeData({ cnpj: '', natureza_juridica: '', razao_social: '', nome_fantasia: '', cep: '', logradouro: '', numero_endereco: '', bairro: '', municipio: '', estado: '', data_abertura_cnpj: '', email_osc: '', telefone: '', responsavel: '' });
+        setStep(1);
+        setShowCnpjStep(true);
+      } catch (e) {
+        console.error(e);
       }
-      localStorage.removeItem('obgp_guest_entidade');
-      localStorage.removeItem('obgp_guest_docs');
-      setRelatorioId(null);
-      setData({});
-      setEntidadeData({ cnpj: '', natureza_juridica: '', razao_social: '', nome_fantasia: '', cep: '', logradouro: '', numero_endereco: '', bairro: '', municipio: '', estado: '', data_abertura_cnpj: '', email_osc: '', telefone: '', responsavel: '' });
-      setStep(1);
-      setShowCnpjStep(true);
-    } catch (e) {
-      console.error(e);
-    }
-    setResetting(false);
+      setResetting(false);
+    });
   };
 
   const formatCNPJ = (val: string) => {
@@ -374,7 +402,10 @@ export default function ProcessoPage() {
   const handleConsultarCNPJ = async (cnpjInput: string): Promise<void> => {
     setCnpjError(null);
     const cleanCnpj = cnpjInput.replace(/\D/g, '');
-    if (cleanCnpj.length !== 14) { alert('CNPJ inválido.'); return; }
+    if (cleanCnpj.length !== 14) { 
+      showAlert('CNPJ Inválido', 'O CNPJ informado não possui a quantidade de dígitos necessária (14). Verifique e tente novamente.'); 
+      return; 
+    }
     setLoadingData(true);
     try {
       const res = await fetch(`/api/painel/consultar-cnpj?cnpj=${cleanCnpj}`);
@@ -441,9 +472,9 @@ export default function ProcessoPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ osc_id: activePerfil.osc_id, relatorioId, arquivo_docx_path: pathArquivo }),
       });
-      alert('Processo enviado com sucesso!');
+      showAlert('Sucesso', 'Seu processo de conformidade foi enviado com sucesso para análise!');
     } catch (e: any) {
-      alert(`Erro: ${e.message}`);
+      showAlert('Erro ao Enviar', `Não foi possível submeter seu processo: ${e.message}`);
     } finally {
       setEnviando(false);
     }
@@ -682,7 +713,7 @@ export default function ProcessoPage() {
           </div>
 
           <div style={{ padding: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div id="field-cnpj" style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-text-secondary)', textTransform: 'uppercase' }}>CNPJ</label>
               <input
                 ref={cnpjInputFormRef}
@@ -693,22 +724,22 @@ export default function ProcessoPage() {
               />
               {showValidationErrors && !entidadeData.cnpj && <span style={{ color: '#ef4444', fontSize: '0.7rem', fontWeight: 700, marginTop: -2 }}>⚠️ Preencha este campo obrigatório.</span>}
             </div>
-            <InputField label="Natureza Jurídica" value={entidadeData.natureza_juridica} onChange={(v) => handleEntidadeUpdate('natureza_juridica', v)} showError={showValidationErrors && !entidadeData.natureza_juridica} />
-            <InputField label="Razão Social" value={entidadeData.razao_social} onChange={(v) => handleEntidadeUpdate('razao_social', v)} showError={showValidationErrors && !entidadeData.razao_social} />
-            <InputField label="Nome Fantasia" value={entidadeData.nome_fantasia} onChange={(v) => handleEntidadeUpdate('nome_fantasia', v)} showError={showValidationErrors && !entidadeData.nome_fantasia} />
-            <InputField label="E-mail" value={entidadeData.email_osc} onChange={(v) => handleEntidadeUpdate('email_osc', v)} type="email" showError={showValidationErrors && !entidadeData.email_osc} />
-            <InputField label="Telefone" value={entidadeData.telefone} onChange={(v) => handleEntidadeUpdate('telefone', v)} showError={showValidationErrors && !entidadeData.telefone} />
-            <InputField label="Representante Legal" value={entidadeData.responsavel} onChange={(v) => handleEntidadeUpdate('responsavel', v)} showError={showValidationErrors && !entidadeData.responsavel} />
-            <InputField label="Data de Abertura do CNPJ" type="date" value={entidadeData.data_abertura_cnpj} onChange={(v) => handleEntidadeUpdate('data_abertura_cnpj', v)} showError={showValidationErrors && !entidadeData.data_abertura_cnpj} />
+            <InputField id="field-natureza_juridica" label="Natureza Jurídica" value={entidadeData.natureza_juridica} onChange={(v) => handleEntidadeUpdate('natureza_juridica', v)} showError={showValidationErrors && !entidadeData.natureza_juridica} />
+            <InputField id="field-razao_social" label="Razão Social" value={entidadeData.razao_social} onChange={(v) => handleEntidadeUpdate('razao_social', v)} showError={showValidationErrors && !entidadeData.razao_social} />
+            <InputField id="field-nome_fantasia" label="Nome Fantasia" value={entidadeData.nome_fantasia} onChange={(v) => handleEntidadeUpdate('nome_fantasia', v)} showError={showValidationErrors && !entidadeData.nome_fantasia} />
+            <InputField id="field-email_osc" label="E-mail" value={entidadeData.email_osc} onChange={(v) => handleEntidadeUpdate('email_osc', v)} type="email" showError={showValidationErrors && !entidadeData.email_osc} />
+            <InputField id="field-telefone" label="Telefone" value={entidadeData.telefone} onChange={(v) => handleEntidadeUpdate('telefone', v)} showError={showValidationErrors && !entidadeData.telefone} />
+            <InputField id="field-responsavel" label="Representante Legal" value={entidadeData.responsavel} onChange={(v) => handleEntidadeUpdate('responsavel', v)} showError={showValidationErrors && !entidadeData.responsavel} />
+            <InputField id="field-data_abertura_cnpj" label="Data de Abertura do CNPJ" type="date" value={entidadeData.data_abertura_cnpj} onChange={(v) => handleEntidadeUpdate('data_abertura_cnpj', v)} showError={showValidationErrors && !entidadeData.data_abertura_cnpj} />
             <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--site-border)', paddingTop: 20, marginTop: 4 }}>
               <h3 style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--site-text-secondary)', textTransform: 'uppercase', marginBottom: 16 }}>Endereço Completo</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20 }}>
-                <InputField label="CEP" value={entidadeData.cep} onChange={(v) => handleEntidadeUpdate('cep', v)} showError={showValidationErrors && !entidadeData.cep} />
-                <InputField label="Logradouro" value={entidadeData.logradouro} onChange={(v) => handleEntidadeUpdate('logradouro', v)} showError={showValidationErrors && !entidadeData.logradouro} />
-                <InputField label="Número" value={entidadeData.numero_endereco} onChange={(v) => handleEntidadeUpdate('numero_endereco', v)} showError={showValidationErrors && !entidadeData.numero_endereco} />
-                <InputField label="Bairro" value={entidadeData.bairro} onChange={(v) => handleEntidadeUpdate('bairro', v)} showError={showValidationErrors && !entidadeData.bairro} />
-                <InputField label="Município" value={entidadeData.municipio} onChange={(v) => handleEntidadeUpdate('municipio', v)} showError={showValidationErrors && !entidadeData.municipio} />
-                <InputField label="Estado (UF)" value={entidadeData.estado} onChange={(v) => handleEntidadeUpdate('estado', v)} showError={showValidationErrors && !entidadeData.estado} />
+                <InputField id="field-cep" label="CEP" value={entidadeData.cep} onChange={(v) => handleEntidadeUpdate('cep', v)} showError={showValidationErrors && !entidadeData.cep} />
+                <InputField id="field-logradouro" label="Logradouro" value={entidadeData.logradouro} onChange={(v) => handleEntidadeUpdate('logradouro', v)} showError={showValidationErrors && !entidadeData.logradouro} />
+                <InputField id="field-numero_endereco" label="Número" value={entidadeData.numero_endereco} onChange={(v) => handleEntidadeUpdate('numero_endereco', v)} showError={showValidationErrors && !entidadeData.numero_endereco} />
+                <InputField id="field-bairro" label="Bairro" value={entidadeData.bairro} onChange={(v) => handleEntidadeUpdate('bairro', v)} showError={showValidationErrors && !entidadeData.bairro} />
+                <InputField id="field-municipio" label="Município" value={entidadeData.municipio} onChange={(v) => handleEntidadeUpdate('municipio', v)} showError={showValidationErrors && !entidadeData.municipio} />
+                <InputField id="field-estado" label="Estado (UF)" value={entidadeData.estado} onChange={(v) => handleEntidadeUpdate('estado', v)} showError={showValidationErrors && !entidadeData.estado} />
               </div>
             </div>
           </div>
@@ -797,15 +828,53 @@ export default function ProcessoPage() {
           </button>
         )}
       </div>
+
+      {/* CUSTOM MODAL */}
+      {modal.show && (
+        <div className="panel-modal-overlay">
+          <div className="panel-modal" style={{ maxWidth: 450 }}>
+            <div className="panel-modal-header">
+              <h2 className="panel-modal-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {modal.type === 'confirm' ? <AlertCircle className="text-gold" size={24} /> : <CheckCircle2 className="text-gold" size={24} />}
+                {modal.title}
+              </h2>
+            </div>
+            <div className="panel-modal-body">
+              <p style={{ margin: 0, color: 'var(--site-text-secondary)', lineHeight: 1.6, fontSize: '0.95rem' }}>
+                {modal.message}
+              </p>
+            </div>
+            <div className="panel-modal-footer">
+              {modal.type === 'confirm' && (
+                <button 
+                  className="panel-btn panel-btn-ghost" 
+                  onClick={() => setModal({ ...modal, show: false })}
+                >
+                  Cancelar
+                </button>
+              )}
+              <button 
+                className="panel-btn panel-btn-primary"
+                onClick={() => {
+                  setModal({ ...modal, show: false });
+                  if (modal.type === 'confirm' && modal.onConfirm) modal.onConfirm();
+                }}
+              >
+                {modal.type === 'confirm' ? 'Confirmar' : 'Entendi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 /* ── COMPONENTES INTERNOS ── */
 
-function InputField({ label, value, onChange, readonly = false, type = 'text', showError = false }: { label: string, value?: string, onChange?: (val: string) => void, readonly?: boolean, type?: string, showError?: boolean }) {
+function InputField({ label, value, onChange, readonly = false, type = 'text', showError = false, id }: { label: string, value?: string, onChange?: (val: string) => void, readonly?: boolean, type?: string, showError?: boolean, id?: string }) {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div id={id} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-text-secondary)', textTransform: 'uppercase' }}>{label}</label>
       <input
         type={type}
@@ -839,7 +908,7 @@ function DocumentSection({ number, title, items, data, handleUpdate, showErrors 
           const isLast = index === items.length - 1;
 
           return (
-            <div key={item.id} style={{ padding: '24px', borderBottom: isLast ? 'none' : '1px solid var(--site-border)', position: 'relative' }}>
+            <div id={`doc-item-${item.id}`} key={item.id} style={{ padding: '24px', borderBottom: isLast ? 'none' : '1px solid var(--site-border)', position: 'relative' }}>
               <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
                 <div style={{ background: 'rgba(0,0,0,0.04)', padding: '4px 8px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: 'var(--site-text-secondary)', minWidth: 46, textAlign: 'center', marginTop: 2 }}>
                   {item.id}
