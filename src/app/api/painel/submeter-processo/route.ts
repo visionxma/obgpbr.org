@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-// Service role bypassa RLS — único lugar seguro para atualizar status_selo
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+// Lazy-init — evita falha no build quando env vars não estão disponíveis
+let _supabaseAdmin: SupabaseClient | null = null;
+
+function getSupabaseAdmin() {
+  if (!_supabaseAdmin) {
+    _supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+  }
+  return _supabaseAdmin;
+}
+
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -37,13 +46,13 @@ export async function POST(req: NextRequest) {
 
     // 1. Salva/atualiza relatorios_conformidade
     if (relatorioId) {
-      const { error } = await supabaseAdmin
+      const { error } = await getSupabaseAdmin()
         .from('relatorios_conformidade')
         .update(repPayload)
         .eq('id', relatorioId);
       if (error) throw error;
     } else {
-      const { error } = await supabaseAdmin
+      const { error } = await getSupabaseAdmin()
         .from('relatorios_conformidade')
         .insert(repPayload);
       if (error) throw error;
@@ -58,7 +67,7 @@ export async function POST(req: NextRequest) {
     if (d.estado)       perfilUpdate.estado        = d.estado;
     if (d.responsavel)  perfilUpdate.responsavel   = d.responsavel;
 
-    const { error: perfilErr } = await supabaseAdmin
+    const { error: perfilErr } = await getSupabaseAdmin()
       .from('osc_perfis')
       .update(perfilUpdate)
       .eq('osc_id', osc_id);

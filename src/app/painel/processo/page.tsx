@@ -83,6 +83,15 @@ export default function ProcessoPage() {
   const [saving, setSaving] = useState(false);
   const [loadingData, setLoadingData] = useState(true);
   const [relatorioId, setRelatorioId] = useState<string | null>(null);
+  const [cnpjError, setCnpjError] = useState<string | null>(null);
+
+  // Perfil Geração (Convidado) caso não tenha login
+  const activePerfil = perfil || {
+    id: 'guest',
+    osc_id: `OSC-GUEST-${Math.floor(Math.random() * 10000)}`,
+    cnpj: '', natureza_juridica: '', razao_social: '', nome_fantasia: '', cep: '', logradouro: '',
+    numero_endereco: '', bairro: '', municipio: '', estado: '', data_abertura_cnpj: '', email_osc: '', telefone: '', responsavel: ''
+  };
   const [resetting, setResetting] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [mensagemEnviando, setMensagemEnviando] = useState('');
@@ -123,26 +132,21 @@ export default function ProcessoPage() {
   useEffect(() => {
     if (contextLoading) return;
 
-    if (!perfil) {
-      setLoadingData(false);
-      return;
-    }
-
     const defaultEntidade = {
-      cnpj: perfil.cnpj || '',
-      natureza_juridica: perfil.natureza_juridica || '',
-      razao_social: perfil.razao_social || '',
-      nome_fantasia: (perfil as any).nome_fantasia || '',
-      cep: perfil.cep || '',
-      logradouro: perfil.logradouro || '',
-      numero_endereco: perfil.numero_endereco || '',
-      bairro: perfil.bairro || '',
-      municipio: perfil.municipio || '',
-      estado: perfil.estado || '',
-      data_abertura_cnpj: perfil.data_abertura_cnpj || '',
-      email_osc: perfil.email_osc || '',
-      telefone: perfil.telefone || '',
-      responsavel: perfil.responsavel || '',
+      cnpj: activePerfil.cnpj || '',
+      natureza_juridica: activePerfil.natureza_juridica || '',
+      razao_social: activePerfil.razao_social || '',
+      nome_fantasia: (activePerfil as any).nome_fantasia || '',
+      cep: activePerfil.cep || '',
+      logradouro: activePerfil.logradouro || '',
+      numero_endereco: activePerfil.numero_endereco || '',
+      bairro: activePerfil.bairro || '',
+      municipio: activePerfil.municipio || '',
+      estado: activePerfil.estado || '',
+      data_abertura_cnpj: activePerfil.data_abertura_cnpj || '',
+      email_osc: activePerfil.email_osc || '',
+      telefone: activePerfil.telefone || '',
+      responsavel: activePerfil.responsavel || '',
     };
 
     const load = async () => {
@@ -150,7 +154,7 @@ export default function ProcessoPage() {
         const { data: existing, error } = await supabase
           .from('relatorios_conformidade')
           .select('id, dados_entidade, habilitacao_juridica')
-          .eq('osc_id', perfil.osc_id)
+          .eq('osc_id', activePerfil.osc_id)
           .maybeSingle();
 
         if (error) throw error;
@@ -195,11 +199,10 @@ export default function ProcessoPage() {
   };
 
   const saveProgress = useCallback(async () => {
-    if (!perfil) return;
     setSaving(true);
     try {
       const payload = {
-        osc_id: perfil.osc_id,
+        osc_id: activePerfil.osc_id,
         dados_entidade: entidadeData,
         habilitacao_juridica: data,
         status: 'em_preenchimento',
@@ -210,7 +213,7 @@ export default function ProcessoPage() {
       } else {
         const { data: inserted } = await supabase
           .from('relatorios_conformidade')
-          .insert({ ...payload, numero: `OBGP${new Date().getFullYear()}${perfil.id.substring(0, 4).toUpperCase()}` })
+          .insert({ ...payload, numero: `OBGP${new Date().getFullYear()}${activePerfil.id.substring(0, 4).toUpperCase()}` })
           .select('id')
           .single();
         if (inserted) setRelatorioId(inserted.id);
@@ -219,7 +222,7 @@ export default function ProcessoPage() {
       console.error('Erro ao salvar:', e);
     }
     setSaving(false);
-  }, [perfil, entidadeData, data, relatorioId]);
+  }, [activePerfil.osc_id, activePerfil.id, entidadeData, data, relatorioId]);
 
   const handleNext = async () => {
     await saveProgress();
@@ -235,7 +238,7 @@ export default function ProcessoPage() {
   };
   
   const handleResetProcess = async () => {
-    if (!perfil || !relatorioId) return;
+    if (!relatorioId) return;
     if (!confirm('ATENÇÃO: Isso apagará TODOS os dados preenchidos até agora e reiniciará o processo do zero. Esta ação não pode ser desfeita. Deseja continuar?')) return;
     
     setResetting(true);
@@ -282,7 +285,8 @@ export default function ProcessoPage() {
     return `${v.substring(0, 2)}.${v.substring(2, 5)}.${v.substring(5, 8)}/${v.substring(8, 12)}-${v.substring(12, 14)}`;
   };
 
-  const handleConsultarCNPJ = async (cnpjInput: string) => {
+  const handleConsultarCNPJ = async (cnpjInput: string, retryCount = 0): Promise<void> => {
+    setCnpjError(null);
     const cleanCnpj = cnpjInput.replace(/\D/g, '');
     if (cleanCnpj.length !== 14) {
       alert('Por favor, insira um CNPJ válido com 14 dígitos.');
@@ -291,9 +295,8 @@ export default function ProcessoPage() {
 
     setLoadingData(true);
     try {
-      // Usando BrasilAPI (v1) com tratamento de erro aprimorado
       const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), 8000); // 8 segundos de timeout
+      const id = setTimeout(() => controller.abort(), 6000);
 
       const res = await fetch(`/api/painel/consultar-cnpj?cnpj=${cleanCnpj}`, {
         signal: controller.signal
@@ -302,7 +305,7 @@ export default function ProcessoPage() {
 
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Erro ao consultar CNPJ. Tente novamente.');
+        throw new Error(errorData.error || 'Não foi possível consultar agora. Tente novamente em instantes.');
       }
       
       const d = await res.json();
@@ -336,41 +339,57 @@ export default function ProcessoPage() {
       setShowCnpjStep(false);
       
       // Auto-save após consulta
-      if (perfil) {
-        const payload = {
-          osc_id: perfil.osc_id,
-          dados_entidade: newData,
-          status: 'em_preenchimento',
-        };
-        if (relatorioId) {
-          await supabase.from('relatorios_conformidade').update(payload).eq('id', relatorioId);
-        } else {
-          const { data: inserted } = await supabase.from('relatorios_conformidade').insert(payload).select('id').single();
-          if (inserted) setRelatorioId(inserted.id);
-        }
+      const payload = {
+        osc_id: activePerfil.osc_id,
+        dados_entidade: newData,
+        status: 'em_preenchimento',
+      };
+      if (relatorioId) {
+        await supabase.from('relatorios_conformidade').update(payload).eq('id', relatorioId);
+      } else {
+        const { data: inserted } = await supabase.from('relatorios_conformidade').insert(payload).select('id').single();
+        if (inserted) setRelatorioId(inserted.id);
       }
 
     } catch (e: any) {
-      alert(e.message);
+      // Retry automático (1 tentativa) antes de exibir erro amigável
+      if (retryCount < 1) {
+        setLoadingData(false);
+        return handleConsultarCNPJ(cnpjInput, retryCount + 1);
+      }
+      // Mensagem controlada — nunca expor erros técnicos
+      const msg = (e.message && !e.message.includes('fetch') && !e.message.includes('abort'))
+        ? e.message
+        : 'Não foi possível consultar agora. Tente novamente em instantes.';
+      setCnpjError(msg);
     } finally {
       setLoadingData(false);
     }
   };
 
+
   const handleConsultarPagamentoEEnviar = async () => {
-    if (!perfil) return;
     setEnviando(true);
     setMensagemEnviando('Verificando status de liberação/pagamento...');
 
     try {
-      const { data: pData, error: pErr } = await supabase
-        .from('osc_perfis')
-        .select('certificacao_liberada')
-        .eq('id', perfil.id)
-        .single();
+      // Como não há mais login obrigatório, bypass de certificação para convidados
+      const isGuest = activePerfil.id === 'guest';
+      let certificacaoLiberada = isGuest;
 
-      if (pErr) throw pErr;
-      if (!pData?.certificacao_liberada) {
+      if (!isGuest) {
+        const { data: pData, error: pErr } = await supabase
+          .from('osc_perfis')
+          .select('certificacao_liberada')
+          .eq('id', activePerfil.id)
+          .single();
+
+        if (!pErr && pData?.certificacao_liberada) {
+          certificacaoLiberada = true;
+        }
+      }
+
+      if (!certificacaoLiberada) {
         console.warn('Aviso bypass: Simulando que o pagamento já foi aprovado.');
       }
 
@@ -395,7 +414,7 @@ export default function ProcessoPage() {
         email: entidadeData.email_osc || 'Não Informado',
         telefone: entidadeData.telefone || 'Não Informado',
         responsavel: entidadeData.responsavel || 'Não Informado',
-        numero_relatorio: `OBGP${new Date().getFullYear()}${perfil.id.substring(0, 4).toUpperCase()}`,
+        numero_relatorio: `OBGP${new Date().getFullYear()}${activePerfil.id.substring(0, 4).toUpperCase()}`,
         codigo_controle: `RC${new Date().getTime().toString(36).toUpperCase()}`,
         data_hoje: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
         habilitacao_juridica: HABILITACAO_JURIDICA.map(i => {
@@ -424,7 +443,7 @@ export default function ProcessoPage() {
       const blob = await gerarRelatorioDocx(docxData);
       setMensagemEnviando('Enviando documento para criptografia em nuvem permanente...');
 
-      const pathArquivo = `relatorios/${perfil.osc_id}/RELATORIO_CONFORMIDADE_${Date.now()}.docx`;
+      const pathArquivo = `relatorios/${activePerfil.osc_id}/RELATORIO_CONFORMIDADE_${Date.now()}.docx`;
       const { error: upError } = await supabase.storage
         .from('osc-docs')
         .upload(pathArquivo, blob, { contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', upsert: true });
@@ -438,7 +457,7 @@ export default function ProcessoPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          osc_id: perfil.osc_id,
+          osc_id: activePerfil.osc_id,
           relatorioId,
           numero: docxData.numero_relatorio,
           dados_entidade: entidadeData,
@@ -495,7 +514,10 @@ export default function ProcessoPage() {
               className="panel-input"
               style={{ fontSize: '1.2rem', padding: '16px 20px', textAlign: 'center', letterSpacing: '0.05em', fontWeight: 700 }}
               value={entidadeData.cnpj || ''}
-              onChange={(e) => setEntidadeData({...entidadeData, cnpj: formatCNPJ(e.target.value)})}
+              onChange={(e) => {
+                setEntidadeData({...entidadeData, cnpj: formatCNPJ(e.target.value)});
+                setCnpjError(null);
+              }}
             />
           </div>
 
@@ -508,6 +530,24 @@ export default function ProcessoPage() {
             Consultar e Iniciar
           </button>
 
+          {cnpjError && (
+            <div style={{ marginTop: 16, padding: 16, backgroundColor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 8, color: '#B91C1C', fontSize: '0.9rem', textAlign: 'left', animation: 'panelPageIn 0.3s ease' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <AlertCircle size={20} />
+                <span style={{ fontWeight: 600 }}>{cnpjError}</span>
+              </div>
+              <p style={{ marginBottom: 16, fontSize: '0.85rem' }}>Você pode tentar novamente ou prosseguir preenchendo as informações manualmente.</p>
+              <button 
+                onClick={() => setShowCnpjStep(false)}
+                className="panel-btn"
+                style={{ width: '100%', padding: '12px', fontSize: '0.95rem', background: '#fff', color: '#B91C1C', border: '1px solid #FCA5A5', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontWeight: 600 }}
+              >
+                Preencher Manualmente
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          )}
+
           <p style={{ marginTop: 24, fontSize: '0.8rem', color: 'rgba(0,0,0,0.4)' }}>
             Os dados serão recuperados diretamente da base de dados da Receita Federal do Brasil.
           </p>
@@ -516,20 +556,7 @@ export default function ProcessoPage() {
     );
   }
 
-  if (!perfil) {
-    return (
-      <div style={{ padding: '40px 20px', textAlign: 'center', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-xl)', background: '#fff' }}>
-        <AlertCircle size={48} color="#dc2626" style={{ marginBottom: 16 }} />
-        <h2 style={{ fontSize: '1.25rem', fontWeight: 800, marginBottom: 8, color: 'var(--site-text-primary)' }}>Perfil não encontrado</h2>
-        <p style={{ color: 'var(--site-text-secondary)', marginBottom: 24, maxWidth: 400, margin: '0 auto 24px' }}>
-          Não foi possível identificar seu perfil de OSC. Certifique-se de que você está logado corretamente.
-        </p>
-        <button onClick={() => window.location.href = '/login'} className="btn btn-gold" style={{ padding: '12px 24px' }}>
-          Ir para Login
-        </button>
-      </div>
-    );
-  }
+  // Removed the !perfil redirect to /login to allow guest usage without authentication
 
   return (
     <div id="painel-top" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60, fontFamily: 'var(--font-sans)', color: 'var(--site-text-primary)' }}>
