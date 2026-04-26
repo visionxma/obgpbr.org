@@ -584,6 +584,33 @@ p {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
+/* ── Sticky Stack Effect ─────────────────────── */
+.mobile-sticky-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .mobile-sticky-stack {
+    gap: 40px; /* Mais espaço para o scroll ser percebido */
+  }
+  .mobile-sticky-stack .sticky-item {
+    position: sticky;
+    top: 90px;
+    z-index: 1;
+    transform-origin: top center;
+  }
+  /* Garante que o próximo card tenha z-index maior para sobrepor */
+}
+
+/* Utilitário para números de fundo mais visíveis */
+.bg-number-visible {
+  color: rgba(0,0,0,0.08) !important;
+}
+.glass-section-blue .bg-number-visible {
+  color: rgba(255,255,255,0.08) !important;
+}
 @keyframes spin { to { transform: rotate(360deg); } }
 @keyframes slideDown {
   from { opacity: 0; transform: translateY(-8px); }

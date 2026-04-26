@@ -567,9 +567,10 @@ export default function InicioPage() {
 
             {/* Cards 2×2 */}
             <div
+              className="mobile-sticky-stack"
               style={{
                 display: "grid",
-                gridTemplateColumns: "1fr 1fr",
+                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
                 gap: 14,
               }}
             >
@@ -605,7 +606,7 @@ export default function InicioPage() {
               ].map(({ icon: Icon, label, sub, color, bg }, i) => (
                 <div
                   key={label}
-                  className={`stagger-${i + 1}`}
+                  className={`stagger-${i + 1} sticky-item`}
                   style={{
                     padding: "24px 18px",
                     borderRadius: "var(--site-radius-lg)",
@@ -614,6 +615,7 @@ export default function InicioPage() {
                     flexDirection: "column",
                     gap: 10,
                     border: "1px solid var(--site-border)",
+                    zIndex: i + 1,
                   }}
                 >
                   <Icon size={26} style={{ color }} />
@@ -752,7 +754,7 @@ export default function InicioPage() {
             </p>
             <div className="section-line" />
           </div>
-          <div className="grid-3">
+          <div className="mobile-sticky-stack">
             {[
               {
                 icon: Target,
@@ -775,12 +777,13 @@ export default function InicioPage() {
             ].map(({ icon: Icon, title, text, color }, i) => (
               <div
                 key={title}
-                className={`glass-panel stagger-${i + 1}`}
+                className={`glass-panel stagger-${i + 1} sticky-item`}
                 style={{
                   padding: "36px 28px",
                   display: "flex",
                   flexDirection: "column",
                   gap: 16,
+                  zIndex: i + 1,
                 }}
               >
                 <div className={`icon-box ${color}`}>
@@ -983,11 +986,11 @@ export default function InicioPage() {
             </p>
             <div className="section-line" />
           </div>
-          <div className="grid-3">
+          <div className="mobile-sticky-stack">
             {SERVICOS.map(({ icon: Icon, title, desc, color }, i) => (
               <div
                 key={title}
-                className={`glass-panel stagger-${i + 1}`}
+                className={`glass-panel stagger-${i + 1} sticky-item`}
                 style={{
                   padding: "30px 24px",
                   display: "flex",
@@ -995,9 +998,11 @@ export default function InicioPage() {
                   gap: 14,
                   position: "relative",
                   overflow: "hidden",
+                  zIndex: i + 1,
                 }}
               >
                 <div
+                  className="bg-number-visible"
                   style={{
                     position: "absolute",
                     top: 12,
@@ -1005,7 +1010,6 @@ export default function InicioPage() {
                     fontFamily: "var(--font-heading)",
                     fontSize: "3.5rem",
                     fontWeight: 900,
-                    color: "rgba(0,0,0,0.04)",
                     lineHeight: 1,
                     pointerEvents: "none",
                     userSelect: "none",
@@ -1246,11 +1250,11 @@ export default function InicioPage() {
             </p>
             <div className="section-line" />
           </div>
-          <div className="grid-2" style={{ gap: 16 }}>
+          <div className="mobile-sticky-stack">
             {DIFERENCIAIS.map(({ icon: Icon, title, text }, i) => (
               <div
                 key={title}
-                className={`glass-panel stagger-${i + 1}`}
+                className={`glass-panel sticky-item stagger-${i + 1}`}
                 style={{
                   padding: "28px 24px",
                   display: "flex",
