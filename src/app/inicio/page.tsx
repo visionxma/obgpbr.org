@@ -569,8 +569,8 @@ export default function InicioPage() {
             <div
               className="mobile-sticky-stack"
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+                display: "flex",
+                flexDirection: "column",
                 gap: 14,
               }}
             >
@@ -608,8 +608,8 @@ export default function InicioPage() {
                   key={label}
                   className={`stagger-${i + 1} sticky-item`}
                   style={{
-                    padding: "24px 18px",
-                    borderRadius: "var(--site-radius-lg)",
+                    padding: "32px 18px",
+                    borderRadius: "var(--site-radius-xl)",
                     background: bg,
                     display: "flex",
                     flexDirection: "column",
@@ -778,13 +778,16 @@ export default function InicioPage() {
               <div
                 key={title}
                 className={`glass-panel stagger-${i + 1} sticky-item`}
-                style={{
-                  padding: "36px 28px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 16,
-                  zIndex: i + 1,
-                }}
+                  style={{
+                    padding: "40px 18px",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 16,
+                    zIndex: i + 1,
+                    background: "white",
+                    borderRadius: "var(--site-radius-xl)",
+                    border: "1px solid var(--site-border)",
+                  }}
               >
                 <div className={`icon-box ${color}`}>
                   <Icon size={22} />
@@ -1000,13 +1003,15 @@ export default function InicioPage() {
                 key={title}
                 className={`glass-panel stagger-${i + 1} sticky-item`}
                 style={{
-                  padding: "30px 24px",
+                  padding: "36px 18px",
                   display: "flex",
                   flexDirection: "column",
                   gap: 14,
                   position: "relative",
                   overflow: "hidden",
                   zIndex: i + 1,
+                  background: "white",
+                  borderRadius: "var(--site-radius-xl)",
                 }}
               >
                 <div
