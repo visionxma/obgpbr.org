@@ -721,6 +721,102 @@
   .pv2-content { padding: 20px 14px 36px; }
 }
 
+/* ── Processo Page Fixes ─────────────────── */
+.processo-header-wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.wizard-card {
+  background: var(--site-primary);
+  border-radius: var(--site-radius-xl);
+  padding: 24px 32px;
+  margin-bottom: 24px;
+  box-shadow: 0 12px 32px rgba(13,54,79,0.15);
+  color: #fff;
+}
+
+.wizard-steps-row {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  z-index: 2;
+  gap: 10px;
+}
+
+.wizard-step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.wizard-step-label {
+  font-size: 0.65rem;
+  text-align: center;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  color: rgba(255,255,255,0.4);
+  font-weight: 500;
+}
+
+.wizard-step-item.active .wizard-step-label {
+  color: #fff;
+  font-weight: 700;
+}
+
+.wizard-step-item.done .wizard-step-label {
+  color: rgba(255,255,255,0.7);
+}
+
+@media (max-width: 768px) {
+  .processo-header-wrap { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .wizard-card { padding: 20px 16px; }
+  .wizard-step-label { display: none; }
+  .wizard-step-item.active .wizard-step-label { 
+    display: block; 
+    position: absolute; 
+    bottom: -22px; 
+    left: 50%; 
+    transform: translateX(-50%);
+    white-space: normal;
+    font-size: 0.7rem;
+    width: 120px;
+  }
+  .wizard-steps-row { margin-bottom: 24px; }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+  padding: 24px;
+}
+
+@media (max-width: 480px) {
+  .form-grid { padding: 16px; grid-template-columns: 1fr; }
+  .panel-btn-primary, .panel-btn-ghost, .btn-gold {
+    width: 100%;
+    min-width: 0 !important;
+  }
+  .processo-nav-btns {
+    flex-direction: column-reverse;
+    gap: 12px;
+  }
+  .processo-nav-btns button {
+    width: 100%;
+  }
+}
+
 /* Utilities */
 @keyframes spin { 100% { transform: rotate(360deg); } }
 .spin-anim { animation: spin 1s linear infinite; }

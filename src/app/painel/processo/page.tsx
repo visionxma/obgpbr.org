@@ -621,11 +621,21 @@ export default function ProcessoPage() {
               const done = step > i + 1;
               const active = step === i + 1;
               return (
-                <div key={i} className={`wizard-step-item ${active ? 'active' : ''}`}>
-                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: done ? 'var(--site-gold)' : (active ? 'var(--site-primary)' : 'rgba(255,255,255,0.05)'), border: done ? 'none' : (active ? '2px solid var(--site-gold)' : '2px solid rgba(255,255,255,0.2)'), display: 'flex', alignItems: 'center', justifyContent: 'center', color: done ? '#fff' : (active ? 'var(--site-gold)' : 'rgba(255,255,255,0.4)'), zIndex: 2 }}>
+                <div key={i} className={`wizard-step-item ${active ? 'active' : ''} ${done ? 'done' : ''}`}>
+                  <div 
+                    className="wizard-step-circle"
+                    style={{ 
+                      width: 30, height: 30, borderRadius: '50%', 
+                      background: done ? 'var(--site-gold)' : (active ? 'var(--site-primary)' : 'rgba(255,255,255,0.05)'), 
+                      border: done ? 'none' : (active ? '2px solid var(--site-gold)' : '2px solid rgba(255,255,255,0.2)'), 
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                      color: done ? '#fff' : (active ? 'var(--site-gold)' : 'rgba(255,255,255,0.4)'), 
+                      zIndex: 2 
+                    }}
+                  >
                     {done ? <Check size={14} /> : <span style={{ fontSize: 11, fontWeight: 700 }}>{i + 1}</span>}
                   </div>
-                  <span className="wizard-step-label" style={{ color: active ? '#fff' : (done ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)'), fontWeight: active ? 700 : 500 }}>{s.label}</span>
+                  <span className="wizard-step-label">{s.label}</span>
                 </div>
               );
             })}
