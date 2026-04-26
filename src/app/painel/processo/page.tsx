@@ -1,7 +1,7 @@
 'use client';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  ShieldCheck, UploadCloud, CheckCircle2, Clock, Check, AlertCircle, Briefcase, ChevronLeft, ChevronRight, Loader2, FileUp, Sparkles
+  ShieldCheck, UploadCloud, CheckCircle2, Clock, Check, AlertCircle, Briefcase, ChevronLeft, ChevronRight, Loader2, FileUp, Sparkles, RefreshCcw
 } from 'lucide-react';
 import { usePainel } from '../PainelContext';
 import { supabase } from '@/lib/supabase';
@@ -84,6 +84,8 @@ export default function ProcessoPage() {
   const [loadingData, setLoadingData] = useState(true);
   const [relatorioId, setRelatorioId] = useState<string | null>(null);
   const [cnpjError, setCnpjError] = useState<string | null>(null);
+  const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const [cnpjSuccess, setCnpjSuccess] = useState(false);
 
   // Perfil Geração (Convidado) caso não tenha login
   const activePerfil = perfil || {
@@ -225,6 +227,28 @@ export default function ProcessoPage() {
   }, [activePerfil.osc_id, activePerfil.id, entidadeData, data, relatorioId]);
 
   const handleNext = async () => {
+    // Validação
+    if (step === 1) {
+      const reqEntityFields = ['cnpj', 'natureza_juridica', 'razao_social', 'nome_fantasia', 'email_osc', 'telefone', 'responsavel', 'data_abertura_cnpj', 'cep', 'logradouro', 'numero_endereco', 'bairro', 'municipio', 'estado'];
+      const hasEmptyEntityField = reqEntityFields.some(f => !entidadeData[f] || entidadeData[f].trim() === '');
+      if (hasEmptyEntityField) {
+        setShowValidationErrors(true);
+        document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+    }
+    
+    if (step >= 2 && step <= 5) {
+      const itemsList = step === 2 ? HABILITACAO_JURIDICA : step === 3 ? REGULARIDADE_FISCAL : step === 4 ? QUALIFICACAO_FINANCEIRA : QUALIFICACAO_TECNICA;
+      const hasPendingDoc = itemsList.some(item => !data[item.id] || !data[item.id].status || data[item.id].status === 'pendente');
+      if (hasPendingDoc) {
+        setShowValidationErrors(true);
+        document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+    }
+
+    setShowValidationErrors(false);
     await saveProgress();
     setStep(s => Math.min(s + 1, 7));
     document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
@@ -336,7 +360,7 @@ export default function ProcessoPage() {
       };
 
       setEntidadeData(newData);
-      setShowCnpjStep(false);
+      setCnpjSuccess(true);
       
       // Auto-save após consulta
       const payload = {
@@ -517,33 +541,61 @@ export default function ProcessoPage() {
               onChange={(e) => {
                 setEntidadeData({...entidadeData, cnpj: formatCNPJ(e.target.value)});
                 setCnpjError(null);
+                setCnpjSuccess(false);
               }}
             />
           </div>
 
-          <button 
-            className="panel-btn panel-btn-primary" 
-            style={{ width: '100%', padding: 16, fontSize: '1rem' }}
-            onClick={() => handleConsultarCNPJ(entidadeData.cnpj)}
-            disabled={!entidadeData.cnpj || entidadeData.cnpj.replace(/\D/g, '').length !== 14}
-          >
-            Consultar e Iniciar
-          </button>
-
-          {cnpjError && (
-            <div style={{ marginTop: 16, padding: 16, backgroundColor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 8, color: '#B91C1C', fontSize: '0.9rem', textAlign: 'left', animation: 'panelPageIn 0.3s ease' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <AlertCircle size={20} />
-                <span style={{ fontWeight: 600 }}>{cnpjError}</span>
+          {!cnpjSuccess ? (
+            <>
+              <div style={{ display: 'flex', gap: 12, flexDirection: 'row' }}>
+                <button 
+                  className="panel-btn panel-btn-primary" 
+                  style={{ flex: 1, padding: 16, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                  onClick={() => handleConsultarCNPJ(entidadeData.cnpj)}
+                  disabled={!entidadeData.cnpj || entidadeData.cnpj.replace(/\D/g, '').length !== 14 || loadingData}
+                >
+                  {cnpjError ? (
+                    <>
+                      <RefreshCcw size={18} />
+                      Tentar Novamente
+                    </>
+                  ) : (
+                    'Consultar CNPJ'
+                  )}
+                </button>
+                {cnpjError && (
+                  <button 
+                    onClick={() => setShowCnpjStep(false)}
+                    className="panel-btn"
+                    style={{ flex: 1, padding: 16, fontSize: '0.95rem', background: '#fff', color: '#B91C1C', border: '1px solid #FCA5A5', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontWeight: 600 }}
+                  >
+                    Preencher Manualmente
+                    <ChevronRight size={18} />
+                  </button>
+                )}
               </div>
-              <p style={{ marginBottom: 16, fontSize: '0.85rem' }}>Você pode tentar novamente ou prosseguir preenchendo as informações manualmente.</p>
+              {cnpjError && (
+                <div style={{ marginTop: 16, padding: 12, backgroundColor: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 8, color: '#B91C1C', fontSize: '0.85rem', textAlign: 'left', animation: 'panelPageIn 0.3s ease', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <AlertCircle size={18} style={{ flexShrink: 0 }} />
+                  <span style={{ fontWeight: 600 }}>{cnpjError}</span>
+                </div>
+              )}
+            </>
+          ) : (
+            <div style={{ marginTop: 16, padding: 20, backgroundColor: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: 8, color: '#166534', textAlign: 'center', animation: 'panelPageIn 0.3s ease' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 16 }}>
+                <CheckCircle2 size={24} />
+                <span style={{ fontWeight: 800, fontSize: '1.1rem' }}>Consulta realizada com sucesso!</span>
+              </div>
+              <p style={{ marginBottom: 20, fontSize: '0.9rem' }}>Os dados foram recuperados e preenchidos automaticamente.</p>
               <button 
                 onClick={() => setShowCnpjStep(false)}
-                className="panel-btn"
-                style={{ width: '100%', padding: '12px', fontSize: '0.95rem', background: '#fff', color: '#B91C1C', border: '1px solid #FCA5A5', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontWeight: 600 }}
+                className="panel-btn panel-btn-primary"
+                style={{ width: '100%', padding: '16px', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
               >
-                Preencher Manualmente
-                <ChevronRight size={18} />
+                Clique aqui para avançar
+                <ChevronRight size={20} />
               </button>
             </div>
           )}
@@ -698,23 +750,23 @@ export default function ProcessoPage() {
           </div>
 
           <div style={{ padding: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
-            <InputField label="CNPJ" value={entidadeData.cnpj} onChange={(v) => handleEntidadeUpdate('cnpj', formatCNPJ(v))} />
-            <InputField label="Natureza Jurídica" value={entidadeData.natureza_juridica} onChange={(v) => handleEntidadeUpdate('natureza_juridica', v)} />
-            <InputField label="Razão Social" value={entidadeData.razao_social} onChange={(v) => handleEntidadeUpdate('razao_social', v)} />
-            <InputField label="Nome Fantasia" value={entidadeData.nome_fantasia} onChange={(v) => handleEntidadeUpdate('nome_fantasia', v)} />
-            <InputField label="E-mail" value={entidadeData.email_osc} onChange={(v) => handleEntidadeUpdate('email_osc', v)} type="email" />
-            <InputField label="Telefone" value={entidadeData.telefone} onChange={(v) => handleEntidadeUpdate('telefone', v)} />
-            <InputField label="Representante Legal" value={entidadeData.responsavel} onChange={(v) => handleEntidadeUpdate('responsavel', v)} />
-            <InputField label="Data de Abertura do CNPJ" type="date" value={entidadeData.data_abertura_cnpj} onChange={(v) => handleEntidadeUpdate('data_abertura_cnpj', v)} />
+            <InputField label="CNPJ" value={entidadeData.cnpj} onChange={(v) => handleEntidadeUpdate('cnpj', formatCNPJ(v))} showError={showValidationErrors && !entidadeData.cnpj} />
+            <InputField label="Natureza Jurídica" value={entidadeData.natureza_juridica} onChange={(v) => handleEntidadeUpdate('natureza_juridica', v)} showError={showValidationErrors && !entidadeData.natureza_juridica} />
+            <InputField label="Razão Social" value={entidadeData.razao_social} onChange={(v) => handleEntidadeUpdate('razao_social', v)} showError={showValidationErrors && !entidadeData.razao_social} />
+            <InputField label="Nome Fantasia" value={entidadeData.nome_fantasia} onChange={(v) => handleEntidadeUpdate('nome_fantasia', v)} showError={showValidationErrors && !entidadeData.nome_fantasia} />
+            <InputField label="E-mail" value={entidadeData.email_osc} onChange={(v) => handleEntidadeUpdate('email_osc', v)} type="email" showError={showValidationErrors && !entidadeData.email_osc} />
+            <InputField label="Telefone" value={entidadeData.telefone} onChange={(v) => handleEntidadeUpdate('telefone', v)} showError={showValidationErrors && !entidadeData.telefone} />
+            <InputField label="Representante Legal" value={entidadeData.responsavel} onChange={(v) => handleEntidadeUpdate('responsavel', v)} showError={showValidationErrors && !entidadeData.responsavel} />
+            <InputField label="Data de Abertura do CNPJ" type="date" value={entidadeData.data_abertura_cnpj} onChange={(v) => handleEntidadeUpdate('data_abertura_cnpj', v)} showError={showValidationErrors && !entidadeData.data_abertura_cnpj} />
             <div style={{ gridColumn: '1 / -1', borderTop: '1px solid var(--site-border)', paddingTop: 20, marginTop: 4 }}>
               <h3 style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--site-text-secondary)', textTransform: 'uppercase', marginBottom: 16 }}>Endereço Completo</h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 20 }}>
-                <InputField label="CEP" value={entidadeData.cep} onChange={(v) => handleEntidadeUpdate('cep', v)} />
-                <InputField label="Logradouro" value={entidadeData.logradouro} onChange={(v) => handleEntidadeUpdate('logradouro', v)} />
-                <InputField label="Número" value={entidadeData.numero_endereco} onChange={(v) => handleEntidadeUpdate('numero_endereco', v)} />
-                <InputField label="Bairro" value={entidadeData.bairro} onChange={(v) => handleEntidadeUpdate('bairro', v)} />
-                <InputField label="Município" value={entidadeData.municipio} onChange={(v) => handleEntidadeUpdate('municipio', v)} />
-                <InputField label="Estado (UF)" value={entidadeData.estado} onChange={(v) => handleEntidadeUpdate('estado', v)} />
+                <InputField label="CEP" value={entidadeData.cep} onChange={(v) => handleEntidadeUpdate('cep', v)} showError={showValidationErrors && !entidadeData.cep} />
+                <InputField label="Logradouro" value={entidadeData.logradouro} onChange={(v) => handleEntidadeUpdate('logradouro', v)} showError={showValidationErrors && !entidadeData.logradouro} />
+                <InputField label="Número" value={entidadeData.numero_endereco} onChange={(v) => handleEntidadeUpdate('numero_endereco', v)} showError={showValidationErrors && !entidadeData.numero_endereco} />
+                <InputField label="Bairro" value={entidadeData.bairro} onChange={(v) => handleEntidadeUpdate('bairro', v)} showError={showValidationErrors && !entidadeData.bairro} />
+                <InputField label="Município" value={entidadeData.municipio} onChange={(v) => handleEntidadeUpdate('municipio', v)} showError={showValidationErrors && !entidadeData.municipio} />
+                <InputField label="Estado (UF)" value={entidadeData.estado} onChange={(v) => handleEntidadeUpdate('estado', v)} showError={showValidationErrors && !entidadeData.estado} />
               </div>
             </div>
           </div>
@@ -722,23 +774,23 @@ export default function ProcessoPage() {
       )}
 
       {step === 2 && (
-        <DocumentSection number="2" title="HABILITAÇÃO JURÍDICA" items={HABILITACAO_JURIDICA} data={data} handleUpdate={handleUpdate} />
+        <DocumentSection number="2" title="HABILITAÇÃO JURÍDICA" items={HABILITACAO_JURIDICA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} />
       )}
 
       {step === 3 && (
-        <DocumentSection number="3" title="REGULARIDADE FISCAL, SOCIAL E TRABALHISTA" items={REGULARIDADE_FISCAL} data={data} handleUpdate={handleUpdate} />
+        <DocumentSection number="3" title="REGULARIDADE FISCAL, SOCIAL E TRABALHISTA" items={REGULARIDADE_FISCAL} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} />
       )}
 
       {step === 4 && (
-        <DocumentSection number="4" title="QUALIFICAÇÃO ECONÔMICO-FINANCEIRA" items={QUALIFICACAO_FINANCEIRA} data={data} handleUpdate={handleUpdate} />
+        <DocumentSection number="4" title="QUALIFICAÇÃO ECONÔMICO-FINANCEIRA" items={QUALIFICACAO_FINANCEIRA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} />
       )}
 
       {step === 5 && (
-        <DocumentSection number="5" title="QUALIFICAÇÃO TÉCNICA" items={QUALIFICACAO_TECNICA} data={data} handleUpdate={handleUpdate} />
+        <DocumentSection number="5" title="QUALIFICAÇÃO TÉCNICA" items={QUALIFICACAO_TECNICA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} />
       )}
 
       {step === 6 && (
-        <DocumentSection number="6" title="OUTROS REGISTROS" items={OUTROS_REGISTROS} data={data} handleUpdate={handleUpdate} />
+        <DocumentSection number="6" title="OUTROS REGISTROS" items={OUTROS_REGISTROS} data={data} handleUpdate={handleUpdate} showErrors={false} />
       )}
 
       {step === 7 && (
@@ -809,7 +861,7 @@ export default function ProcessoPage() {
 
 /* ── COMPONENTES INTERNOS ── */
 
-function InputField({ label, value, onChange, readonly = false, type = 'text' }: { label: string, value?: string, onChange?: (val: string) => void, readonly?: boolean, type?: string }) {
+function InputField({ label, value, onChange, readonly = false, type = 'text', showError = false }: { label: string, value?: string, onChange?: (val: string) => void, readonly?: boolean, type?: string, showError?: boolean }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-text-secondary)', textTransform: 'uppercase' }}>{label}</label>
@@ -818,15 +870,17 @@ function InputField({ label, value, onChange, readonly = false, type = 'text' }:
         value={value || ''}
         onChange={e => onChange?.(e.target.value)}
         readOnly={readonly}
-        style={{ padding: '10px 14px', borderRadius: 'var(--site-radius-md)', border: '1px solid var(--site-border)', background: readonly ? 'var(--site-surface-warm)' : '#fff', color: readonly ? 'var(--site-text-secondary)' : 'var(--site-text-primary)', fontSize: '0.9rem', outline: 'none', pointerEvents: readonly ? 'none' : 'auto', width: '100%', boxSizing: 'border-box' }}
+        style={{ padding: '10px 14px', borderRadius: 'var(--site-radius-md)', border: showError ? '1px solid #ef4444' : '1px solid var(--site-border)', background: readonly ? 'var(--site-surface-warm)' : '#fff', color: readonly ? 'var(--site-text-secondary)' : 'var(--site-text-primary)', fontSize: '0.9rem', outline: 'none', pointerEvents: readonly ? 'none' : 'auto', width: '100%', boxSizing: 'border-box' }}
       />
+      {showError && <span style={{ color: '#ef4444', fontSize: '0.7rem', fontWeight: 700, marginTop: -2 }}>⚠️ Preencha este campo obrigatório.</span>}
     </div>
   );
 }
 
-function DocumentSection({ number, title, items, data, handleUpdate }: {
+function DocumentSection({ number, title, items, data, handleUpdate, showErrors = false }: {
   number: string, title: string, items: { id: string, title: string }[],
-  data: Record<string, any>, handleUpdate: (id: string, field: string, val: string) => void
+  data: Record<string, any>, handleUpdate: (id: string, field: string, val: string) => void,
+  showErrors?: boolean
 }) {
   return (
     <section style={{ marginBottom: 32, border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-xl)', overflow: 'hidden', background: '#fff' }}>
@@ -853,11 +907,11 @@ function DocumentSection({ number, title, items, data, handleUpdate }: {
                     <h3 style={{ fontSize: '0.95rem', fontWeight: 800, margin: 0, color: 'var(--site-text-primary)', maxWidth: '70%' }}>
                       {item.title}
                     </h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                       <select
                         value={status}
                         onChange={(e) => handleUpdate(item.id, 'status', e.target.value)}
-                        style={{ appearance: 'none', padding: '6px 28px 6px 12px', borderRadius: 'var(--site-radius-full)', fontSize: '0.75rem', fontWeight: 700, border: 'none', cursor: 'pointer', outline: 'none', backgroundColor: status === 'conforme' ? 'rgba(22,163,74,0.1)' : (status === 'pendente' ? 'rgba(0,0,0,0.05)' : 'rgba(217,119,6,0.1)'), color: status === 'conforme' ? '#16a34a' : (status === 'pendente' ? 'var(--site-text-secondary)' : '#d97706') }}
+                        style={{ appearance: 'none', padding: '6px 28px 6px 12px', borderRadius: 'var(--site-radius-full)', fontSize: '0.75rem', fontWeight: 700, border: (showErrors && status === 'pendente') ? '1px solid #ef4444' : 'none', cursor: 'pointer', outline: 'none', backgroundColor: status === 'conforme' ? 'rgba(22,163,74,0.1)' : (status === 'pendente' ? 'rgba(0,0,0,0.05)' : 'rgba(217,119,6,0.1)'), color: status === 'conforme' ? '#16a34a' : (status === 'pendente' ? 'var(--site-text-secondary)' : '#d97706') }}
                       >
                         <option value="pendente">Pendente</option>
                         <option value="em_analise">Em Análise</option>
@@ -865,6 +919,7 @@ function DocumentSection({ number, title, items, data, handleUpdate }: {
                         <option value="irregular">Irregular / Vencido</option>
                         <option value="nao_se_aplica">Não se Aplica</option>
                       </select>
+                      {showErrors && status === 'pendente' && <span style={{ color: '#ef4444', fontSize: '0.7rem', fontWeight: 700 }}>⚠️ Status obrigatório.</span>}
                     </div>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
