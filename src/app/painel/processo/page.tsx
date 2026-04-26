@@ -489,7 +489,7 @@ export default function ProcessoPage() {
   if (showCnpjStep) {
     return (
       <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 0', minHeight: 'calc(100vh - 120px)', animation: 'panelPageIn .3s ease' }}>
-        <div className="panel-card" style={{ maxWidth: 600, width: '90%', padding: 40, textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.1)', background: '#fff', borderRadius: 'var(--site-radius-xl)' }}>
+        <div className="panel-card" style={{ maxWidth: 600, width: '92%', padding: 'clamp(20px, 5vw, 40px)', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.1)', background: '#fff', borderRadius: 'var(--site-radius-xl)' }}>
           <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
             <div style={{ width: 64, height: 64, background: 'rgba(197,171,118,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--site-gold)' }}>
               <ShieldCheck size={32} />
@@ -575,27 +575,27 @@ export default function ProcessoPage() {
 
   return (
     <div id="painel-top" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
+      <div className="processo-header-wrap">
         <div>
-          <h1 style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--site-primary)', letterSpacing: '-0.02em', marginBottom: 4 }}>
+          <h1 style={{ fontSize: 'clamp(1.4rem, 4vw, 1.8rem)', fontWeight: 900, color: 'var(--site-primary)', letterSpacing: '-0.02em', marginBottom: 4 }}>
             Relatório de Conformidade
           </h1>
           <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.9rem' }}>
             {activePerfil.razao_social} ({activePerfil.osc_id})
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 12 }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <button 
             onClick={handleResetProcesso}
             disabled={resetting}
             style={{ padding: '8px 16px', fontSize: '0.8rem', fontWeight: 700, borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)', background: '#fff', color: 'var(--site-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
           >
             {resetting ? <Loader2 size={14} className="spin-anim" /> : <RefreshCcw size={14} />}
-            Reiniciar Processo
+            Reiniciar
           </button>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px', background: 'var(--site-surface-blue)', borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)' }}>
             <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Progresso</div>
-            <div style={{ width: 120, height: 6, background: 'rgba(0,0,0,0.05)', borderRadius: 3, overflow: 'hidden' }}>
+            <div style={{ width: 'clamp(60px, 15vw, 120px)', height: 6, background: 'rgba(0,0,0,0.05)', borderRadius: 3, overflow: 'hidden' }}>
               <div style={{ width: `${progress}%`, height: '100%', background: 'var(--site-gold)', transition: 'width 0.4s ease' }} />
             </div>
             <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--site-gold)' }}>{progress}%</div>
@@ -603,7 +603,7 @@ export default function ProcessoPage() {
         </div>
       </div>
 
-      <div style={{ background: 'var(--site-primary)', borderRadius: 'var(--site-radius-xl)', padding: '24px 32px', marginBottom: 24, boxShadow: '0 12px 32px rgba(13,54,79,0.15)', color: '#fff' }}>
+      <div className="wizard-card">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
             <h2 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: '#fff' }}>PAINEL DE ACOMPANHAMENTO</h2>
@@ -616,16 +616,16 @@ export default function ProcessoPage() {
         <div style={{ position: 'relative' }}>
           <div style={{ position: 'absolute', top: 14, left: 0, right: 0, height: 2, background: 'rgba(255,255,255,0.15)', zIndex: 0 }} />
           <div style={{ position: 'absolute', top: 14, left: 0, width: `${progress}%`, height: 2, background: 'var(--site-gold)', zIndex: 1, transition: 'width 0.5s ease' }} />
-          <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative', zIndex: 2 }}>
+          <div className="wizard-steps-row">
             {WIZARD_STEPS.map((s, i) => {
               const done = step > i + 1;
               const active = step === i + 1;
               return (
-                <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, width: 80 }}>
-                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: done ? 'var(--site-gold)' : (active ? 'var(--site-primary)' : 'rgba(255,255,255,0.05)'), border: done ? 'none' : (active ? '2px solid var(--site-gold)' : '2px solid rgba(255,255,255,0.2)'), display: 'flex', alignItems: 'center', justifyContent: 'center', color: done ? '#fff' : (active ? 'var(--site-gold)' : 'rgba(255,255,255,0.4)') }}>
+                <div key={i} className={`wizard-step-item ${active ? 'active' : ''}`}>
+                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: done ? 'var(--site-gold)' : (active ? 'var(--site-primary)' : 'rgba(255,255,255,0.05)'), border: done ? 'none' : (active ? '2px solid var(--site-gold)' : '2px solid rgba(255,255,255,0.2)'), display: 'flex', alignItems: 'center', justifyContent: 'center', color: done ? '#fff' : (active ? 'var(--site-gold)' : 'rgba(255,255,255,0.4)'), zIndex: 2 }}>
                     {done ? <Check size={14} /> : <span style={{ fontSize: 11, fontWeight: 700 }}>{i + 1}</span>}
                   </div>
-                  <span style={{ fontSize: '0.6rem', fontWeight: active ? 700 : 500, color: active ? '#fff' : (done ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)'), textAlign: 'center', lineHeight: 1.2 }}>{s.label}</span>
+                  <span className="wizard-step-label" style={{ color: active ? '#fff' : (done ? 'rgba(255,255,255,0.7)' : 'rgba(255,255,255,0.4)'), fontWeight: active ? 700 : 500 }}>{s.label}</span>
                 </div>
               );
             })}
@@ -634,7 +634,7 @@ export default function ProcessoPage() {
       </div>
 
       {/* TOP NAVIGATION (DUPLICATE) */}
-      <div style={{ display: 'flex', justifyContent: step === 1 ? 'flex-end' : 'space-between', alignItems: 'center', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid var(--site-border)' }}>
+      <div className="processo-nav-btns" style={{ display: 'flex', justifyContent: step === 1 ? 'flex-end' : 'space-between', alignItems: 'center', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid var(--site-border)' }}>
         {step > 1 && (
           <button onClick={handleBack} className="btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', fontSize: '0.85rem', background: 'var(--site-surface-warm)', color: 'var(--site-text-primary)', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', fontWeight: 700 }}>
             <ChevronLeft size={16} /> Voltar
@@ -687,7 +687,7 @@ export default function ProcessoPage() {
               }}
             >
               {importando ? (
-                <Loader2 size={28} style={{ animation: 'spin 1s linear infinite', flexShrink: 0, color: 'var(--site-gold)' }} />
+                <Loader2 size={28} className="spin-anim" style={{ flexShrink: 0, color: 'var(--site-gold)' }} />
               ) : importSuccess ? (
                 <CheckCircle2 size={28} style={{ flexShrink: 0, color: '#16a34a' }} />
               ) : (
@@ -794,16 +794,16 @@ export default function ProcessoPage() {
                 A autenticidade do documento pode ser conferida através do website: https://obgpbr.org/selo-osc, mediante código de verificação e controle.
               </p>
             </div>
-            <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 12 }}>
-              <span style={{ fontSize: '0.85rem', color: 'var(--site-text-secondary)', fontWeight: 700 }}>
+            <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+              <span style={{ fontSize: '0.85rem', color: 'var(--site-text-secondary)', fontWeight: 700, textAlign: 'center' }}>
                 <AlertCircle size={14} style={{ display: 'inline', position: 'relative', top: 2, marginRight: 4 }} />
                 O envio para a administração requer assinatura e pagamento ativo.
               </span>
-              <button onClick={handleConsultarPagamentoEEnviar} disabled={enviando} className="btn btn-gold" style={{ padding: '14px 28px', fontSize: '1rem', minWidth: 420 }}>
+              <button onClick={handleConsultarPagamentoEEnviar} disabled={enviando} className="btn btn-gold" style={{ padding: '14px 28px', fontSize: '1rem', width: '100%', maxWidth: 420 }}>
                 {enviando ? (
                   <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Clock size={18} className="spin-anim" /> {mensagemEnviando || 'Processando...'}</span>
                 ) : (
-                  <><CheckCircle2 size={18} /> Validar, Verificar Pagamento e Enviar Processo</>
+                  <><CheckCircle2 size={18} /> Validar e Enviar Processo</>
                 )}
               </button>
             </div>
@@ -812,7 +812,7 @@ export default function ProcessoPage() {
       )}
 
       {/* NAVIGATION */}
-      <div style={{ display: 'flex', justifyContent: step === 1 ? 'flex-end' : 'space-between', alignItems: 'center', marginTop: 8 }}>
+      <div className="processo-nav-btns" style={{ display: 'flex', justifyContent: step === 1 ? 'flex-end' : 'space-between', alignItems: 'center', marginTop: 8 }}>
         {step > 1 && (
           <button onClick={handleBack} className="btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', fontSize: '0.9rem', background: 'var(--site-surface-warm)', color: 'var(--site-text-primary)', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', fontWeight: 700 }}>
             <ChevronLeft size={18} /> Voltar
