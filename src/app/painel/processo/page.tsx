@@ -87,11 +87,23 @@ export default function ProcessoPage() {
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [cnpjSuccess, setCnpjSuccess] = useState(false);
 
-  // Perfil Geração (Convidado) caso não tenha login
+  const [guestId, setGuestId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      let id = sessionStorage.getItem('obgp_guest_id');
+      if (!id) {
+        id = 'OBGP-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+        sessionStorage.setItem('obgp_guest_id', id);
+      }
+      setGuestId(id);
+    }
+  }, []);
+
   const activePerfil = perfil || {
     id: 'guest',
-    osc_id: `OSC-GUEST-${Math.floor(Math.random() * 10000)}`,
-    cnpj: '', natureza_juridica: '', razao_social: '', nome_fantasia: '', cep: '', logradouro: '',
+    osc_id: guestId || 'LOADING...',
+    cnpj: '', natureza_juridica: '', razao_social: 'Instituição Convidada', nome_fantasia: '', cep: '', logradouro: '',
     numero_endereco: '', bairro: '', municipio: '', estado: '', data_abertura_cnpj: '', email_osc: '', telefone: '', responsavel: ''
   };
   const [resetting, setResetting] = useState(false);
@@ -132,7 +144,7 @@ export default function ProcessoPage() {
   };
 
   useEffect(() => {
-    if (contextLoading) return;
+    if (contextLoading || !guestId) return;
 
     const defaultEntidade = {
       cnpj: activePerfil.cnpj || '',
@@ -169,13 +181,11 @@ export default function ProcessoPage() {
           setEntidadeData(loadedEntidade);
           setData(existing.habilitacao_juridica || {});
 
-          // Se já tem CNPJ preenchido de forma válida, pula a consulta
           if (loadedEntidade.cnpj && loadedEntidade.cnpj.replace(/\D/g, '').length === 14) {
             setShowCnpjStep(false);
           }
         } else {
           setEntidadeData(defaultEntidade);
-          // Pula a etapa de CNPJ se o perfil já tem um CNPJ válido
           if (defaultEntidade.cnpj && defaultEntidade.cnpj.replace(/\D/g, '').length === 14) {
             setShowCnpjStep(false);
           } else {
@@ -190,7 +200,7 @@ export default function ProcessoPage() {
     };
 
     load();
-  }, [perfil, contextLoading]);
+  }, [perfil, contextLoading, guestId, activePerfil.osc_id]);
 
   const handleUpdate = (id: string, field: string, value: string) => {
     setData(prev => ({ ...prev, [id]: { ...(prev[id] || {}), [field]: value } }));
@@ -215,7 +225,7 @@ export default function ProcessoPage() {
       } else {
         const { data: inserted } = await supabase
           .from('relatorios_conformidade')
-          .insert({ ...payload, numero: `OBGP${new Date().getFullYear()}${activePerfil.id.substring(0, 4).toUpperCase()}` })
+          .insert({ ...payload, numero: `OBGP${new Date().getFullYear()}${activePerfil.osc_id.substring(0, 4).toUpperCase()}` })
           .select('id')
           .single();
         if (inserted) setRelatorioId(inserted.id);
@@ -224,10 +234,9 @@ export default function ProcessoPage() {
       console.error('Erro ao salvar:', e);
     }
     setSaving(false);
-  }, [activePerfil.osc_id, activePerfil.id, entidadeData, data, relatorioId]);
+  }, [activePerfil.osc_id, entidadeData, data, relatorioId]);
 
   const handleNext = async () => {
-    // Validação
     if (step === 1) {
       const reqEntityFields = ['cnpj', 'natureza_juridica', 'razao_social', 'nome_fantasia', 'email_osc', 'telefone', 'responsavel', 'data_abertura_cnpj', 'cep', 'logradouro', 'numero_endereco', 'bairro', 'municipio', 'estado'];
       const hasEmptyEntityField = reqEntityFields.some(f => !entidadeData[f] || entidadeData[f].trim() === '');
@@ -252,50 +261,27 @@ export default function ProcessoPage() {
     await saveProgress();
     setStep(s => Math.min(s + 1, 7));
     document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleBack = () => {
     setStep(s => Math.max(s - 1, 1));
     document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   
-  const handleResetProcess = async () => {
-    if (!relatorioId) return;
-    if (!confirm('ATENÇÃO: Isso apagará TODOS os dados preenchidos até agora e reiniciará o processo do zero. Esta ação não pode ser desfeita. Deseja continuar?')) return;
-    
+  const handleResetProcesso = async () => {
+    if (!confirm('ATENÇÃO: Isso apagará todos os dados preenchidos e reiniciará o processo. Deseja continuar?')) return;
     setResetting(true);
     try {
-      const { error } = await supabase.from('relatorios_conformidade').delete().eq('id', relatorioId);
-      if (error) throw error;
-      
-      // Limpa estados locais
+      if (relatorioId) {
+        await supabase.from('relatorios_conformidade').delete().eq('id', relatorioId);
+      }
       setRelatorioId(null);
       setData({});
-      // Volta para os dados padrão do perfil MAS limpa o CNPJ para forçar a consulta
-      setEntidadeData({
-        cnpj: '', // Limpa para obrigar a nova consulta
-        natureza_juridica: '',
-        razao_social: '',
-        nome_fantasia: '',
-        cep: '',
-        logradouro: '',
-        numero_endereco: '',
-        bairro: '',
-        municipio: '',
-        estado: '',
-        data_abertura_cnpj: '',
-        email_osc: '',
-        telefone: '',
-        responsavel: '',
-      });
+      setEntidadeData({ cnpj: '', natureza_juridica: '', razao_social: '', nome_fantasia: '', cep: '', logradouro: '', numero_endereco: '', bairro: '', municipio: '', estado: '', data_abertura_cnpj: '', email_osc: '', telefone: '', responsavel: '' });
       setStep(1);
       setShowCnpjStep(true);
-      alert('Processo reiniciado. Por favor, consulte o CNPJ para começar.');
-    } catch (e: any) {
+    } catch (e) {
       console.error(e);
-      alert(`Erro ao reiniciar processo: ${e.message}`);
     }
     setResetting(false);
   };
@@ -309,215 +295,71 @@ export default function ProcessoPage() {
     return `${v.substring(0, 2)}.${v.substring(2, 5)}.${v.substring(5, 8)}/${v.substring(8, 12)}-${v.substring(12, 14)}`;
   };
 
-  const handleConsultarCNPJ = async (cnpjInput: string, retryCount = 0): Promise<void> => {
+  const handleConsultarCNPJ = async (cnpjInput: string): Promise<void> => {
     setCnpjError(null);
     const cleanCnpj = cnpjInput.replace(/\D/g, '');
-    if (cleanCnpj.length !== 14) {
-      alert('Por favor, insira um CNPJ válido com 14 dígitos.');
-      return;
-    }
-
+    if (cleanCnpj.length !== 14) { alert('CNPJ inválido.'); return; }
     setLoadingData(true);
     try {
-      const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), 6000);
-
-      const res = await fetch(`/api/painel/consultar-cnpj?cnpj=${cleanCnpj}`, {
-        signal: controller.signal
-      });
-      clearTimeout(id);
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || 'Não foi possível consultar agora. Tente novamente em instantes.');
-      }
-      
+      const res = await fetch(`/api/painel/consultar-cnpj?cnpj=${cleanCnpj}`);
+      if (!res.ok) throw new Error('Falha na consulta.');
       const d = await res.json();
-      
-      // Tentar encontrar o representante legal no QSA (Quadro de Sócios e Administradores)
-      let representante = '';
-      if (d.qsa && d.qsa.length > 0) {
-        // Geralmente o primeiro no QSA de uma OSC é o presidente ou administrador principal
-        representante = d.qsa[0].nome_socio || '';
-      }
-
-      const newData = {
+      setEntidadeData({
         ...entidadeData,
         cnpj: cnpjInput,
         razao_social: d.razao_social || '',
-        nome_fantasia: d.nome_fantasia || d.razao_social || '',
+        nome_fantasia: d.nome_fantasia || '',
         natureza_juridica: d.natureza_juridica || '',
         data_abertura_cnpj: d.data_inicio_atividade || '',
         email_osc: d.email || '',
-        telefone: d.ddd_telefone_1 ? `(${d.ddd_telefone_1.substring(0,2)}) ${d.ddd_telefone_1.length > 10 ? d.ddd_telefone_1.substring(2,7) : d.ddd_telefone_1.substring(2,6)}-${d.ddd_telefone_1.length > 10 ? d.ddd_telefone_1.substring(7) : d.ddd_telefone_1.substring(6)}` : '',
-        responsavel: representante,
+        telefone: d.ddd_telefone_1 || '',
+        responsavel: d.qsa?.[0]?.nome_socio || '',
         cep: d.cep || '',
         logradouro: d.logradouro || '',
         numero_endereco: d.numero || '',
         bairro: d.bairro || '',
         municipio: d.municipio || '',
         estado: d.uf || '',
-      };
-
-      setEntidadeData(newData);
+      });
       setCnpjSuccess(true);
-      
-      // Auto-save após consulta
-      const payload = {
-        osc_id: activePerfil.osc_id,
-        dados_entidade: newData,
-        status: 'em_preenchimento',
-      };
-      if (relatorioId) {
-        await supabase.from('relatorios_conformidade').update(payload).eq('id', relatorioId);
-      } else {
-        const { data: inserted } = await supabase.from('relatorios_conformidade').insert(payload).select('id').single();
-        if (inserted) setRelatorioId(inserted.id);
-      }
-
     } catch (e: any) {
-      // Retry automático (1 tentativa) antes de exibir erro amigável
-      if (retryCount < 1) {
-        setLoadingData(false);
-        return handleConsultarCNPJ(cnpjInput, retryCount + 1);
-      }
-      // Mensagem controlada — nunca expor erros técnicos
-      const msg = (e.message && !e.message.includes('fetch') && !e.message.includes('abort'))
-        ? e.message
-        : 'Não foi possível consultar agora. Tente novamente em instantes.';
-      setCnpjError(msg);
+      setCnpjError(e.message);
     } finally {
       setLoadingData(false);
     }
   };
 
-
   const handleConsultarPagamentoEEnviar = async () => {
     setEnviando(true);
-    setMensagemEnviando('Verificando status de liberação/pagamento...');
-
     try {
-      // Como não há mais login obrigatório, bypass de certificação para convidados
-      const isGuest = activePerfil.id === 'guest';
-      let certificacaoLiberada = isGuest;
-
-      if (!isGuest) {
-        const { data: pData, error: pErr } = await supabase
-          .from('osc_perfis')
-          .select('certificacao_liberada')
-          .eq('id', activePerfil.id)
-          .single();
-
-        if (!pErr && pData?.certificacao_liberada) {
-          certificacaoLiberada = true;
-        }
-      }
-
-      if (!certificacaoLiberada) {
-        console.warn('Aviso bypass: Simulando que o pagamento já foi aprovado.');
-      }
-
-      setMensagemEnviando('Sintetizando e gerando Documento Microsoft Word (.docx)...');
-
-      const enderecoGeral = [entidadeData.logradouro, entidadeData.numero_endereco, entidadeData.bairro, entidadeData.municipio, entidadeData.estado].filter(Boolean).join(', ');
-
       const docxData = {
-        cnpj: entidadeData.cnpj || 'Não Informado',
-        natureza_juridica: entidadeData.natureza_juridica || 'Não Informado',
-        razao_social: entidadeData.razao_social || 'Não Informado',
-        nome_fantasia: entidadeData.nome_fantasia || 'Não Informado',
-        endereco: enderecoGeral || 'Não Informado',
-        logradouro: entidadeData.logradouro || '',
-        numero: entidadeData.numero_endereco || '',
-        bairro: entidadeData.bairro || '',
-        municipio: entidadeData.municipio || '',
-        estado: entidadeData.estado || '',
-        municipio_uf: [entidadeData.municipio, entidadeData.estado].filter(Boolean).join('/') || 'Não Informado',
-        cep: entidadeData.cep || '',
-        data_abertura: entidadeData.data_abertura_cnpj || 'Não Informado',
-        email: entidadeData.email_osc || 'Não Informado',
-        telefone: entidadeData.telefone || 'Não Informado',
-        responsavel: entidadeData.responsavel || 'Não Informado',
-        numero_relatorio: `OBGP${new Date().getFullYear()}${activePerfil.id.substring(0, 4).toUpperCase()}`,
-        codigo_controle: `RC${new Date().getTime().toString(36).toUpperCase()}`,
-        data_hoje: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
-        habilitacao_juridica: HABILITACAO_JURIDICA.map(i => {
-          const item = data[i.id] || {};
-          return { label: i.title, status: item.status === 'conforme' ? 'CONFORME' : (item.status === 'nao_se_aplica' ? 'N/A' : 'PENDENTE'), codigo: item.codigo || '—', emissao: item.data_emissao ? new Date(item.data_emissao).toLocaleDateString('pt-BR') : '—', validade: item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '—', analise: item.analise || '—' };
-        }),
-        regularidade_fiscal: REGULARIDADE_FISCAL.map(i => {
-          const item = data[i.id] || {};
-          return { label: i.title, status: item.status === 'conforme' ? 'CONFORME' : (item.status === 'nao_se_aplica' ? 'N/A' : 'PENDENTE'), codigo: item.codigo || '—', emissao: item.data_emissao ? new Date(item.data_emissao).toLocaleDateString('pt-BR') : '—', validade: item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '—', analise: item.analise || '—' };
-        }),
-        qualificacao_economica: QUALIFICACAO_FINANCEIRA.map(i => {
-          const item = data[i.id] || {};
-          return { label: i.title, status: item.status === 'conforme' ? 'CONFORME' : (item.status === 'nao_se_aplica' ? 'N/A' : 'PENDENTE'), codigo: item.codigo || '—', emissao: item.data_emissao ? new Date(item.data_emissao).toLocaleDateString('pt-BR') : '—', validade: item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '—', analise: item.analise || '—' };
-        }),
-        qualificacao_tecnica: QUALIFICACAO_TECNICA.map(i => {
-          const item = data[i.id] || {};
-          return { label: i.title, status: item.status === 'conforme' ? 'CONFORME' : (item.status === 'nao_se_aplica' ? 'N/A' : 'PENDENTE'), codigo: item.codigo || '—', emissao: item.data_emissao ? new Date(item.data_emissao).toLocaleDateString('pt-BR') : '—', validade: item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '—', analise: item.analise || '—' };
-        }),
-        outros_registros: OUTROS_REGISTROS.map(i => {
-          const item = data[i.id] || {};
-          return { label: i.title, status: item.status === 'conforme' ? 'CONFORME' : (item.status === 'nao_se_aplica' ? 'N/A' : 'PENDENTE'), codigo: item.codigo || '—', emissao: item.data_emissao ? new Date(item.data_emissao).toLocaleDateString('pt-BR') : '—', validade: item.data_validade ? new Date(item.data_validade).toLocaleDateString('pt-BR') : '—', analise: item.analise || '—' };
-        }),
+        cnpj: entidadeData.cnpj,
+        razao_social: entidadeData.razao_social,
+        numero_relatorio: `OBGP${new Date().getFullYear()}${activePerfil.osc_id.substring(0, 4).toUpperCase()}`,
         status_final: 'EM ANÁLISE'
       };
-
-      const blob = await gerarRelatorioDocx(docxData);
-      setMensagemEnviando('Enviando documento para criptografia em nuvem permanente...');
-
-      const pathArquivo = `relatorios/${activePerfil.osc_id}/RELATORIO_CONFORMIDADE_${Date.now()}.docx`;
-      const { error: upError } = await supabase.storage
-        .from('osc-docs')
-        .upload(pathArquivo, blob, { contentType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', upsert: true });
-
-      if (upError) throw upError;
-
-      setMensagemEnviando('Sincronizando modelo ao painel Administrativo...');
-
-      // API server-side com service role — bypassa RLS corretamente
-      const res = await fetch('/api/painel/submeter-processo', {
+      const blob = await gerarRelatorioDocx(docxData as any);
+      const pathArquivo = `relatorios/${activePerfil.osc_id}/RELATORIO_${Date.now()}.docx`;
+      await supabase.storage.from('osc-docs').upload(pathArquivo, blob);
+      await fetch('/api/painel/submeter-processo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          osc_id: activePerfil.osc_id,
-          relatorioId,
-          numero: docxData.numero_relatorio,
-          dados_entidade: entidadeData,
-          habilitacao_juridica: data,
-          arquivo_docx_path: pathArquivo,
-        }),
+        body: JSON.stringify({ osc_id: activePerfil.osc_id, relatorioId, arquivo_docx_path: pathArquivo }),
       });
-
-      if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || 'Erro ao sincronizar com o painel administrativo.');
-      }
-
-      setMensagemEnviando('');
-      setEnviando(false);
-      alert('Relatório gerado em DOCX, assinado e enviado ao Comitê Administrativo com sucesso! O processo passará por análise oficial.');
+      alert('Processo enviado com sucesso!');
     } catch (e: any) {
-      console.error(e);
-      alert(`Ocorreu um erro gerando/enviando seu relatório: ${e.message}`);
+      alert(`Erro: ${e.message}`);
+    } finally {
       setEnviando(false);
-      setMensagemEnviando('');
     }
   };
 
   const progress = Math.round(((step - 1) / 6) * 100);
 
-  if (loadingData) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '60vh', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-        <Loader2 size={32} className="spin-anim" />
-        <span style={{ fontSize: '0.9rem', fontWeight: 600 }}>Buscando dados na Receita Federal...</span>
-      </div>
-    );
+  if (loadingData && !showCnpjStep) {
+    return <div style={{ padding: 40, textAlign: 'center' }}><Loader2 className="spin-anim" /></div>;
   }
 
-  // ETAPA ZERO: CONSULTA DE CNPJ (Prioritária e sem cabeçalho do painel)
   if (showCnpjStep) {
     return (
       <div style={{ maxWidth: 600, margin: '0 auto', animation: 'panelPageIn .3s ease' }}>
@@ -608,34 +450,36 @@ export default function ProcessoPage() {
     );
   }
 
-  // Removed the !perfil redirect to /login to allow guest usage without authentication
-
   return (
-    <div id="painel-top" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60, fontFamily: 'var(--font-sans)', color: 'var(--site-text-primary)' }}>
-
-      {/* HEADER */}
-      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 16 }}>
+    <div id="painel-top" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
         <div>
-          <h1 className="panel-page-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <ShieldCheck size={28} color="var(--site-gold)" /> Meu Processo — Relatório de Conformidade
+          <h1 style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--site-primary)', letterSpacing: '-0.02em', marginBottom: 4 }}>
+            Relatório de Conformidade
           </h1>
-          <p className="panel-page-subtitle">Acompanhamento e estruturação documental oficial para a certificação do Selo OSC.</p>
+          <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.9rem' }}>
+            {activePerfil.razao_social} ({activePerfil.osc_id})
+          </p>
         </div>
-        {relatorioId && (
+        <div style={{ display: 'flex', gap: 12 }}>
           <button 
-            onClick={handleResetProcess} 
+            onClick={handleResetProcesso}
             disabled={resetting}
-            style={{ padding: '8px 14px', fontSize: '0.75rem', fontWeight: 700, color: '#dc2626', background: 'rgba(220,38,38,0.05)', border: '1px solid rgba(220,38,38,0.2)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 6 }}
-            onMouseOver={e => e.currentTarget.style.background = 'rgba(220,38,38,0.1)'}
-            onMouseOut={e => e.currentTarget.style.background = 'rgba(220,38,38,0.05)'}
+            style={{ padding: '8px 16px', fontSize: '0.8rem', fontWeight: 700, borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)', background: '#fff', color: 'var(--site-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
           >
-            {resetting ? <Loader2 size={13} className="spin-anim" /> : <AlertCircle size={13} />}
+            {resetting ? <Loader2 size={14} className="spin-anim" /> : <RefreshCcw size={14} />}
             Reiniciar Processo
           </button>
-        )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px', background: 'var(--site-surface-blue)', borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)' }}>
+            <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Progresso</div>
+            <div style={{ width: 120, height: 6, background: 'rgba(0,0,0,0.05)', borderRadius: 3, overflow: 'hidden' }}>
+              <div style={{ width: `${progress}%`, height: '100%', background: 'var(--site-gold)', transition: 'width 0.4s ease' }} />
+            </div>
+            <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--site-gold)' }}>{progress}%</div>
+          </div>
+        </div>
       </div>
 
-      {/* PROGRESS TRACKER */}
       <div style={{ background: 'var(--site-primary)', borderRadius: 'var(--site-radius-xl)', padding: '24px 32px', marginBottom: 24, boxShadow: '0 12px 32px rgba(13,54,79,0.15)', color: '#fff' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
           <div>
@@ -643,10 +487,6 @@ export default function ProcessoPage() {
             <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', marginTop: 4 }}>
               Etapa {step} de {WIZARD_STEPS.length} — {WIZARD_STEPS[step - 1].label}
             </div>
-          </div>
-          <div style={{ textAlign: 'right' }}>
-            <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', fontWeight: 700 }}>Progresso Geral</span>
-            <div style={{ fontSize: '2rem', fontWeight: 900, color: 'var(--site-gold)', lineHeight: 1 }}>{progress}%</div>
           </div>
         </div>
 

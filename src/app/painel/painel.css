@@ -676,6 +676,7 @@
 
 .pv2-shell {
   min-height: 100vh;
+  box-sizing: border-box;
   overflow-y: auto;
   background: var(--site-bg, #f0f3f5);
   font-family: var(--font-body);
