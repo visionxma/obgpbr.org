@@ -708,8 +708,8 @@ export default function ProcessoPage() {
 
       {/* GLOBAL MODAL (Always available) */}
       {modal.show && (
-        <div className="panel-modal-overlay">
-          <div className="panel-modal" style={{ maxWidth: 450 }}>
+        <div className="panel-modal-overlay" onClick={() => setModal({ ...modal, show: false })}>
+          <div className="panel-modal" style={{ maxWidth: 450 }} onClick={(e) => e.stopPropagation()}>
             <div className="panel-modal-header">
               <h2 className="panel-modal-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 {modal.type === 'confirm' ? <AlertCircle className="text-gold" size={24} /> : <CheckCircle2 className="text-gold" size={24} />}

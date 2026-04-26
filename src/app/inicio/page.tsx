@@ -393,7 +393,7 @@ export default function InicioPage() {
                 <div
                   key={label}
                   style={{
-                    flex: "1 1 160px",
+                    flex: "1 1 120px",
                     textAlign: "center",
                     padding: "16px 12px",
                     borderRight:
@@ -1462,24 +1462,23 @@ export default function InicioPage() {
               display: "flex",
               alignItems: "center",
               gap: 14,
-              flexWrap: "wrap",
+              flexWrap: "nowrap",
             }}
           >
-            <div className="icon-box icon-box-gold">
+            <div className="icon-box icon-box-gold" style={{ flexShrink: 0 }}>
               <Clock size={20} />
             </div>
             <div>
-              <h3 style={{ fontSize: ".96rem", marginBottom: 3 }}>
+              <h3 style={{ fontSize: ".9rem", marginBottom: 2 }}>
                 Horário de Atendimento
               </h3>
               <p
                 style={{
                   color: "var(--site-text-secondary)",
-                  fontSize: ".9rem",
+                  fontSize: ".8rem",
                 }}
               >
-                Segunda a sexta-feira, das <strong>8h às 17h</strong> (horário
-                de Brasília)
+                Segunda a sexta-feira, <strong>8h às 17h</strong>
               </p>
             </div>
           </div>

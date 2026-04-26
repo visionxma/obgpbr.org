@@ -246,7 +246,7 @@ export default function PublicLayout({ children, navRightSlot }: { children: Rea
         .ftr-logo{font-family:var(--font-heading);font-size:2rem;font-weight:800;color:#fff;letter-spacing:.06em;display:block;margin-bottom:12px}
         .ftr-tagline{font-size:1.15rem;color:var(--site-gold);opacity:.7;line-height:1.4}
         .ftr-cols{display:grid;grid-template-columns:1fr 1fr;gap:40px}
-        @media(max-width:480px){.ftr-cols{grid-template-columns:1fr}}
+        @media(max-width:360px){.ftr-cols{grid-template-columns:1fr}}
         .ftr-col{display:flex;flex-direction:column;gap:12px}
         .ftr-col-title{font-family:var(--font-heading);font-size:var(--text-xs);font-weight:700;text-transform:uppercase;letter-spacing:var(--tracking-widest);color:rgba(255,255,255,.3);margin-bottom:6px}
         .ftr-link{font-size:var(--text-sm);color:rgba(255,255,255,.5);text-decoration:none;transition:color .2s;display:inline-flex;align-items:center;gap:8px;line-height:1.5}
