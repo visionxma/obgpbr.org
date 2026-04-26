@@ -550,9 +550,9 @@
   background: rgba(0,0,0,.5);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  z-index: 200;
-  display: flex; align-items: center; justify-content: center;
-  padding: 24px;
+  z-index: 9999;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 80px 24px;
   animation: panelFadeIn .2s ease;
 }
 .panel-modal {
