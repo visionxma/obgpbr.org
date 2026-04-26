@@ -106,6 +106,26 @@ export default function ProcessoPage() {
     cnpj: '', natureza_juridica: '', razao_social: 'Instituição Convidada', nome_fantasia: '', cep: '', logradouro: '',
     numero_endereco: '', bairro: '', municipio: '', estado: '', data_abertura_cnpj: '', email_osc: '', telefone: '', responsavel: ''
   };
+
+  // Helper para persistência local (fallback para convidados)
+  const saveLocal = useCallback((entidade?: any, docs?: any) => {
+    if (activePerfil.id === 'guest' && typeof window !== 'undefined') {
+      if (entidade) localStorage.setItem('obgp_guest_entidade', JSON.stringify(entidade));
+      if (docs) localStorage.setItem('obgp_guest_docs', JSON.stringify(docs));
+    }
+  }, [activePerfil.id]);
+
+  const loadLocal = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      const e = localStorage.getItem('obgp_guest_entidade');
+      const d = localStorage.getItem('obgp_guest_docs');
+      return { 
+        entidade: e ? JSON.parse(e) : null, 
+        docs: d ? JSON.parse(d) : null 
+      };
+    }
+    return { entidade: null, docs: null };
+  }, []);
   const [resetting, setResetting] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [mensagemEnviando, setMensagemEnviando] = useState('');
@@ -185,11 +205,19 @@ export default function ProcessoPage() {
             setShowCnpjStep(false);
           }
         } else {
-          setEntidadeData(defaultEntidade);
-          if (defaultEntidade.cnpj && defaultEntidade.cnpj.replace(/\D/g, '').length === 14) {
+          // Fallback para localStorage se for convidado e não encontrou no banco
+          const local = loadLocal();
+          if (local.entidade && local.entidade.cnpj) {
+            setEntidadeData(local.entidade);
+            if (local.docs) setData(local.docs);
             setShowCnpjStep(false);
           } else {
-            setShowCnpjStep(true);
+            setEntidadeData(defaultEntidade);
+            if (defaultEntidade.cnpj && defaultEntidade.cnpj.replace(/\D/g, '').length === 14) {
+              setShowCnpjStep(false);
+            } else {
+              setShowCnpjStep(true);
+            }
           }
         }
       } catch (err) {
@@ -203,16 +231,25 @@ export default function ProcessoPage() {
   }, [perfil, contextLoading, guestId, activePerfil.osc_id]);
 
   const handleUpdate = (id: string, field: string, value: string) => {
-    setData(prev => ({ ...prev, [id]: { ...(prev[id] || {}), [field]: value } }));
+    setData(prev => {
+      const updated = { ...prev, [id]: { ...(prev[id] || {}), [field]: value } };
+      saveLocal(undefined, updated);
+      return updated;
+    });
   };
 
   const handleEntidadeUpdate = (field: string, value: string) => {
-    setEntidadeData(prev => ({ ...prev, [field]: value }));
+    setEntidadeData(prev => {
+      const updated = { ...prev, [field]: value };
+      saveLocal(updated);
+      return updated;
+    });
   };
 
   const saveProgress = useCallback(async () => {
     setSaving(true);
     try {
+      saveLocal(entidadeData, data);
       const payload = {
         osc_id: activePerfil.osc_id,
         dados_entidade: entidadeData,
@@ -275,6 +312,8 @@ export default function ProcessoPage() {
       if (relatorioId) {
         await supabase.from('relatorios_conformidade').delete().eq('id', relatorioId);
       }
+      localStorage.removeItem('obgp_guest_entidade');
+      localStorage.removeItem('obgp_guest_docs');
       setRelatorioId(null);
       setData({});
       setEntidadeData({ cnpj: '', natureza_juridica: '', razao_social: '', nome_fantasia: '', cep: '', logradouro: '', numero_endereco: '', bairro: '', municipio: '', estado: '', data_abertura_cnpj: '', email_osc: '', telefone: '', responsavel: '' });
@@ -324,6 +363,7 @@ export default function ProcessoPage() {
       };
 
       setEntidadeData(newData);
+      saveLocal(newData);
       setCnpjSuccess(true);
 
       // Auto-save imediato para garantir persistência ao trocar de aba
@@ -331,6 +371,7 @@ export default function ProcessoPage() {
         osc_id: activePerfil.osc_id,
         dados_entidade: newData,
         status: 'em_preenchimento',
+        numero: `OBGP${new Date().getFullYear()}${activePerfil.osc_id.substring(0, 4).toUpperCase()}`
       };
       if (relatorioId) {
         await supabase.from('relatorios_conformidade').update(payload).eq('id', relatorioId);
@@ -379,8 +420,8 @@ export default function ProcessoPage() {
 
   if (showCnpjStep) {
     return (
-      <div style={{ maxWidth: 600, margin: '0 auto', animation: 'panelPageIn .3s ease' }}>
-        <div className="panel-card" style={{ padding: 40, textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.1)' }}>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 0', minHeight: 'calc(100vh - 120px)', animation: 'panelPageIn .3s ease' }}>
+        <div className="panel-card" style={{ maxWidth: 600, width: '90%', padding: 40, textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.1)', background: '#fff', borderRadius: 'var(--site-radius-xl)' }}>
           <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
             <div style={{ width: 64, height: 64, background: 'rgba(197,171,118,0.1)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--site-gold)' }}>
               <ShieldCheck size={32} />

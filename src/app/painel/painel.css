@@ -677,16 +677,22 @@
 .pv2-shell {
   min-height: 100vh;
   box-sizing: border-box;
-  overflow-y: auto;
   background: var(--site-bg, #f0f3f5);
   font-family: var(--font-body);
   padding-top: 76px;
+  display: flex;
+  flex-direction: column;
 }
 
 .pv2-content {
+  flex: 1;
+  width: 100%;
   max-width: 1100px;
   margin: 0 auto;
   padding: 24px 28px 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
 }
 
 .pv2-back-btn {
