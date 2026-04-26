@@ -828,7 +828,7 @@ export default function InicioPage() {
             </p>
             <div className="section-line" />
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 72 }}>
+          <div className="mobile-sticky-stack">
             {AREAS.map(
               (
                 {
@@ -845,7 +845,15 @@ export default function InicioPage() {
               ) => (
                 <div
                   key={titulo}
-                  className={`row-alternate ${i % 2 !== 0 ? "reverse" : ""}`}
+                  className={`row-alternate sticky-item ${
+                    i % 2 !== 0 ? "reverse" : ""
+                  }`}
+                  style={{
+                    zIndex: i + 1,
+                    background: "white",
+                    padding: "32px 0",
+                    borderRadius: "var(--site-radius-xl)",
+                  }}
                 >
                   <div
                     style={{
