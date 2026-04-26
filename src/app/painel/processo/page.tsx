@@ -133,6 +133,8 @@ export default function ProcessoPage() {
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cnpjInputRef = useRef<HTMLInputElement>(null);
+  const cnpjInputFormRef = useRef<HTMLInputElement>(null);
 
   const handleImportarDocumento = async (file: File) => {
     setImportando(true);
@@ -334,6 +336,41 @@ export default function ProcessoPage() {
     return `${v.substring(0, 2)}.${v.substring(2, 5)}.${v.substring(5, 8)}/${v.substring(8, 12)}-${v.substring(12, 14)}`;
   };
 
+  const handleCnpjInputChange = (e: React.ChangeEvent<HTMLInputElement>, ref: React.RefObject<HTMLInputElement | null>, isForm: boolean = false) => {
+    const input = e.target;
+    const originalValue = input.value;
+    const selectionStart = input.selectionStart || 0;
+    
+    // Contar quantos dígitos existem antes do cursor antes da formatação
+    const digitsBeforeCursor = originalValue.substring(0, selectionStart).replace(/\D/g, '').length;
+    
+    const formatted = formatCNPJ(originalValue);
+    
+    if (isForm) {
+      handleEntidadeUpdate('cnpj', formatted);
+    } else {
+      setEntidadeData({ ...entidadeData, cnpj: formatted });
+    }
+    
+    setCnpjError(null);
+    setCnpjSuccess(false);
+
+    // Restaurar a posição do cursor após o re-render
+    setTimeout(() => {
+      if (ref.current) {
+        let newPos = 0;
+        let digitsSeen = 0;
+        for (let i = 0; i < formatted.length && digitsSeen < digitsBeforeCursor; i++) {
+          if (/\d/.test(formatted[i])) {
+            digitsSeen++;
+          }
+          newPos = i + 1;
+        }
+        ref.current.setSelectionRange(newPos, newPos);
+      }
+    }, 0);
+  };
+
   const handleConsultarCNPJ = async (cnpjInput: string): Promise<void> => {
     setCnpjError(null);
     const cleanCnpj = cnpjInput.replace(/\D/g, '');
@@ -433,16 +470,13 @@ export default function ProcessoPage() {
           <div style={{ textAlign: 'left', marginBottom: 24 }}>
             <label style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--site-primary)', display: 'block', marginBottom: 8 }}>CNPJ da Instituição</label>
             <input 
+              ref={cnpjInputRef}
               type="text" 
               placeholder="00.000.000/0000-00"
               className="panel-input"
               style={{ fontSize: '1.2rem', padding: '16px 20px', textAlign: 'center', letterSpacing: '0.05em', fontWeight: 700 }}
               value={entidadeData.cnpj || ''}
-              onChange={(e) => {
-                setEntidadeData({...entidadeData, cnpj: formatCNPJ(e.target.value)});
-                setCnpjError(null);
-                setCnpjSuccess(false);
-              }}
+              onChange={(e) => handleCnpjInputChange(e, cnpjInputRef)}
             />
           </div>
 
@@ -648,7 +682,17 @@ export default function ProcessoPage() {
           </div>
 
           <div style={{ padding: 24, display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 20 }}>
-            <InputField label="CNPJ" value={entidadeData.cnpj} onChange={(v) => handleEntidadeUpdate('cnpj', formatCNPJ(v))} showError={showValidationErrors && !entidadeData.cnpj} />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-text-secondary)', textTransform: 'uppercase' }}>CNPJ</label>
+              <input
+                ref={cnpjInputFormRef}
+                type="text"
+                value={entidadeData.cnpj || ''}
+                onChange={(e) => handleCnpjInputChange(e, cnpjInputFormRef, true)}
+                style={{ padding: '10px 14px', borderRadius: 'var(--site-radius-md)', border: (showValidationErrors && !entidadeData.cnpj) ? '1px solid #ef4444' : '1px solid var(--site-border)', background: '#fff', color: 'var(--site-text-primary)', fontSize: '0.9rem', outline: 'none', width: '100%', boxSizing: 'border-box' }}
+              />
+              {showValidationErrors && !entidadeData.cnpj && <span style={{ color: '#ef4444', fontSize: '0.7rem', fontWeight: 700, marginTop: -2 }}>⚠️ Preencha este campo obrigatório.</span>}
+            </div>
             <InputField label="Natureza Jurídica" value={entidadeData.natureza_juridica} onChange={(v) => handleEntidadeUpdate('natureza_juridica', v)} showError={showValidationErrors && !entidadeData.natureza_juridica} />
             <InputField label="Razão Social" value={entidadeData.razao_social} onChange={(v) => handleEntidadeUpdate('razao_social', v)} showError={showValidationErrors && !entidadeData.razao_social} />
             <InputField label="Nome Fantasia" value={entidadeData.nome_fantasia} onChange={(v) => handleEntidadeUpdate('nome_fantasia', v)} showError={showValidationErrors && !entidadeData.nome_fantasia} />
