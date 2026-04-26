@@ -91,10 +91,10 @@ export default function ProcessoPage() {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      let id = sessionStorage.getItem('obgp_guest_id');
+      let id = localStorage.getItem('obgp_guest_id');
       if (!id) {
         id = 'OBGP-' + Math.random().toString(36).substring(2, 9).toUpperCase();
-        sessionStorage.setItem('obgp_guest_id', id);
+        localStorage.setItem('obgp_guest_id', id);
       }
       setGuestId(id);
     }
@@ -302,9 +302,10 @@ export default function ProcessoPage() {
     setLoadingData(true);
     try {
       const res = await fetch(`/api/painel/consultar-cnpj?cnpj=${cleanCnpj}`);
-      if (!res.ok) throw new Error('Falha na consulta.');
+      if (!res.ok) throw new Error('Não foi possível consultar agora. Tente novamente em instantes.');
       const d = await res.json();
-      setEntidadeData({
+      
+      const newData = {
         ...entidadeData,
         cnpj: cnpjInput,
         razao_social: d.razao_social || '',
@@ -320,8 +321,24 @@ export default function ProcessoPage() {
         bairro: d.bairro || '',
         municipio: d.municipio || '',
         estado: d.uf || '',
-      });
+      };
+
+      setEntidadeData(newData);
       setCnpjSuccess(true);
+
+      // Auto-save imediato para garantir persistência ao trocar de aba
+      const payload = {
+        osc_id: activePerfil.osc_id,
+        dados_entidade: newData,
+        status: 'em_preenchimento',
+      };
+      if (relatorioId) {
+        await supabase.from('relatorios_conformidade').update(payload).eq('id', relatorioId);
+      } else {
+        const { data: inserted } = await supabase.from('relatorios_conformidade').insert(payload).select('id').single();
+        if (inserted) setRelatorioId(inserted.id);
+      }
+
     } catch (e: any) {
       setCnpjError(e.message);
     } finally {
