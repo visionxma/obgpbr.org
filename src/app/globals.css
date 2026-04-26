@@ -261,8 +261,9 @@ p {
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 16px;
 }
+@media (max-width: 480px) { .container { padding: 0 12px; } }
 @media (min-width: 640px) { .container { padding: 0 32px; } }
 @media (min-width: 1024px) { .container { padding: 0 48px; } }
 
@@ -597,12 +598,14 @@ p {
   }
   .mobile-sticky-stack .sticky-item {
     position: sticky;
-    top: 90px;
+    top: 80px;
     z-index: 1;
     transform-origin: top center;
-    background: #fff; /* Fundo sólido para evitar transparência */
-    box-shadow: 0 -20px 40px rgba(0,0,0,0.08); /* Sombra para profundidade no empilhamento */
+    background: #fff;
+    box-shadow: 0 -20px 40px rgba(0,0,0,0.08);
     border-top: 1px solid rgba(0,0,0,0.05);
+    width: calc(100% + 24px); /* Expande para as laterais */
+    margin-left: -12px; /* Centraliza a expansão */
   }
   .glass-section-blue .sticky-item {
     background: var(--site-primary) !important;

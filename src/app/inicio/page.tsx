@@ -851,7 +851,7 @@ export default function InicioPage() {
                   style={{
                     zIndex: i + 1,
                     background: "white",
-                    padding: "32px 0",
+                    padding: "32px 18px",
                     borderRadius: "var(--site-radius-xl)",
                   }}
                 >
