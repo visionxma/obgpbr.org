@@ -320,14 +320,22 @@ export async function gerarRelatorioDocx(dados: Record<string, any>): Promise<Bl
   // Re-parse rows after entity data injection
   const allRowsPass2 = findAllRows(xml);
 
-  // Build a map of template label -> checklist section + index
+  function normalize(text: string) {
+    return text.toLowerCase()
+      .replace(/[^a-z0-9áéíóúâêîôûãõç]/g, ' ')
+      .replace(/\b(de|da|do|e|ou)\b/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  // Build a map of normalized template label -> checklist section + index
   type SectionMapping = { section: ChecklistRow[]; index: number };
   const labelMap = new Map<string, SectionMapping>();
 
   function mapLabels(labels: string[], section: ChecklistRow[]) {
     labels.forEach((label, idx) => {
       if (idx < section.length) {
-        labelMap.set(label.toLowerCase(), { section, index: idx });
+        labelMap.set(normalize(label), { section, index: idx });
       }
     });
   }
@@ -345,7 +353,8 @@ export async function gerarRelatorioDocx(dados: Record<string, any>): Promise<Bl
     if (cells.length !== 5) continue;
 
     const cell1Xml = row.content.substring(cells[0].start, cells[0].end);
-    const cell1Text = stripXmlTags(cell1Xml).trim().toLowerCase();
+    const rawCellText = stripXmlTags(cell1Xml).trim();
+    const cell1Text = rawCellText.toLowerCase();
 
     // Skip header rows (containing "Descrição documento")
     if (cell1Text.includes('descrição documento') || cell1Text.includes('descri')) continue;
@@ -353,13 +362,15 @@ export async function gerarRelatorioDocx(dados: Record<string, any>): Promise<Bl
     // Must have at least some text to match against, prevent empty string matching hijacking!
     if (cell1Text.length === 0) continue;
 
+    const normCell = normalize(rawCellText);
+
     // Try to match by label
     let matched: SectionMapping | undefined;
-    for (const [key, val] of labelMap.entries()) {
-      // Direct inclusion OR reverse inclusion but only if the text is substantial (avoid "a" matching)
-      if (cell1Text.includes(key) || (cell1Text.length > 5 && key.includes(cell1Text))) {
+    for (const [normKey, val] of labelMap.entries()) {
+      // Direct inclusion OR reverse inclusion but only if the text is substantial
+      if (normCell === normKey || normCell.includes(normKey) || (normKey.length > 5 && normKey.includes(normCell))) {
         matched = val;
-        labelMap.delete(key); // Remove to avoid duplicate matches
+        labelMap.delete(normKey); // Remove to avoid duplicate matches
         break;
       }
     }
