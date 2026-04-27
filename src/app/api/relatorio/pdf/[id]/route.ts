@@ -22,11 +22,12 @@ const SECAO_LABELS: Record<number, string> = {
   3: 'Regularidade Fiscal, Social e Trabalhista',
   4: 'Qualificação Econômico-Financeira',
   5: 'Qualificação Técnica',
+  6: 'Outros Registros',
 };
 
 function renderTable(itens: RelItem[]) {
   const rows = itens.map(i => {
-    const bg  = i.is_header ? '#dce8f0' : '';
+    const bg  = i.is_header ? '#f8fafc' : '';
     const fw  = i.is_header ? 'bold' : 'normal';
     const fs  = i.is_header ? 'italic' : 'normal';
     const sta = i.is_header ? '' : ({
@@ -35,29 +36,28 @@ function renderTable(itens: RelItem[]) {
       nao_aplicavel:'<span style="color:#6b7280">N/A</span>',
       pendente:     '<span style="color:#f59e0b">Pendente</span>',
     }[i.status] ?? i.status);
+    
+    const analiseHtml = i.is_header ? '' : `${sta}${i.analise_atual ? `<br/><span style="font-size:9px;color:#6b7280">${i.analise_atual}</span>` : ''}`;
+
     return `
       <tr style="background:${bg}">
-        <td style="font-family:monospace;font-weight:bold;white-space:nowrap;padding:5px 8px;border:1px solid #ccc">${i.codigo}</td>
-        <td style="font-weight:${fw};font-style:${fs};padding:5px 8px;border:1px solid #ccc">${i.descricao}</td>
-        <td style="text-align:center;padding:5px 8px;border:1px solid #ccc">${i.codigo_controle ?? '—'}</td>
-        <td style="text-align:center;white-space:nowrap;padding:5px 8px;border:1px solid #ccc">${fmtDate(i.data_emissao)}</td>
-        <td style="text-align:center;white-space:nowrap;padding:5px 8px;border:1px solid #ccc">${fmtDate(i.data_validade)}</td>
-        <td style="padding:5px 8px;border:1px solid #ccc">${i.analise_atual ?? '—'}</td>
-        <td style="text-align:center;padding:5px 8px;border:1px solid #ccc">${sta}</td>
+        <td style="font-weight:${fw};font-style:${fs};padding:6px 8px;border:1px solid #e5e7eb">${i.codigo ? `${i.codigo}. ` : ''}${i.descricao}</td>
+        <td style="text-align:center;padding:6px 8px;border:1px solid #e5e7eb">${i.codigo_controle ?? '—'}</td>
+        <td style="text-align:center;white-space:nowrap;padding:6px 8px;border:1px solid #e5e7eb">${fmtDate(i.data_emissao)}</td>
+        <td style="text-align:center;white-space:nowrap;padding:6px 8px;border:1px solid #e5e7eb">${fmtDate(i.data_validade)}</td>
+        <td style="padding:6px 8px;border:1px solid #e5e7eb">${analiseHtml}</td>
       </tr>`;
   }).join('');
 
   return `
-    <table style="width:100%;border-collapse:collapse;font-size:11px;margin-bottom:20px">
+    <table style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:24px">
       <thead>
-        <tr style="background:#0D364F;color:#fff">
-          <th style="padding:6px 8px;border:1px solid #0D364F;text-align:left">Código</th>
-          <th style="padding:6px 8px;border:1px solid #0D364F;text-align:left">Descrição do Documento</th>
-          <th style="padding:6px 8px;border:1px solid #0D364F">Cód. Controle</th>
-          <th style="padding:6px 8px;border:1px solid #0D364F">Data Emissão</th>
-          <th style="padding:6px 8px;border:1px solid #0D364F">Data Validade</th>
-          <th style="padding:6px 8px;border:1px solid #0D364F">Análise Situação Atual</th>
-          <th style="padding:6px 8px;border:1px solid #0D364F">Status</th>
+        <tr style="background:#f0f4f8;color:#0D364F;font-weight:bold;text-align:left">
+          <th style="padding:8px;border:1px solid #e5e7eb;width:35%">Descrição documento</th>
+          <th style="padding:8px;border:1px solid #e5e7eb;text-align:center">Código controle documento<br/><span style="font-size:8px;font-weight:normal">(se houver)</span></th>
+          <th style="padding:8px;border:1px solid #e5e7eb;text-align:center">Data emissão<br/>documento</th>
+          <th style="padding:8px;border:1px solid #e5e7eb;text-align:center">Data validade<br/>documento<br/><span style="font-size:8px;font-weight:normal">(se houver)</span></th>
+          <th style="padding:8px;border:1px solid #e5e7eb">Análise conformidade atual</th>
         </tr>
       </thead>
       <tbody>${rows}</tbody>
@@ -108,29 +108,17 @@ export async function GET(
 
   // Conformity summary
   const nonHeaders = itens.filter(i => !i.is_header);
-  const secSummary = [2,3,4,5].map(s => {
+  const secSummary = [2,3,4,5,6].map(s => {
     const sit  = nonHeaders.filter(i => i.secao === s);
     const conf = sit.filter(i => i.status === 'conforme').length;
     return { secao:s, label: SECAO_LABELS[s], pct: sit.length > 0 ? Math.round(conf/sit.length*100) : 0 };
-  });
+  }).filter(s => s.pct > 0 || s.secao <= 5); // Omit section 6 if empty
 
   // Signature blocks
   const rtSign   = assinaturas.find(a => a.role === 'admin_rt');
   const contSign = assinaturas.find(a => a.role === 'contador');
 
-  function sigBlock(title: string, name: string | undefined, cred: string | undefined, dt: string | undefined) {
-    return `
-      <div style="border:1px solid #ccc;border-radius:6px;padding:14px 18px;min-width:220px;flex:1">
-        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;margin-bottom:6px">${title}</div>
-        ${name
-          ? `<div style="font-weight:700;font-size:12px">${name}</div>
-             ${cred ? `<div style="font-size:11px;color:#6b7280">${cred}</div>` : ''}
-             <div style="font-size:10px;color:#9ca3af;margin-top:4px">Assinado em ${fmtDate(dt??null)}</div>
-             <div style="margin-top:8px;padding:6px;background:#f0faf4;border:1px solid rgba(22,163,74,.2);border-radius:4px;font-size:10px;color:#15803d">✓ Assinatura registrada</div>`
-          : `<div style="color:#9ca3af;font-size:11px;font-style:italic">Aguardando assinatura</div>`
-        }
-      </div>`;
-  }
+
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -149,18 +137,14 @@ export async function GET(
     .title-block { text-align: center; margin: 24px 0; padding: 20px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; }
     .title-block h1 { font-size: 15px; font-weight: 900; color: #0D364F; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
     .title-block .subtitle { font-size: 12px; color: #6b7280; }
-    .section-title { font-size: 13px; font-weight: 800; color: #0D364F; text-transform: uppercase; letter-spacing: .05em; margin: 20px 0 10px; padding: 8px 12px; background: #f0f4f8; border-left: 4px solid #0D364F; border-radius: 0 6px 6px 0; }
-    .dados-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(200px,1fr)); gap: 8px 20px; margin-bottom: 20px; }
-    .dados-field { margin-bottom: 4px; }
-    .dados-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; margin-bottom: 2px; }
-    .dados-value { font-size: 12px; font-weight: 600; color: #1f2937; }
-    .summary-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin: 20px 0; }
-    .summary-card { text-align: center; padding: 10px; border: 1px solid #e5e7eb; border-radius: 6px; }
-    .summary-pct { font-size: 20px; font-weight: 900; color: #0D364F; }
-    .summary-label { font-size: 9px; color: #9ca3af; font-weight: 600; text-transform: uppercase; margin-top: 2px; }
-    .conclusion { background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px 20px; margin: 20px 0; line-height: 1.7; }
-    .sign-row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 24px; }
-    .footer { margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb; text-align: center; font-size: 10px; color: #9ca3af; line-height: 1.6; }
+    .section-title { font-size: 13px; font-weight: 800; color: #0D364F; text-transform: uppercase; letter-spacing: .05em; margin: 24px 0 12px; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; }
+    .dados-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 6px 20px; margin-bottom: 20px; }
+    .dados-field { margin-bottom: 4px; display: flex; gap: 8px; align-items: baseline; }
+    .dados-label { font-size: 10px; font-weight: bold; text-transform: uppercase; color: #1f2937; }
+    .dados-value { font-size: 11px; color: #1f2937; }
+    .conclusion { margin: 20px 0; line-height: 1.6; font-size: 12px; }
+    .sign-row { display: flex; justify-content: space-around; margin-top: 60px; text-align: center; }
+    .footer { margin-top: 40px; padding-top: 16px; border-top: 1px solid #000; text-align: center; font-size: 10px; font-weight: bold; color: #000; line-height: 1.4; }
     .verification { background: #f0f4f8; border: 1px solid #dce8f0; border-radius: 6px; padding: 10px 16px; margin-top: 16px; font-size: 11px; }
     .verification span { font-family: monospace; font-weight: 800; color: #0D364F; font-size: 13px; }
     @media print {
@@ -181,45 +165,26 @@ export async function GET(
     </button>
   </div>
 
-  <!-- Header -->
-  <div class="header">
-    <div>
-      <div class="header-brand">OBG<span>P</span></div>
-      <div style="font-size:9px;font-weight:700;color:#6b7280;letter-spacing:.08em">ORGANIZAÇÃO BRASIL GESTÃO DE PARCERIAS</div>
-    </div>
-    <div class="header-info">
-      Av. L, N.º 10 D, Quadra 32, Bairro Morada do Sol, Paço do Lumiar/MA, CEP 65130-000<br/>
-      contato.org.obgp@gmail.com &nbsp;|&nbsp; (98) 9 8710-0001 &nbsp;|&nbsp; obgpbr.org
-    </div>
-  </div>
-
-  <!-- Title -->
-  <div class="title-block">
-    <h1>Relatório de Conformidade</h1>
-    <div class="subtitle">
-      N.º ${rel.numero ?? '—'} &nbsp;|&nbsp; OSC: ${rel.osc_id}
-      ${perfil?.certificado_numero ? ` &nbsp;|&nbsp; Código: <strong>${perfil.certificado_numero}</strong>` : ''}
-    </div>
-    <div style="font-size:10px;color:#9ca3af;margin-top:4px">
-      Emitido em: ${fmtDate(rel.reviewed_at ?? rel.created_at)} &nbsp;|&nbsp; Status: ${({
-        em_preenchimento:'Em Preenchimento', em_analise:'Em Análise',
-        aprovado:'APROVADO', reprovado:'REPROVADO',
-      })[rel.status as string] ?? rel.status}
-    </div>
+  <!-- Header (PDF Style) -->
+  <div style="text-align:center; margin-bottom: 30px; line-height: 1.5;">
+    <div style="font-size:14px; font-weight:bold; color:#0D364F">ORGANIZAÇÃO BRASIL GESTAO DE PARCERIAS - OBGP</div>
+    <div style="font-size:11px; color:#1f2937">Avenida L, N.º 10 D, Quadra 32, Bairro Morada do Sol, Município Paço do Lumiar/MA, CEP 65130-000</div>
+    <div style="font-size:11px; color:#1f2937">E-mail: contato.org.obgp@gmail.com, Contato: (98)9 8710-0001</div>
+    <div style="font-size:13px; font-weight:bold; margin-top: 12px; color:#0D364F">RELATÓRIO DE CONFORMIDADE N.º ${rel.numero || 'ANO.MES.DIA'}/OBGP</div>
   </div>
 
   <!-- Section 1 — Dados da Entidade -->
-  <div class="section-title">1 — Dados da Entidade</div>
+  <div class="section-title">1. Dados da Entidade</div>
   <div class="dados-grid">
     ${[
-      ['CNPJ',              dados.cnpj],
-      ['Natureza Jurídica', dados.natureza_juridica],
-      ['Razão Social',      dados.razao_social],
-      ['Nome Fantasia',     dados.nome_fantasia],
-      ['Endereço',          dados.logradouro],
-      ['Data Abertura CNPJ',dados.data_abertura_cnpj],
-      ['E-mail',            dados.email_osc],
-      ['Telefone',          dados.telefone],
+      ['CNPJ:',              dados.cnpj],
+      ['NATUREZA JURÍDICA:', dados.natureza_juridica],
+      ['RAZÃO SOCIAL:',      dados.razao_social],
+      ['NOME FANTASIA:',     dados.nome_fantasia],
+      ['ENDEREÇO:',          dados.logradouro],
+      ['DATA ABERTURA CNPJ:',dados.data_abertura_cnpj],
+      ['E-MAIL:',            dados.email_osc],
+      ['TELEFONE:',          dados.telefone],
     ].map(([l,v]) => `
       <div class="dados-field">
         <div class="dados-label">${l}</div>
@@ -227,48 +192,42 @@ export async function GET(
       </div>`).join('')}
   </div>
 
-  <!-- Sections 2–5 -->
-  ${[2,3,4,5].map(s => {
+  <!-- Sections 2–6 -->
+  ${[2,3,4,5,6].map(s => {
     const sit = itens.filter(i => i.secao === s);
     if (!sit.length) return '';
-    return `<div class="section-title">${s} — ${SECAO_LABELS[s]}</div>${renderTable(sit)}`;
+    return `<div class="section-title">${s}. ${SECAO_LABELS[s]}</div>${renderTable(sit)}`;
   }).join('')}
 
-  <!-- Summary -->
-  <div class="section-title">6 — Conclusão</div>
-  <div class="summary-grid">
-    ${secSummary.map(s => `
-      <div class="summary-card">
-        <div class="summary-pct">${s.pct}%</div>
-        <div class="summary-label">${s.label}</div>
-      </div>`).join('')}
-  </div>
-
+  <!-- Conclusion -->
   <div class="conclusion">
-    <strong>Após análise documental</strong>, constata-se que a organização <strong>${dados.razao_social || rel.osc_id}</strong>,
-    CNPJ <strong>${dados.cnpj || '—'}</strong>, apresenta a seguinte conformidade aos requisitos para gestão de parcerias:<br/><br/>
-    ${secSummary.map(s => `&nbsp;&nbsp;${s.secao}. ${s.label} — <strong>${s.pct}% conforme</strong>`).join('<br/>')}
+    <strong>1. Conclusão</strong><br/><br/>
+    Após análise documental, constata-se que a ORGANIZAÇÃO DA SOCIEDADE CIVIL, CNPJ ${dados.cnpj || 'XX.XXX.XXX/XXXX-XX'} apresenta a seguinte conformidade aos requisitos para gestão de parcerias:<br/><br/>
+    ${secSummary.map((s, idx) => `&nbsp;&nbsp;${idx + 1}. ${s.label} - ${s.pct}% conforme`).join('<br/>')}
     <br/><br/>
     ${secSummary.every(s => s.pct === 100)
-      ? '<strong>Portanto, recomenda-se para certificação independente através do "SELO OSC GESTÃO DE PARCERIAS".</strong>'
-      : 'Pendências identificadas — a certificação será emitida após a regularização dos itens não conformes.'}
+      ? 'Portanto recomenda-se para certificação independente através do “SELO OSC GESTÃO DE PARCERIAS”.'
+      : 'Portanto constatam-se pendências — a certificação independente através do “SELO OSC GESTÃO DE PARCERIAS” será recomendada após a regularização.'}
+    <br/><br/>
+    A autenticidade do documento pode ser conferida através do website: https://obgpbr.org/selo-osc, código de verificação e controle: ${perfil?.certificado_numero || 'RCN.º-ANO.MES.DIA/OBGP'}.
+    <br/><br/>
+    Paço do Lumiar/MA, ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}.
   </div>
 
-  <!-- Assinaturas -->
-  <div class="section-title" style="margin-top:24px">Assinaturas Eletrônicas / Trilha de Auditoria</div>
+  <!-- Assinaturas (PDF Style) -->
   <div class="sign-row">
-    ${sigBlock(
-      'Responsável Técnico (RT)',
-      rtSign?.nome_assinante,
-      rtSign?.credencial ?? undefined,
-      rtSign?.signed_at
-    )}
-    ${sigBlock(
-      'Contador Responsável Técnico',
-      contSign?.nome_assinante,
-      contSign?.credencial ?? undefined,
-      contSign?.signed_at
-    )}
+    <div>
+      <div style="border-top: 1px solid #000; padding-top: 6px; font-weight: bold; font-size: 11px;">${rtSign?.nome_assinante || 'Carlos Eduardo dos Santos Coelho'}</div>
+      <div style="font-size: 10px;">Administrador Responsável Técnico para Gestão de Parcerias</div>
+      <div style="font-size: 10px;">CRAMA-4816</div>
+      ${rtSign?.signed_at ? `<div style="font-size: 9px; color: #16a34a; margin-top: 4px;">Assinado Eletronicamente em ${fmtDate(rtSign.signed_at)}</div>` : ''}
+    </div>
+    <div>
+      <div style="border-top: 1px solid #000; padding-top: 6px; font-weight: bold; font-size: 11px;">${contSign?.nome_assinante || 'Rodolfo Meneses Costa'}</div>
+      <div style="font-size: 10px;">Contador Responsável Técnico para Gestão de Parcerias</div>
+      <div style="font-size: 10px;">CRCMA-005916/O-3</div>
+      ${contSign?.signed_at ? `<div style="font-size: 9px; color: #16a34a; margin-top: 4px;">Assinado Eletronicamente em ${fmtDate(contSign.signed_at)}</div>` : ''}
+    </div>
   </div>
 
   ${(perfil?.certificacao_liberada || perfil?.certificado_numero) ? `
@@ -297,12 +256,11 @@ export async function GET(
     </span>
   </div>` : ''}
 
-  <!-- Footer -->
+  <!-- Footer (PDF Style) -->
   <div class="footer">
-    ORGANIZAÇÃO BRASIL GESTÃO DE PARCERIAS — OBGP<br/>
-    Av. L, N.º 10 D, Quadra 32, Bairro Morada do Sol, Paço do Lumiar/MA, CEP 65130-000<br/>
-    contato.org.obgp@gmail.com &nbsp;|&nbsp; (98) 9 8710-0001 &nbsp;|&nbsp; obgpbr.org<br/>
-    <em>Art. 11 da Lei nº 13.019/2014 — Portal de Transparência OBGP</em>
+    ORGANIZAÇÃO BRASIL GESTAO DE PARCERIAS - OBGP<br/>
+    Avenida L, N.º 10 D, Quadra 32, Bairro Morada do Sol, Município Paço do Lumiar/MA, CEP 65130-000<br/>
+    E-mail: contato.org.obgp@gmail.com, Contato: (98)9 8710-0001
   </div>
 </div>
 <script>

@@ -1319,11 +1319,19 @@ export default function OscDetailPage() {
                   </button>
                   
                   <button className="admin-btn"
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '7px 16px', fontSize: '0.82rem', background: '#0D364F', color: '#fff', border: 'none', fontWeight: 800, cursor: 'context-menu' }}
-                    onClick={handleGenerateAdminDocx}
-                    title="Gerar Relatório Docx preenchido com dados atuais"
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '7px 16px', fontSize: '0.82rem', background: '#dc2626', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
+                    onClick={() => window.open(`/api/relatorio/pdf/${relatorio.id}?print=1`, '_blank')}
+                    title="Imprimir Relatório em PDF com o novo esqueleto padrão"
                   >
-                    <FileSignature size={13} /> Gerar Relatório (DOCX)
+                    <FileSignature size={13} /> Gerar PDF
+                  </button>
+
+                  <button className="admin-btn"
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '7px 16px', fontSize: '0.82rem', background: '#0D364F', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
+                    onClick={handleGenerateAdminDocx}
+                    title="Baixar rascunho DOCX preenchido com dados atuais"
+                  >
+                    <Download size={13} /> Gerar DOCX (Legado)
                   </button>
 
                   {relatorio.arquivo_docx_path && (
