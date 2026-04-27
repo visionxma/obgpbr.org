@@ -271,10 +271,27 @@ export async function GET(
     )}
   </div>
 
+  ${(perfil?.certificacao_liberada || perfil?.certificado_numero) ? `
+  <!-- Selo de Assinatura Digital OBGP -->
+  <div style="margin-top: 24px; padding: 16px; border: 2px solid #C5AB76; border-radius: 12px; background: rgba(197,171,118,0.03); display: flex; align-items: center; gap: 20px;">
+    <div style="width: 50px; height: 50px; border-radius: 50%; background: #C5AB76; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 24px; font-weight: 900;">✓</div>
+    <div style="flex: 1">
+      <div style="font-size: 11px; font-weight: 800; color: #0D364F; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 2px;">Documento Assinado Digitalmente</div>
+      <div style="font-size: 10px; color: #6b7280; line-height: 1.4;">
+        Este relatório foi validado via <strong>Certificado Digital (.pfx)</strong> em conformidade com as normas do <strong>ICP-Brasil</strong> e o Marco Regulatório das OSCs (Lei 13.019/2014).
+      </div>
+    </div>
+    <div style="text-align: right">
+       <div style="font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase;">ID de Validação</div>
+       <div style="font-family: monospace; font-size: 13px; font-weight: 800; color: #0D364F;">${perfil.certificado_numero || 'PENDENTE'}</div>
+    </div>
+  </div>
+  ` : ''}
+
   <!-- Verification -->
-  ${perfil?.certificado_numero ? `
+  ${(perfil?.certificacao_liberada || perfil?.certificado_numero) ? `
   <div class="verification" style="margin-top:20px">
-    Código de verificação: <span>${perfil.certificado_numero}</span><br/>
+    Código de verificação: <span>${perfil.certificado_numero || 'AGUARDANDO LIBERAÇÃO'}</span><br/>
     <span style="font-size:10px;color:#6b7280">
       Verifique em: <a href="https://obgpbr.org/verificar?codigo=${perfil.certificado_numero}" style="color:#0D364F">https://obgpbr.org/verificar</a>
     </span>

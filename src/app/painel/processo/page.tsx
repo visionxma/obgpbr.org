@@ -16,8 +16,7 @@ import {
   ExternalLink,
   Info,
   Calendar,
-  Search,
-  Key
+  Search
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../PainelContext';
@@ -672,19 +671,16 @@ export default function ProcessoPage() {
                 </div>
                 <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
                   <span style={{ fontSize: '0.85rem', color: 'var(--site-text-secondary)', fontWeight: 700, textAlign: 'center' }}>
-                    <AlertCircle size={14} style={{ display: 'inline', position: 'relative', top: 2, marginRight: 4 }} />
-                    O envio para a administração requer assinatura digital (.pfx) e pagamento ativo.
+                    <ShieldCheck size={14} style={{ display: 'inline', position: 'relative', top: 2, marginRight: 4, color: '#16a34a' }} />
+                    Sua assinatura digital (.pfx) será aplicada automaticamente ao validar o pagamento.
                   </span>
                   
-                  <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 420 }}>
-                    <button onClick={() => window.location.href = '/painel/assinatura-digital'} className="btn btn-ghost" style={{ flex: 1, padding: '14px', borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)', background: '#fff' }}>
-                      <Key size={18} /> Configurar Assinatura
-                    </button>
-                    <button onClick={handleConsultarPagamentoEEnviar} disabled={enviando} className="btn btn-gold" style={{ flex: 1, padding: '14px', borderRadius: 'var(--site-radius-full)' }}>
+                  <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 300 }}>
+                    <button onClick={handleConsultarPagamentoEEnviar} disabled={enviando} className="btn btn-gold" style={{ flex: 1, padding: '16px', borderRadius: 'var(--site-radius-full)', fontWeight: 800 }}>
                       {enviando ? (
                         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Clock size={18} className="spin-anim" /> {mensagemEnviando || 'Processando...'}</span>
                       ) : (
-                        <><CheckCircle2 size={18} /> Validar e Enviar</>
+                        <><CheckCircle2 size={18} /> Validar e Enviar Relatório</>
                       )}
                     </button>
                   </div>
