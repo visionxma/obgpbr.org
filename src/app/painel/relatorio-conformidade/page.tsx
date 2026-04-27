@@ -8,6 +8,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../PainelContext';
 import Link from 'next/link';
+import { maskCNPJ, maskTelefone, maskCEP } from '@/lib/brasil-masks';
 
 /* ── Types ─────────────────────────────────────────────────────────── */
 interface RelatorioItem {
@@ -541,7 +542,13 @@ function RelatorioContent() {
               <div key={key}>
                 <label style={{ display:'block', fontSize:'0.62rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', color:'#9ca3af', marginBottom:4 }}>{label}</label>
                 <input type="text" value={dados[key]??''} disabled={readonly}
-                  onChange={e => handleDadosChange(key, e.target.value)}
+                  onChange={e => {
+                    let val = e.target.value;
+                    if (key === 'cnpj') val = maskCNPJ(val);
+                    if (key === 'telefone') val = maskTelefone(val);
+                    if (key === 'cep') val = maskCEP(val);
+                    handleDadosChange(key, val);
+                  }}
                   style={{ width:'100%', padding:'8px 10px', border:'1.5px solid #e5e7eb', borderRadius:8, fontSize:'0.83rem', outline:'none', background: readonly?'#f8fafc':'#fafafa', boxSizing:'border-box', transition:'border-color .15s' }}
                   onFocus={e => { e.currentTarget.style.borderColor = 'var(--site-primary,#0D364F)'; }}
                   onBlur={e => { e.currentTarget.style.borderColor = '#e5e7eb'; }}
