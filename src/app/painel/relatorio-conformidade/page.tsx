@@ -229,23 +229,6 @@ function RelatorioContent() {
   const relatorioId = useRef<string | null>(null);
   const readonly = relatorio?.status === 'em_analise' || relatorio?.status === 'aprovado';
 
-  useEffect(() => {
-    let keys = '';
-    const handleKeyDown = (e: KeyboardEvent) => {
-      keys += e.key.toLowerCase();
-      if (keys.length > 20) keys = keys.slice(-20);
-      if (keys.includes('habilitar')) {
-        setForceGating(prev => {
-          const next = !prev;
-          alert(`Trava de pagamento (gating) ${next ? 'ATIVADA' : 'DESATIVADA'}!`);
-          return next;
-        });
-        keys = '';
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
 
   /* ── Load ── */
   useEffect(() => {
