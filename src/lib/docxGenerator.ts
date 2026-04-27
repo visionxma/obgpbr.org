@@ -248,6 +248,8 @@ const TEMPLATE_OR_LABELS = [
   'Conselho Municipal dos Direitos da Criança e Adolescente',
   'Alvará de autorização sanitária',
   'Sistema de Cadastramento Unificado de Fornecedores',
+  'Utilidade Pública Municipal',
+  'Utilidade Pública Estadual',
   'Registro e Regularidade no Conselho Classe',
   'Registro e Regularidade do Profissional RT',
 ];
@@ -269,7 +271,7 @@ const ENTITY_LABELS: Record<string, string> = {
    ═══════════════════════════════════════════════════════════════════ */
 export async function gerarRelatorioDocx(dados: Record<string, any>): Promise<Blob> {
   // 1. Load the original clean template
-  const response = await fetch('/docs/MODEL_RELATORIO_CONFORMIDADE_OSC_REV00_20.04.2026_.docx');
+  const response = await fetch('/docs/MODEL_RELATORIO_CONFORMIDADE_RCN_ANOMESDIAOBGP_REV02_24.04.2026.docx');
   if (!response.ok) {
     throw new Error('Não foi possível carregar o template do relatório.');
   }
