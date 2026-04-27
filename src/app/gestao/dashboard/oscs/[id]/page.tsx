@@ -80,14 +80,14 @@ const HABILITACAO_JURIDICA = [
   { id: '2.1', title: 'Cartão CNPJ' },
   { id: '2.2', title: 'QSA Cartão CNPJ' },
   { id: '2.3', title: 'Cadastro Contribuinte Municipal/Estadual' },
-  { id: '2.4', title: 'Alvará de Licença e Funcionamento' },
+  { id: '2.4', title: 'Alvará de licença e funcionamento' },
   { id: '2.5', title: 'Estatuto Social' },
   { id: '2.6', title: 'Ata Constituição/Fundação' },
   { id: '2.7', title: 'Ata Eleição e Posse atual' },
   { id: '2.8', title: 'Relação de Membros atual' },
-  { id: '2.9', title: 'Comprovante de Endereço da Entidade' },
-  { id: '2.10', title: 'RG/CPF do Representante Legal' },
-  { id: '2.11', title: 'Comprovante de Endereço do Representante Legal' },
+  { id: '2.9', title: 'Comprovante endereço entidade' },
+  { id: '2.10', title: 'RG/CPF representante legal' },
+  { id: '2.11', title: 'Comprovante endereço representante legal' },
 ];
 
 const REGULARIDADE_FISCAL = [
@@ -102,35 +102,36 @@ const REGULARIDADE_FISCAL = [
 
 const QUALIFICACAO_FINANCEIRA = [
   { id: '4.1', title: 'Certidão de Falência e Concordata' },
-  { id: '4.2', title: 'Registro e Regularidade do Contador' },
+  { id: '4.2', title: 'Registro e regularidade Contador' },
   { id: '4.3.1', title: 'Termo de abertura' },
   { id: '4.3.2', title: 'Balanço Patrimonial' },
-  { id: '4.3.3', title: 'Demonstração do Superávit e Déficit' },
-  { id: '4.3.4', title: 'Demonstração das Mutações do Patrimônio Líquido' },
+  { id: '4.3.3', title: 'Demonstração do Superavit e Déficit' },
+  { id: '4.3.4', title: 'Demonstração das Mutações do Patrimonio Líquido' },
   { id: '4.3.5', title: 'Demonstração dos Fluxos de Caixa' },
   { id: '4.3.6', title: 'Notas Explicativas dos dois últimos exercícios sociais' },
   { id: '4.3.7', title: 'Termo de encerramento' },
-  { id: '4.4', title: 'Ata aprovando prestação de contas com parecer do Conselho Fiscal dos últimos dois exercícios sociais da entidade' },
+  { id: '4.4', title: 'Ata aprovando prestação de contas com parecer do conselho fiscal dos últimos dois exercícios sociais da entidade.' },
 ];
 
 const QUALIFICACAO_TECNICA = [
-  { id: '5.1', title: 'Termo de Contrato' },
-  { id: '5.2', title: 'Convênio' },
-  { id: '5.3', title: 'Termo de Colaboração' },
-  { id: '5.4', title: 'Termo de Fomento' },
-  { id: '5.5', title: 'Acordo de Cooperação Técnica' },
+  { id: '5.1.1', title: 'Instrumento Jurídico (Termo de Colaboração)' },
+  { id: '5.1.2', title: 'Instrumento Jurídico (Termo de Fomento)' },
+  { id: '5.1.3', title: 'Instrumento Jurídico (Acordo de Cooperação)' },
+  { id: '5.1.4', title: 'Instrumento Jurídico (Outro tipo de contrato).' },
 ];
 
 const OUTROS_REGISTROS = [
   { id: '6.1', title: 'Atestado de Existência e Regular Funcionamento – AERFE MP/MA (se houver)' },
-  { id: '6.2', title: 'Cadastro Nacional de Entidades de Assistência Social - CNEAS (se houver)' },
+  { id: '6.2', title: 'Cadastro Nacional de Entidades de Assistência Social – CNEAS (se houver)' },
   { id: '6.3', title: 'Cadastro Nacional de Estabelecimento de Saúde – CNES (se houver)' },
   { id: '6.4', title: 'Conselho Municipal da Assistência Social – CMAS (se houver)' },
   { id: '6.5', title: 'Conselho Municipal dos Direitos da Criança e Adolescente - CMDCA (se houver)' },
   { id: '6.6', title: 'Alvará de autorização sanitária (se houver)' },
   { id: '6.7', title: 'Sistema de Cadastramento Unificado de Fornecedores - SICAF (se houver)' },
-  { id: '6.8', title: 'Registro e Regularidade no Conselho Classe (se houver)' },
-  { id: '6.9', title: 'Registro e Regularidade do Profissional RT no Conselho Classe (se houver)' },
+  { id: '6.8', title: 'Utilidade Pública Municipal (se houver)' },
+  { id: '6.9', title: 'Utilidade Pública Estadual (se houver)' },
+  { id: '6.10', title: 'Registro e Regularidade no Conselho Classe (se houver)' },
+  { id: '6.11', title: 'Registro e Regularidade do Profissional RT no Conselho Classe (se houver)' },
 ];
 
 /* Converte o campo habilitacao_juridica (Record OU Array) em ChecklistItem[] para uma seção */

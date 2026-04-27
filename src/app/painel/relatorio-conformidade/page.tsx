@@ -54,7 +54,7 @@ const SECAO_LABELS: Record<number,string> = {
   3: 'Regularidade Fiscal, Social e Trabalhista',
   4: 'Qualificação Econômico-Financeira',
   5: 'Qualificação Técnica',
-  6: 'Conclusão',
+  6: 'Outros Registros',
 };
 const STATUS_LABELS: Record<string,string> = {
   pendente:'Pendente', conforme:'Conforme',
@@ -272,9 +272,64 @@ function RelatorioContent() {
       relatorioId.current = rel.id;
 
       const { data: existing } = await supabase
-        .from('relatorio_itens').select('id').eq('relatorio_id', rel.id).limit(1);
-      if (!existing?.length) {
-        await supabase.rpc('seed_relatorio_itens', { p_relatorio_id: rel.id });
+        .from('relatorio_itens').select('id').eq('relatorio_id', rel.id);
+      
+      if (!existing || existing.length < 43) {
+        if (existing && existing.length > 0) {
+          await supabase.from('relatorio_itens').delete().eq('relatorio_id', rel.id);
+        }
+        const NEW_ITENS = [
+          // Seção 2
+          { relatorio_id: rel.id, secao: 2, codigo: '2.1', descricao: 'Cartão CNPJ', ordem: 1 },
+          { relatorio_id: rel.id, secao: 2, codigo: '2.2', descricao: 'QSA Cartão CNPJ', ordem: 2 },
+          { relatorio_id: rel.id, secao: 2, codigo: '2.3', descricao: 'Cadastro Contribuinte Municipal/Estadual', ordem: 3 },
+          { relatorio_id: rel.id, secao: 2, codigo: '2.4', descricao: 'Alvará de licença e funcionamento', ordem: 4 },
+          { relatorio_id: rel.id, secao: 2, codigo: '2.5', descricao: 'Estatuto Social', ordem: 5 },
+          { relatorio_id: rel.id, secao: 2, codigo: '2.6', descricao: 'Ata Constituição/Fundação', ordem: 6 },
+          { relatorio_id: rel.id, secao: 2, codigo: '2.7', descricao: 'Ata Eleição e Posse atual', ordem: 7 },
+          { relatorio_id: rel.id, secao: 2, codigo: '2.8', descricao: 'Relação de Membros atual', ordem: 8 },
+          { relatorio_id: rel.id, secao: 2, codigo: '2.9', descricao: 'Comprovante endereço entidade', ordem: 9 },
+          { relatorio_id: rel.id, secao: 2, codigo: '2.10', descricao: 'RG/CPF representante legal', ordem: 10 },
+          { relatorio_id: rel.id, secao: 2, codigo: '2.11', descricao: 'Comprovante endereço representante legal', ordem: 11 },
+          // Seção 3
+          { relatorio_id: rel.id, secao: 3, codigo: '3.1', descricao: 'CND Federal', ordem: 1 },
+          { relatorio_id: rel.id, secao: 3, codigo: '3.2', descricao: 'CND Estadual', ordem: 2 },
+          { relatorio_id: rel.id, secao: 3, codigo: '3.3', descricao: 'CNDA Estadual', ordem: 3 },
+          { relatorio_id: rel.id, secao: 3, codigo: '3.4', descricao: 'CND Municipal', ordem: 4 },
+          { relatorio_id: rel.id, secao: 3, codigo: '3.5', descricao: 'CR FGTS', ordem: 5 },
+          { relatorio_id: rel.id, secao: 3, codigo: '3.6', descricao: 'CND Trabalhista', ordem: 6 },
+          { relatorio_id: rel.id, secao: 3, codigo: '3.7', descricao: 'CND CAEMA', ordem: 7 },
+          // Seção 4
+          { relatorio_id: rel.id, secao: 4, codigo: '4.1', descricao: 'Certidão de Falência e Concordata', ordem: 1 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.2', descricao: 'Registro e regularidade Contador', ordem: 2 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.3.1', descricao: 'Termo de abertura', ordem: 3 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.3.2', descricao: 'Balanço Patrimonial', ordem: 4 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.3.3', descricao: 'Demonstração do Superavit e Déficit', ordem: 5 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.3.4', descricao: 'Demonstração das Mutações do Patrimonio Líquido', ordem: 6 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.3.5', descricao: 'Demonstração dos Fluxos de Caixa', ordem: 7 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.3.6', descricao: 'Notas Explicativas dos dois últimos exercícios sociais', ordem: 8 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.3.7', descricao: 'Termo de encerramento', ordem: 9 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.4', descricao: 'Ata aprovando prestação de contas com parecer do conselho fiscal dos últimos dois exercícios sociais da entidade.', ordem: 10 },
+          // Seção 5
+          { relatorio_id: rel.id, secao: 5, codigo: '5.1.1', descricao: 'Instrumento Jurídico (Termo de Colaboração)', ordem: 1 },
+          { relatorio_id: rel.id, secao: 5, codigo: '5.1.2', descricao: 'Instrumento Jurídico (Termo de Fomento)', ordem: 2 },
+          { relatorio_id: rel.id, secao: 5, codigo: '5.1.3', descricao: 'Instrumento Jurídico (Acordo de Cooperação)', ordem: 3 },
+          { relatorio_id: rel.id, secao: 5, codigo: '5.1.4', descricao: 'Instrumento Jurídico (Outro tipo de contrato).', ordem: 4 },
+          // Seção 6
+          { relatorio_id: rel.id, secao: 6, codigo: '6.1', descricao: 'Atestado de Existência e Regular Funcionamento – AERFE MP/MA (se houver)', ordem: 1 },
+          { relatorio_id: rel.id, secao: 6, codigo: '6.2', descricao: 'Cadastro Nacional de Entidades de Assistência Social – CNEAS (se houver)', ordem: 2 },
+          { relatorio_id: rel.id, secao: 6, codigo: '6.3', descricao: 'Cadastro Nacional de Estabelecimento de Saúde – CNES (se houver)', ordem: 3 },
+          { relatorio_id: rel.id, secao: 6, codigo: '6.4', descricao: 'Conselho Municipal da Assistência Social – CMAS (se houver)', ordem: 4 },
+          { relatorio_id: rel.id, secao: 6, codigo: '6.5', descricao: 'Conselho Municipal dos Direitos da Criança e Adolescente - CMDCA (se houver)', ordem: 5 },
+          { relatorio_id: rel.id, secao: 6, codigo: '6.6', descricao: 'Alvará de autorização sanitária (se houver)', ordem: 6 },
+          { relatorio_id: rel.id, secao: 6, codigo: '6.7', descricao: 'Sistema de Cadastramento Unificado de Fornecedores - SICAF (se houver)', ordem: 7 },
+          { relatorio_id: rel.id, secao: 6, codigo: '6.8', descricao: 'Utilidade Pública Municipal (se houver)', ordem: 8 },
+          { relatorio_id: rel.id, secao: 6, codigo: '6.9', descricao: 'Utilidade Pública Estadual (se houver)', ordem: 9 },
+          { relatorio_id: rel.id, secao: 6, codigo: '6.10', descricao: 'Registro e Regularidade no Conselho Classe (se houver)', ordem: 10 },
+          { relatorio_id: rel.id, secao: 6, codigo: '6.11', descricao: 'Registro e Regularidade do Profissional RT no Conselho Classe (se houver)', ordem: 11 },
+        ];
+        // Insert chunks of 20 to avoid large payload errors, or insert all at once since 43 is small enough.
+        await supabase.from('relatorio_itens').insert(NEW_ITENS);
       }
 
       const { data: its } = await supabase
@@ -463,7 +518,7 @@ function RelatorioContent() {
   const progPct    = totalItens > 0 ? Math.round((conformes/totalItens)*100) : 0;
 
   /* Estatísticas por seção para Conclusão */
-  const secStats = ([2,3,4,5] as const).map(s => {
+  const secStats = ([2,3,4,5,6] as const).map(s => {
     const si = itens.filter(i => i.secao === s && !i.is_header);
     return { secao: s, label: SECAO_LABELS[s], total: si.length, conf: si.filter(i => i.status === 'conforme').length };
   });
@@ -555,8 +610,8 @@ function RelatorioContent() {
         </div>
       </div>
 
-      {/* ── Seções 2–5 ── */}
-      {([2,3,4,5] as const).map(secao => {
+      {/* ── Seções 2–6 ── */}
+      {([2,3,4,5,6] as const).map(secao => {
         const secItens = itens.filter(i => i.secao===secao).sort((a,b) => a.ordem-b.ordem);
         const secConf  = secItens.filter(i => !i.is_header && i.status==='conforme').length;
         const secTotal = secItens.filter(i => !i.is_header).length;
