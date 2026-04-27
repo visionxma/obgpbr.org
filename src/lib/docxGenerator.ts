@@ -240,6 +240,13 @@ const TEMPLATE_QE_LABELS = [
   'Ata aprovando prestação de contas com parecer do conselho fiscal dos últimos dois exercícios sociais da entidade.',
 ];
 
+const TEMPLATE_QT_LABELS = [
+  'Instrumento Jurídico (Termo de Colaboração)',
+  'Instrumento Jurídico (Termo de Fomento)',
+  'Instrumento Jurídico (Acordo de Cooperação)',
+  'Instrumento Jurídico (Outro tipo de contrato).',
+];
+
 const TEMPLATE_OR_LABELS = [
   'Atestado de Existência e Regular Funcionamento',
   'Cadastro Nacional de Entidades de Assistência Social',
@@ -328,8 +335,7 @@ export async function gerarRelatorioDocx(dados: Record<string, any>): Promise<Bl
   mapLabels(TEMPLATE_HJ_LABELS, d.habilitacao_juridica || []);
   mapLabels(TEMPLATE_RF_LABELS, d.regularidade_fiscal || []);
   mapLabels(TEMPLATE_QE_LABELS, d.qualificacao_economica || []);
-  // Qualificação Técnica: rows 40-46 are EMPTY (no labels in template)
-  // We'll handle them separately below
+  mapLabels(TEMPLATE_QT_LABELS, d.qualificacao_tecnica || []);
   mapLabels(TEMPLATE_OR_LABELS, d.outros_registros || []);
 
   // Process 5-column rows from END to START
@@ -393,67 +399,8 @@ export async function gerarRelatorioDocx(dados: Record<string, any>): Promise<Bl
     xml = xml.substring(0, row.start) + newContent + xml.substring(row.end);
   }
 
-  // ── 5. Fill Qualificação Técnica (rows are EMPTY in template — no labels in col 1) ──
-  // These are rows 40-46 (all 5 cells empty). We need to find them and fill them.
-  const allRowsPass3 = findAllRows(xml);
-  const qt = d.qualificacao_tecnica || [];
-  let qtInserted = 0;
-
-  // Find the section header "Qualificação Técnica" in the XML
-  const qtHeaderIdx = xml.indexOf('Qualificação Técnica');
-  // Find the "Outros Registros" or "Descrição documento" that follows, to limit the range
-  let qtEndBound = xml.indexOf('Outros Registros');
-  if (qtEndBound === -1) qtEndBound = xml.length;
-
-  if (qtHeaderIdx !== -1) {
-    // Find all rows within this section's range
-    const sectionRows = allRowsPass3.filter(r =>
-      r.start > qtHeaderIdx && r.start < qtEndBound
-    );
-
-    // Filter only 5-cell rows that are NOT header rows
-    const dataRows = sectionRows.filter(r => {
-      const cells = findAllCells(r.content);
-      if (cells.length !== 5) return false;
-      const text = stripXmlTags(r.content).trim().toLowerCase();
-      return !text.includes('descrição documento');
-    });
-
-    // Process from END to START  
-    for (let i = dataRows.length - 1; i >= 0; i--) {
-      const qIdx = i; // Qualificação técnica index
-      if (qIdx >= qt.length) continue;
-
-      const row = dataRows[i];
-      const cells = findAllCells(row.content);
-      if (cells.length !== 5) continue;
-
-      let newContent = row.content;
-
-      // Cell 1: Label (item description)
-      {
-        const cellXml = newContent.substring(cells[0].start, cells[0].end);
-        const newCell = injectTextIntoCell(cellXml, qt[qIdx].label);
-        newContent = newContent.substring(0, cells[0].start) + newCell + newContent.substring(cells[0].end);
-        const diff = newCell.length - (cells[0].end - cells[0].start);
-        for (let j = 1; j < cells.length; j++) { cells[j].start += diff; cells[j].end += diff; }
-      }
-
-      // Cells 2-5: código, emissão, validade, análise
-      const fillData = [qt[qIdx].codigo || '—', qt[qIdx].emissao || '—', qt[qIdx].validade || '—', qt[qIdx].analise || '—'];
-      for (let ci = 1; ci <= 4; ci++) {
-        const cell = cells[ci];
-        const cellXml = newContent.substring(cell.start, cell.end);
-        const newCell = injectTextIntoCell(cellXml, fillData[ci - 1]);
-        newContent = newContent.substring(0, cell.start) + newCell + newContent.substring(cell.end);
-        const diff = newCell.length - (cell.end - cell.start);
-        for (let j = ci + 1; j < cells.length; j++) { cells[j].start += diff; cells[j].end += diff; }
-      }
-
-      xml = xml.substring(0, row.start) + newContent + xml.substring(row.end);
-      qtInserted++;
-    }
-  }
+  // ── 5. Fill Qualificação Técnica is now handled in the main pass! ──
+  // (We removed the old custom pass because the new template has labels in the cells)
 
   // ── 6. Replace conclusion/header text ──
   // All text replacements use replaceSpanningText because Word splits text across runs
