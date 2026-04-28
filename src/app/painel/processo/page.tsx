@@ -16,7 +16,8 @@ import {
   ExternalLink,
   Info,
   Calendar,
-  Search
+  Search,
+  Copy
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../PainelContext';
@@ -368,17 +369,20 @@ export default function ProcessoPage() {
     });
   };
 
-  /* ── Envio real do relatório ── */
+  /* ── Pagamento / Envio ── */
   const forceGating = false; // false = livre para testes; true = exige pagamento em produção
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [copiedField, setCopiedField] = useState('');
+
+  const copyToClipboard = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(''), 2000);
+  };
 
   const handleConsultarPagamentoEEnviar = async () => {
-    // Se forceGating estiver ativo, bloqueia até pagamento confirmado
     if (forceGating) {
-      setEnviando(true);
-      setMensagemEnviando('Verificando status de pagamento...');
-      await new Promise(r => setTimeout(r, 1500));
-      setEnviando(false);
-      showAlert('Acesso Restrito', 'Esta funcionalidade requer uma conta ativa e pagamento confirmado. Os dados foram salvos localmente.');
+      setShowPaymentModal(true);
       return;
     }
 
@@ -758,6 +762,90 @@ export default function ProcessoPage() {
                 }}
               >
                 {modal.type === 'confirm' ? 'Confirmar' : 'Entendi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL DE PAGAMENTO (quando forceGating = true) ── */}
+      {showPaymentModal && (
+        <div style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,.55)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, backdropFilter:'blur(4px)' }}
+          onClick={() => setShowPaymentModal(false)}>
+          <div onClick={e => e.stopPropagation()} style={{ background:'#fff', borderRadius:20, maxWidth:520, width:'100%', maxHeight:'90vh', overflowY:'auto', boxShadow:'0 25px 60px rgba(0,0,0,.25)', animation:'slideUp .3s ease' }}>
+            
+            {/* Header */}
+            <div style={{ background:'linear-gradient(135deg,#0D364F 0%,#1a5276 100%)', borderRadius:'20px 20px 0 0', padding:'28px 32px', color:'#fff', textAlign:'center' }}>
+              <div style={{ width:56, height:56, borderRadius:'50%', background:'rgba(255,255,255,.15)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
+                <ShieldCheck size={28} />
+              </div>
+              <h2 style={{ margin:0, fontSize:'1.3rem', fontWeight:800 }}>Pagamento da Certificação</h2>
+              <p style={{ margin:'6px 0 0', fontSize:'0.85rem', opacity:.85 }}>Selo OSC Gestão de Parcerias — OBGP</p>
+            </div>
+
+            {/* Valor */}
+            <div style={{ textAlign:'center', padding:'20px 32px 0' }}>
+              <div style={{ fontSize:'0.7rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.1em', color:'#6b7280', marginBottom:4 }}>Investimento Único</div>
+              <div style={{ fontSize:'2.8rem', fontWeight:800, color:'#0D364F', lineHeight:1 }}>
+                R$ 350<span style={{ fontSize:'1.1rem', fontWeight:500, color:'#9ca3af' }}>,00</span>
+              </div>
+            </div>
+
+            {/* Dados Bancários */}
+            <div style={{ padding:'20px 32px' }}>
+              <div style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'.1em', color:'#0D364F', marginBottom:12 }}>Dados para Pagamento</div>
+              
+              <div style={{ background:'#f8fafc', borderRadius:14, border:'1px solid #e5e7eb', overflow:'hidden' }}>
+                {[
+                  { label: 'Titular', value: 'C. E. DOS SANTOS COELHO', key: 'titular' },
+                  { label: 'Empresa', value: 'SEMPRE - Gestão de Projetos e Negócios Empresariais', key: 'empresa' },
+                  { label: 'CNPJ / PIX', value: '14.796.065/0001-09', key: 'pix' },
+                  { label: 'Banco', value: 'Bradesco - 237', key: 'banco' },
+                  { label: 'Agência', value: '408-1', key: 'agencia' },
+                  { label: 'Conta Corrente', value: '49035-0', key: 'conta' },
+                ].map(({ label, value, key }, i) => (
+                  <div key={key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 16px', borderBottom: i < 5 ? '1px solid #e5e7eb' : 'none' }}>
+                    <div>
+                      <div style={{ fontSize:'0.62rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', color:'#9ca3af' }}>{label}</div>
+                      <div style={{ fontSize:'0.85rem', fontWeight:600, color:'#1f2937', marginTop:1 }}>{value}</div>
+                    </div>
+                    <button onClick={() => copyToClipboard(value, key)}
+                      style={{ background: copiedField === key ? '#16a34a' : '#0D364F', color:'#fff', border:'none', borderRadius:8, padding:'5px 10px', fontSize:'0.68rem', fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:4, transition:'background .2s', whiteSpace:'nowrap' }}>
+                      {copiedField === key ? <><CheckCircle2 size={11}/> Copiado!</> : <><Copy size={11}/> Copiar</>}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Instruções */}
+              <div style={{ marginTop:16, padding:'14px 16px', background:'rgba(22,163,74,.05)', borderRadius:12, border:'1px solid rgba(22,163,74,.15)' }}>
+                <div style={{ fontSize:'0.72rem', fontWeight:700, color:'#15803d', marginBottom:6 }}>📋 Instruções:</div>
+                <ol style={{ margin:0, paddingLeft:18, fontSize:'0.78rem', color:'#166534', lineHeight:1.7 }}>
+                  <li>Realize o <strong>PIX</strong> ou <strong>transferência</strong> para os dados acima</li>
+                  <li>Envie o comprovante pelo WhatsApp abaixo</li>
+                  <li>Aguarde a liberação (até 30 minutos em horário comercial)</li>
+                </ol>
+              </div>
+
+              {/* WhatsApp */}
+              <a href="https://wa.me/5598987100001?text=Ol%C3%A1%2C+realizei+o+pagamento+da+certifica%C3%A7%C3%A3o+Selo+OSC+e+gostaria+de+enviar+o+comprovante." target="_blank" rel="noopener noreferrer"
+                style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, marginTop:16, padding:'14px 20px', background:'#25D366', color:'#fff', borderRadius:12, textDecoration:'none', fontWeight:800, fontSize:'0.9rem', boxShadow:'0 4px 12px rgba(37,211,102,.3)', transition:'transform .15s' }}
+                onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.02)')}
+                onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+                Enviar Comprovante via WhatsApp
+              </a>
+
+              <p style={{ textAlign:'center', fontSize:'0.72rem', color:'#9ca3af', marginTop:12, lineHeight:1.5 }}>
+                Contato: <strong>(98) 9 8710-0001</strong> · contato.org.obgp@gmail.com
+              </p>
+            </div>
+
+            {/* Fechar */}
+            <div style={{ padding:'0 32px 24px', textAlign:'center' }}>
+              <button onClick={() => setShowPaymentModal(false)}
+                style={{ padding:'10px 32px', background:'#f1f5f9', border:'1px solid #e2e8f0', borderRadius:10, fontSize:'0.85rem', fontWeight:700, color:'#64748b', cursor:'pointer' }}>
+                Fechar
               </button>
             </div>
           </div>
