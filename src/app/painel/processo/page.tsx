@@ -368,12 +368,33 @@ export default function ProcessoPage() {
     });
   };
 
+  /* ── Envio real do relatório ── */
+  const forceGating = false; // false = livre para testes; true = exige pagamento em produção
+
   const handleConsultarPagamentoEEnviar = async () => {
+    // Se forceGating estiver ativo, bloqueia até pagamento confirmado
+    if (forceGating) {
+      setEnviando(true);
+      setMensagemEnviando('Verificando status de pagamento...');
+      await new Promise(r => setTimeout(r, 1500));
+      setEnviando(false);
+      showAlert('Acesso Restrito', 'Esta funcionalidade requer uma conta ativa e pagamento confirmado. Os dados foram salvos localmente.');
+      return;
+    }
+
+    // Fluxo normal — salvar e enviar
     setEnviando(true);
-    setMensagemEnviando('Verificando status de pagamento...');
-    await new Promise(r => setTimeout(r, 2000));
-    setEnviando(false);
-    showAlert('Acesso Restrito', 'Esta funcionalidade requer uma conta ativa e pagamento confirmado. Os dados foram salvos localmente.');
+    setMensagemEnviando('Salvando e enviando relatório...');
+    try {
+      await saveProgress();
+      showAlert('Relatório Enviado!', 'Seu relatório de conformidade foi salvo e enviado com sucesso. A equipe OBGP analisará os dados e retornará em breve.');
+    } catch (err) {
+      console.error('Erro ao enviar:', err);
+      showAlert('Erro', 'Ocorreu um erro ao enviar o relatório. Tente novamente.');
+    } finally {
+      setEnviando(false);
+      setMensagemEnviando('');
+    }
   };
 
   const progress = Math.round(((step - 1) / 6) * 100);
