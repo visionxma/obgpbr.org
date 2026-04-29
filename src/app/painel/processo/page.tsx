@@ -56,28 +56,61 @@ const WIZARD_STEPS = [
 ];
 
 const HABILITACAO_JURIDICA: DocItem[] = [
-  { id: 'estatuto', label: 'Estatuto Social Atualizado', required: true },
-  { id: 'ata_eleicao', label: 'Ata de Eleição da Diretoria', required: true },
+  { id: 'cartao_cnpj',           label: '2.1. Cartão CNPJ',                                  required: true },
+  { id: 'qsa_cnpj',             label: '2.2. QSA Cartão CNPJ',                               required: true },
+  { id: 'cadastro_contribuinte', label: '2.3. Cadastro Contribuinte Municipal/Estadual',       required: true },
+  { id: 'alvara_funcionamento',  label: '2.4. Alvará de licença e funcionamento',              required: true },
+  { id: 'estatuto_social',       label: '2.5. Estatuto Social',                               required: true },
+  { id: 'ata_constituicao',      label: '2.6. Ata Constituição/Fundação',                     required: true },
+  { id: 'ata_eleicao_posse',     label: '2.7. Ata Eleição e Posse atual',                     required: true },
+  { id: 'relacao_membros',       label: '2.8. Relação de Membros atual',                      required: true },
+  { id: 'comprovante_end_ent',   label: '2.9. Comprovante endereço entidade',                 required: true },
+  { id: 'rg_cpf_representante',  label: '2.10. RG/CPF representante legal',                   required: true },
+  { id: 'comprovante_end_rep',   label: '2.11. Comprovante endereço representante legal',     required: true },
 ];
 
 const REGULARIDADE_FISCAL: DocItem[] = [
-  { id: 'fgts', label: 'Certificado de Regularidade do FGTS', required: true },
-  { id: 'trabalhista', label: 'Certidão Negativa de Débitos Trabalhistas (CNDT)', required: true },
-  { id: 'municipal', label: 'Certidão Negativa Municipal', required: true },
+  { id: 'cnd_federal',      label: '3.1. CND Federal',       required: true },
+  { id: 'cnd_estadual',     label: '3.2. CND Estadual',      required: true },
+  { id: 'cnda_estadual',    label: '3.3. CNDA Estadual',     required: true },
+  { id: 'cnd_municipal',    label: '3.4. CND Municipal',     required: true },
+  { id: 'cr_fgts',          label: '3.5. CR FGTS',           required: true },
+  { id: 'cnd_trabalhista',  label: '3.6. CND Trabalhista',   required: true },
+  { id: 'cnd_caema',        label: '3.7. CND CAEMA',         required: true },
 ];
 
 const QUALIFICACAO_FINANCEIRA: DocItem[] = [
-  { id: 'balanco', label: 'Balanço Patrimonial do Último Exercício', required: true },
-  { id: 'demonstrativo', label: 'Demonstrativo de Resultados', required: true },
+  { id: 'cert_falencia',         label: '4.1. Certidão de Falência e Concordata',                                                    required: true },
+  { id: 'reg_contador',          label: '4.2. Registro e regularidade Contador',                                                    required: true },
+  { id: 'termo_abertura',        label: '4.3.1. Termo de abertura',                                                                 required: true },
+  { id: 'balanco_patrimonial',   label: '4.3.2. Balanço Patrimonial',                                                               required: true },
+  { id: 'dem_superavit',         label: '4.3.3. Demonstração do Superavit e Déficit',                                               required: true },
+  { id: 'dem_mutacoes',          label: '4.3.4. Demonstração das Mutações do Patrimônio Líquido',                                   required: true },
+  { id: 'dem_fluxo_caixa',       label: '4.3.5. Demonstração dos Fluxos de Caixa',                                                 required: true },
+  { id: 'notas_explicativas',    label: '4.3.6. Notas Explicativas dos dois últimos exercícios sociais',                           required: true },
+  { id: 'termo_encerramento',    label: '4.3.7. Termo de encerramento',                                                             required: true },
+  { id: 'ata_prestacao_contas',  label: '4.3. Ata aprovando prestação de contas com parecer do conselho fiscal dos últimos dois exercícios sociais da entidade.', required: true },
 ];
 
 const QUALIFICACAO_TECNICA: DocItem[] = [
-  { id: 'termo_contrato', label: 'Termo de Contrato / Parceria Anterior', required: true },
-  { id: 'atestado_capacidade', label: 'Atestado de Capacidade Técnica', required: true },
+  { id: 'instr_colaboracao', label: '5.1.1. Instrumento Jurídico (Termo de Colaboração)',  required: true },
+  { id: 'instr_fomento',     label: '5.1.2. Instrumento Jurídico (Termo de Fomento)',      required: true },
+  { id: 'instr_cooperacao',  label: '5.1.3. Instrumento Jurídico (Acordo de Cooperação)', required: true },
+  { id: 'instr_outro',       label: '5.1.4. Instrumento Jurídico (Outro tipo de contrato).', required: true },
 ];
 
 const OUTROS_REGISTROS: DocItem[] = [
-  { id: 'conselho_municipal', label: 'Registro em Conselho Municipal (se houver)' },
+  { id: 'aerfe',           label: '6.1. Atestado de Existência e Regular Funcionamento – AERFE MP/MA (se houver)' },
+  { id: 'cneas',           label: '6.2. Cadastro Nacional de Entidades de Assistência Social – CNEAS (se houver)' },
+  { id: 'cnes',            label: '6.3. Cadastro Nacional de Estabelecimento de Saúde – CNES (se houver)' },
+  { id: 'cmas',            label: '6.4. Conselho Municipal da Assistência Social – CMAS (se houver)' },
+  { id: 'cmdca',           label: '6.5. Conselho Municipal dos Direitos da Criança e Adolescente - CMDCA (se houver)' },
+  { id: 'alvara_sanitaria',label: '6.6. Alvará de autorização sanitária (se houver)' },
+  { id: 'sicaf',           label: '6.7. Sistema de Cadastramento Unificado de Fornecedores - SICAF (se houver)' },
+  { id: 'util_pub_mun',   label: '6.8. Utilidade Pública Municipal (se houver)' },
+  { id: 'util_pub_est',   label: '6.9. Utilidade Pública Estadual (se houver)' },
+  { id: 'reg_conselho',   label: '6.10. Registro e Regularidade no Conselho Classe (se houver)' },
+  { id: 'reg_prof_rt',    label: '6.11. Registro e Regularidade do Profissional RT no Conselho Classe (se houver)' },
 ];
 
 // ── Components ───────────────────────────────────────────────
