@@ -29,7 +29,7 @@ interface RelatorioData {
   natureza_juridica: string;
   razao_social: string;
   nome_fantasia: string;
-  endereco: string;
+  logradouro: string;
   data_abertura_cnpj: string;
   email_osc: string;
   telefone: string;
@@ -248,17 +248,17 @@ const TEMPLATE_QT_LABELS = [
 ];
 
 const TEMPLATE_OR_LABELS = [
-  'Atestado de Existência e Regular Funcionamento',
-  'Cadastro Nacional de Entidades de Assistência Social',
-  'Cadastro Nacional de Estabelecimento de Saúde',
-  'Conselho Municipal da Assistência Social',
-  'Conselho Municipal dos Direitos da Criança e Adolescente',
-  'Alvará de autorização sanitária',
-  'Sistema de Cadastramento Unificado de Fornecedores',
-  'Utilidade Pública Municipal',
-  'Utilidade Pública Estadual',
-  'Registro e Regularidade no Conselho Classe',
-  'Registro e Regularidade do Profissional RT',
+  'Atestado de Existência e Regular Funcionamento – AERFE MP/MA (se houver)',
+  'Cadastro Nacional de Entidades de Assistência Social – CNEAS (se houver)',
+  'Cadastro Nacional de Estabelecimento de Saúde – CNES (se houver)',
+  'Conselho Municipal da Assistência Social – CMAS (se houver)',
+  'Conselho Municipal dos Direitos da Criança e Adolescente - CMDCA (se houver)',
+  'Alvará de autorização sanitária (se houver)',
+  'Sistema de Cadastramento Unificado de Fornecedores - SICAF (se houver)',
+  'Utilidade Pública Municipal (se houver)',
+  'Utilidade Pública Estadual (se houver)',
+  'Registro e Regularidade no Conselho Classe (se houver)',
+  'Registro e Regularidade do Profissional RT no Conselho Classe (se houver)',
 ];
 
 /* ── Entity Field Labels (existentes no template) ── */

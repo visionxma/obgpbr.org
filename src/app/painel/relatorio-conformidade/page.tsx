@@ -52,9 +52,9 @@ const SECAO_LABELS: Record<number,string> = {
   1: 'Dados da Entidade',
   2: 'Habilitação Jurídica',
   3: 'Regularidade Fiscal, Social e Trabalhista',
-  4: 'Qualificação Econômico-Financeira',
+  4: 'Qualificação Econômico-financeira',
   5: 'Qualificação Técnica',
-  6: 'Outros Registros',
+  6: 'Outros registros',
 };
 const STATUS_LABELS: Record<string,string> = {
   pendente:'Pendente', conforme:'Conforme',

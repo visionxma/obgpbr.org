@@ -20,9 +20,9 @@ function fmtDate(iso: string | null) {
 const SECAO_LABELS: Record<number, string> = {
   2: 'Habilitação Jurídica',
   3: 'Regularidade Fiscal, Social e Trabalhista',
-  4: 'Qualificação Econômico-Financeira',
+  4: 'Qualificação Econômico-financeira',
   5: 'Qualificação Técnica',
-  6: 'Outros Registros',
+  6: 'Outros registros',
 };
 
 function renderTable(itens: RelItem[]) {
