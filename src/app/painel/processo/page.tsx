@@ -353,6 +353,7 @@ export default function ProcessoPage() {
   };
 
   const handleNext = async () => {
+    /* Desabilitado temporariamente conforme pedido do usuário
     if (step === 1) {
       const required = ['cnpj', 'razao_social', 'email_osc', 'responsavel'];
       const missing = required.find(k => !entidadeData[k]);
@@ -372,6 +373,7 @@ export default function ProcessoPage() {
         return;
       }
     }
+    */
 
     setShowValidationErrors(false);
     await saveProgress();
