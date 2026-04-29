@@ -30,8 +30,8 @@ interface RelatorioData {
   razao_social: string;
   nome_fantasia: string;
   endereco: string;
-  data_abertura: string;
-  email: string;
+  data_abertura_cnpj: string;
+  email_osc: string;
   telefone: string;
   responsavel: string;
   // Report metadata
@@ -244,7 +244,7 @@ const TEMPLATE_QT_LABELS = [
   'Instrumento Jurídico (Termo de Colaboração)',
   'Instrumento Jurídico (Termo de Fomento)',
   'Instrumento Jurídico (Acordo de Cooperação)',
-  'Instrumento Jurídico (Outro tipo de contrato)',
+  'Instrumento Jurídico (Outro tipo de contrato).',
 ];
 
 const TEMPLATE_OR_LABELS = [
@@ -267,9 +267,9 @@ const ENTITY_LABELS: Record<string, string> = {
   'NATUREZA JURÍDICA:': 'natureza_juridica',
   'RAZÃO SOCIAL:': 'razao_social',
   'NOME FANTASIA:': 'nome_fantasia',
-  'ENDEREÇO:': 'endereco',
-  'DATA ABERTURA CNPJ:': 'data_abertura',
-  'E-MAIL:': 'email',
+  'ENDEREÇO:': 'logradouro',
+  'DATA ABERTURA CNPJ:': 'data_abertura_cnpj',
+  'E-MAIL:': 'email_osc',
   'TELEFONE:': 'telefone',
 };
 
