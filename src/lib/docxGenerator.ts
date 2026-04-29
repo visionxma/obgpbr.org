@@ -244,7 +244,7 @@ const TEMPLATE_QT_LABELS = [
   'Instrumento Jurídico (Termo de Colaboração)',
   'Instrumento Jurídico (Termo de Fomento)',
   'Instrumento Jurídico (Acordo de Cooperação)',
-  'Instrumento Jurídico (Outro tipo de contrato).',
+  'Instrumento Jurídico (Outro tipo de contrato)',
 ];
 
 const TEMPLATE_OR_LABELS = [
@@ -278,7 +278,11 @@ const ENTITY_LABELS: Record<string, string> = {
    ═══════════════════════════════════════════════════════════════════ */
 export async function gerarRelatorioDocx(dados: Record<string, any>): Promise<Blob> {
   // 1. Load the original clean template
-  const response = await fetch('/docs/MODEL_RELATORIO_CONFORMIDADE_RCN_ANOMESDIAOBGP_REV02_24.04.2026.docx');
+  // Tenta carregar o template DOCX
+  // NOTA: O arquivo PDF no public/docs tem caracteres especiais, 
+  // mas o código espera o nome normalizado para o template .docx
+  const docxPath = '/docs/MODEL_RELATORIO_CONFORMIDADE_RCN_ANOMESDIAOBGP_REV02_24.04.2026.docx';
+  const response = await fetch(docxPath);
   if (!response.ok) {
     throw new Error('Não foi possível carregar o template do relatório.');
   }

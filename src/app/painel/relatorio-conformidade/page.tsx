@@ -271,10 +271,11 @@ function RelatorioContent() {
       setRelatorio(rel);
       relatorioId.current = rel.id;
 
-      const { data: existing } = await supabase
-        .from('relatorio_itens').select('id').eq('relatorio_id', rel.id);
-      
-      if (!existing || existing.length < 43) {
+      const { data: existing } = await supabase.from('relatorio_itens').select('id').eq('relatorio_id', rel.id);
+      const { data: qit } = await supabase.from('relatorio_itens').select('id').eq('relatorio_id', rel.id).eq('secao', 5);
+      const needsSeed = !existing || existing.length < 43 || !qit || qit.length < 4;
+
+      if (needsSeed) {
         if (existing && existing.length > 0) {
           await supabase.from('relatorio_itens').delete().eq('relatorio_id', rel.id);
         }
@@ -302,19 +303,19 @@ function RelatorioContent() {
           // Seção 4
           { relatorio_id: rel.id, secao: 4, codigo: '4.1', descricao: 'Certidão de Falência e Concordata', ordem: 1 },
           { relatorio_id: rel.id, secao: 4, codigo: '4.2', descricao: 'Registro e Regularidade do Contador', ordem: 2 },
-          { relatorio_id: rel.id, secao: 4, codigo: '4.3.1', descricao: 'Termo de Abertura', ordem: 3 },
-          { relatorio_id: rel.id, secao: 4, codigo: '4.3.2', descricao: 'Balanço Patrimonial', ordem: 4 },
-          { relatorio_id: rel.id, secao: 4, codigo: '4.3.3', descricao: 'Demonstração do Superávit e Déficit', ordem: 5 },
-          { relatorio_id: rel.id, secao: 4, codigo: '4.3.4', descricao: 'Demonstração das Mutações do Patrimônio Líquido', ordem: 6 },
-          { relatorio_id: rel.id, secao: 4, codigo: '4.3.5', descricao: 'Demonstração dos Fluxos de Caixa', ordem: 7 },
-          { relatorio_id: rel.id, secao: 4, codigo: '4.3.6', descricao: 'Notas Explicativas dos dois últimos exercícios sociais', ordem: 8 },
-          { relatorio_id: rel.id, secao: 4, codigo: '4.3.7', descricao: 'Termo de Encerramento', ordem: 9 },
-          { relatorio_id: rel.id, secao: 4, codigo: '4.4', descricao: 'Ata aprovando prestação de contas com parecer do Conselho Fiscal dos últimos dois exercícios sociais da entidade', ordem: 10 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.3', descricao: 'Termo de Abertura', ordem: 3 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.4', descricao: 'Balanço Patrimonial', ordem: 4 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.5', descricao: 'Demonstração do Superávit e Déficit', ordem: 5 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.6', descricao: 'Demonstração das Mutações do Patrimônio Líquido', ordem: 6 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.7', descricao: 'Demonstração dos Fluxos de Caixa', ordem: 7 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.8', descricao: 'Notas Explicativas dos dois últimos exercícios sociais', ordem: 8 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.9', descricao: 'Termo de Encerramento', ordem: 9 },
+          { relatorio_id: rel.id, secao: 4, codigo: '4.10', descricao: 'Ata aprovando prestação de contas com parecer do Conselho Fiscal dos últimos dois exercícios sociais da entidade', ordem: 10 },
           // Seção 5
-          { relatorio_id: rel.id, secao: 5, codigo: '5.1.1', descricao: 'Instrumento Jurídico (Termo de Colaboração)', ordem: 1 },
-          { relatorio_id: rel.id, secao: 5, codigo: '5.1.2', descricao: 'Instrumento Jurídico (Termo de Fomento)', ordem: 2 },
-          { relatorio_id: rel.id, secao: 5, codigo: '5.1.3', descricao: 'Instrumento Jurídico (Acordo de Cooperação)', ordem: 3 },
-          { relatorio_id: rel.id, secao: 5, codigo: '5.1.4', descricao: 'Instrumento Jurídico (Outro tipo de contrato)', ordem: 4 },
+          { relatorio_id: rel.id, secao: 5, codigo: '5.1', descricao: 'Instrumento Jurídico (Termo de Colaboração)', ordem: 1 },
+          { relatorio_id: rel.id, secao: 5, codigo: '5.2', descricao: 'Instrumento Jurídico (Termo de Fomento)', ordem: 2 },
+          { relatorio_id: rel.id, secao: 5, codigo: '5.3', descricao: 'Instrumento Jurídico (Acordo de Cooperação)', ordem: 3 },
+          { relatorio_id: rel.id, secao: 5, codigo: '5.4', descricao: 'Instrumento Jurídico (Outro tipo de contrato)', ordem: 4 },
           // Seção 6
           { relatorio_id: rel.id, secao: 6, codigo: '6.1', descricao: 'Atestado de Existência e Regular Funcionamento – AERFE MP/MA (se houver)', ordem: 1 },
           { relatorio_id: rel.id, secao: 6, codigo: '6.2', descricao: 'Cadastro Nacional de Entidades de Assistência Social – CNEAS (se houver)', ordem: 2 },
@@ -328,7 +329,6 @@ function RelatorioContent() {
           { relatorio_id: rel.id, secao: 6, codigo: '6.10', descricao: 'Registro e Regularidade no Conselho Classe (se houver)', ordem: 10 },
           { relatorio_id: rel.id, secao: 6, codigo: '6.11', descricao: 'Registro e Regularidade do Profissional RT no Conselho Classe (se houver)', ordem: 11 },
         ];
-        // Insert chunks of 20 to avoid large payload errors, or insert all at once since 43 is small enough.
         await supabase.from('relatorio_itens').insert(NEW_ITENS);
       }
 
