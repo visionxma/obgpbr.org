@@ -54,7 +54,8 @@ const SECAO_LABELS: Record<number,string> = {
   3: 'Regularidade Fiscal, Social e Trabalhista',
   4: 'Qualificação Econômico-financeira',
   5: 'Qualificação Técnica',
-  6: 'Outros registros',
+  6: 'Outros Registros',
+  7: 'Conclusão',
 };
 const STATUS_LABELS: Record<string,string> = {
   pendente:'Pendente', conforme:'Conforme',
@@ -793,30 +794,66 @@ function RelatorioContent() {
         );
       })}
 
-      {/* ── Seção 6 — Conclusão ── */}
+      {/* ── Conclusão ── */}
       <div style={{ background:'#fff', borderRadius:14, border:'1px solid #e5e7eb', boxShadow:'0 1px 4px rgba(0,0,0,.04)' }}>
-        <SecaoHeader num={6} label={SECAO_LABELS[6]} conf={progPct===100?1:0} total={1} pend={progPct===100?0:1} readonly={readonly}/>
+        <SecaoHeader num={7} label="Conclusão" conf={progPct===100?1:0} total={1} pend={progPct===100?0:1} readonly={readonly}/>
         <div style={{ padding:'18px 20px' }}>
+
           {/* Resumo por seção */}
           <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))', gap:10, marginBottom:20 }}>
             {secStats.map(({ secao, label, total, conf }) => {
               const pct = total > 0 ? Math.round((conf/total)*100) : 0;
               const done = total > 0 && conf === total;
+              const conclusaoNum = secao - 1; // Seção 2→1, 3→2, 4→3, 5→4, 6→5
               return (
                 <div key={secao} style={{ border:`1px solid ${done?'rgba(22,163,74,.25)':'#e5e7eb'}`, borderRadius:10, padding:'12px 14px', background: done?'rgba(22,163,74,.03)':'#fafafa' }}>
                   <div style={{ fontSize:'0.6rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', color: done?'#16a34a':'#9ca3af', marginBottom:4 }}>
-                    Seção {secao}
+                    {conclusaoNum}. {label}
                   </div>
-                  <div style={{ fontSize:'0.78rem', fontWeight:700, color:'var(--site-primary,#0D364F)', marginBottom:6, lineHeight:1.3 }}>{label}</div>
                   <div style={{ height:5, background:'#e5e7eb', borderRadius:3, overflow:'hidden', marginBottom:4 }}>
                     <div style={{ height:'100%', width:`${pct}%`, background: done?'#16a34a':'var(--site-primary,#0D364F)', borderRadius:3, transition:'width .3s' }}/>
                   </div>
-                  <div style={{ fontSize:'0.68rem', color: done?'#16a34a':'#6b7280', fontWeight:600 }}>
-                    {done ? '✅ Concluído' : `${conf}/${total} — ${pct}%`}
+                  <div style={{ fontSize:'0.72rem', color: done?'#16a34a':'#6b7280', fontWeight:700 }}>
+                    {done ? '✅ 100% conforme' : `${pct}% conforme — ${conf}/${total}`}
                   </div>
                 </div>
               );
             })}
+          </div>
+
+          {/* Texto de conclusão */}
+          <div style={{ background:'#f8fafc', border:'1px solid #e5e7eb', borderRadius:10, padding:'16px 18px', marginBottom:18, fontSize:'0.83rem', color:'#374151', lineHeight:1.7 }}>
+            <p style={{ margin:'0 0 10px' }}>
+              Após análise documental, constata-se que a <strong>ORGANIZAÇÃO DA SOCIEDADE CIVIL</strong>, CNPJ <strong>{dados.cnpj || 'XX.XXX.XXX/XXXX-XX'}</strong> apresenta a seguinte conformidade aos requisitos para gestão de parcerias:
+            </p>
+            <ol style={{ margin:'0 0 12px 18px', padding:0 }}>
+              {secStats.map(({ secao, label, total, conf }) => {
+                const pct = total > 0 ? Math.round((conf/total)*100) : 0;
+                return <li key={secao} style={{ marginBottom:3 }}>{label} — <strong>{pct}%</strong> conforme</li>;
+              })}
+            </ol>
+            <p style={{ margin:'0 0 8px' }}>
+              Portanto recomenda-se para certificação independente através do <strong>&ldquo;SELO OSC GESTÃO DE PARCERIAS&rdquo;</strong>.
+            </p>
+            <p style={{ margin:'0 0 4px', fontSize:'0.77rem', color:'#6b7280' }}>
+              A autenticidade do documento pode ser conferida através do website:{' '}
+              <a href="https://obgpbr.org/selo-osc" target="_blank" rel="noopener noreferrer" style={{ color:'var(--site-primary,#0D364F)', fontWeight:600 }}>https://obgpbr.org/selo-osc</a>,{' '}
+              código de verificação e controle: <span style={{ fontFamily:'monospace' }}>RCN.º-ANO.MES.DIA/OBGP</span>.
+            </p>
+          </div>
+
+          {/* Assinantes */}
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit,minmax(220px,1fr))', gap:20, marginBottom:20 }}>
+            <div style={{ borderTop:'2px solid #1f2937', paddingTop:8, textAlign:'center' }}>
+              <div style={{ fontWeight:700, fontSize:'0.83rem', color:'#1f2937' }}>Carlos Eduardo dos Santos Coelho</div>
+              <div style={{ fontSize:'0.75rem', color:'#6b7280' }}>Administrador Responsável Técnico para Gestão de Parcerias</div>
+              <div style={{ fontSize:'0.72rem', color:'#9ca3af', fontFamily:'monospace', marginTop:2 }}>CRAMA-4816</div>
+            </div>
+            <div style={{ borderTop:'2px solid #1f2937', paddingTop:8, textAlign:'center' }}>
+              <div style={{ fontWeight:700, fontSize:'0.83rem', color:'#1f2937' }}>Rodolfo Meneses Costa</div>
+              <div style={{ fontSize:'0.75rem', color:'#6b7280' }}>Contador Responsável Técnico para Gestão de Parcerias</div>
+              <div style={{ fontSize:'0.72rem', color:'#9ca3af', fontFamily:'monospace', marginTop:2 }}>CRCMA-005916/O-3</div>
+            </div>
           </div>
 
           {/* Notas finais e submit */}
