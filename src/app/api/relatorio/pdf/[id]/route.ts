@@ -22,7 +22,7 @@ const SECAO_LABELS: Record<number, string> = {
   3: 'Regularidade Fiscal, Social e Trabalhista',
   4: 'Qualificação Econômico-financeira',
   5: 'Qualificação Técnica',
-  6: 'Outros registros',
+  6: 'Outros Registros',
 };
 
 function renderTable(itens: RelItem[]) {
@@ -112,7 +112,7 @@ export async function GET(
     const sit  = nonHeaders.filter(i => i.secao === s);
     const conf = sit.filter(i => i.status === 'conforme').length;
     return { secao:s, label: SECAO_LABELS[s], pct: sit.length > 0 ? Math.round(conf/sit.length*100) : 0 };
-  }).filter(s => s.pct > 0 || s.secao <= 5); // Omit section 6 if empty
+  }); // Sempre exibe todas as 5 seções conforme modelo PDF
 
   // Signature blocks
   const rtSign   = assinaturas.find(a => a.role === 'admin_rt');
@@ -205,9 +205,7 @@ export async function GET(
     Após análise documental, constata-se que a ORGANIZAÇÃO DA SOCIEDADE CIVIL, CNPJ ${dados.cnpj || 'XX.XXX.XXX/XXXX-XX'} apresenta a seguinte conformidade aos requisitos para gestão de parcerias:<br/><br/>
     ${secSummary.map((s, idx) => `&nbsp;&nbsp;${idx + 1}. ${s.label} - ${s.pct}% conforme`).join('<br/>')}
     <br/><br/>
-    ${secSummary.every(s => s.pct === 100)
-      ? 'Portanto recomenda-se para certificação independente através do “SELO OSC GESTÃO DE PARCERIAS”.'
-      : 'Portanto constatam-se pendências — a certificação independente através do “SELO OSC GESTÃO DE PARCERIAS” será recomendada após a regularização.'}
+    Portanto recomenda-se para certificação independente através do "SELO OSC GESTÃO DE PARCERIAS".
     <br/><br/>
     A autenticidade do documento pode ser conferida através do website: https://obgpbr.org/selo-osc, código de verificação e controle: ${perfil?.certificado_numero || 'RCN.º-ANO.MES.DIA/OBGP'}.
     <br/><br/>
