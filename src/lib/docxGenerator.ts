@@ -92,7 +92,10 @@ function replaceSpanningText(xml: string, target: string, replacement: string): 
 
   // 3. Find target in concatenated text
   const targetIdx = concat.indexOf(target);
-  if (targetIdx === -1) return xml; // not found
+  if (targetIdx === -1) {
+    console.warn(`[docxGenerator] placeholder não encontrado: ${JSON.stringify(target)}`);
+    return xml;
+  }
   const targetEnd = targetIdx + target.length;
 
   // 4. Find which segments are involved
@@ -276,7 +279,7 @@ const ENTITY_LABELS: Record<string, string> = {
 /* ═══════════════════════════════════════════════════════════════════
    FUNÇÃO PRINCIPAL
    ═══════════════════════════════════════════════════════════════════ */
-export async function gerarRelatorioDocx(dados: Record<string, any>): Promise<Blob> {
+export async function gerarRelatorioDocx(dados: RelatorioData): Promise<Blob> {
   // 1. Load the original clean template
   // Tenta carregar o template DOCX
   // NOTA: O arquivo PDF no public/docs tem caracteres especiais, 
@@ -311,7 +314,7 @@ export async function gerarRelatorioDocx(dados: Record<string, any>): Promise<Bl
     const fieldKey = ENTITY_LABELS[cell1Text];
     if (!fieldKey) continue;
 
-    const value = (d as any)[fieldKey] || 'Não informado';
+    const value = (d as Record<string, string>)[fieldKey] || 'Não informado';
     const cell2Xml = row.content.substring(cells[1].start, cells[1].end);
     const newCell2 = injectTextIntoCell(cell2Xml, value);
 
@@ -397,7 +400,6 @@ export async function gerarRelatorioDocx(dados: Record<string, any>): Promise<Bl
     for (let ci = 4; ci >= 1; ci--) {
       const cell = cells[ci];
       const cellXml = newContent.substring(cell.start, cell.end);
-      const cellText = stripXmlTags(cellXml).trim();
       // Replace '-' placeholders or empty with actual data
       const dataIdx = 4 - ci; // maps cell 4->0, 3->1, 2->2, 1->3
       const newCellXml = injectTextIntoCell(cellXml, fillData[dataIdx]);
@@ -418,12 +420,14 @@ export async function gerarRelatorioDocx(dados: Record<string, any>): Promise<Bl
   // (We removed the old custom pass because the new template has labels in the cells)
 
   // ── 6. Replace conclusion/header text ──
-  // All text replacements use replaceSpanningText because Word splits text across runs
-  xml = replaceSpanningText(xml, '1-DT.MM/ANOX/OBGP', d.numero_relatorio || '');
-  xml = replaceSpanningText(xml, 'XX.XXX.XXX/XXXX-XX', d.cnpj || '');
-  xml = replaceSpanningText(xml, 'RC1DTMMANOXOBGP', d.codigo_controle || '');
-  xml = replaceSpanningText(xml, 'DT de MES de ANO', d.data_hoje || '');
-  xml = replaceSpanningText(xml, 'LOCAL/UF', d.municipio_uf || '');
+  // Placeholders alinhados com o template em public/docs/MODEL_RELATORIO_CONFORMIDADE_RCN_ANOMESDIAOBGP_REV02_24.04.2026.docx.
+  // A ordem importa: o código de verificação ("RCN.º-...") contém o placeholder do título ("N.º-...") como substring,
+  // por isso substituímos primeiro o RCN... (mais específico) para evitar conflito.
+  xml = replaceSpanningText(xml, 'RCN.º-ANO.MES.DIA/OBGP', d.codigo_controle || '');
+  xml = replaceSpanningText(xml, 'N.º-ANO.MES.DIA/OBGP',   d.numero_relatorio || '');
+  xml = replaceSpanningText(xml, 'XX.XXX.XXX/XXXX-XX',     d.cnpj || '');
+  xml = replaceSpanningText(xml, 'DT de MES de ANO',       d.data_hoje || '');
+  xml = replaceSpanningText(xml, 'LOCAL/UF',               d.municipio_uf || '');
 
   // Conformity percentages in conclusion
   function calcConf(rows: ChecklistRow[]): number {

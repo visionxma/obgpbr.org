@@ -12,11 +12,36 @@ import {
 import { gerarRelatorioDocx } from '@/lib/docxGenerator';
 import DiagSeloCard from '@/components/admin/DiagSeloCard';
 
+/* ── Standalone helpers (outside component to satisfy react-hooks/static-components) ── */
+function msgParts(msg: string): ['ok' | 'error' | '', string] {
+  if (msg.startsWith('ok:')) return ['ok', msg.slice(3)];
+  if (msg.startsWith('error:')) return ['error', msg.slice(6)];
+  return ['', ''];
+}
+
+function MsgBanner({ msg }: { msg: string }) {
+  const [type, text] = msgParts(msg);
+  if (!text) return null;
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
+      borderRadius: 8, marginBottom: 16, fontSize: '0.82rem', fontWeight: 500,
+      background: type === 'ok' ? 'var(--admin-success-bg)' : 'var(--admin-danger-bg)',
+      color: type === 'ok' ? 'var(--admin-success)' : 'var(--admin-danger)',
+      border: `1px solid ${type === 'ok' ? 'rgba(38,102,47,.2)' : 'rgba(220,38,38,.2)'}`,
+    }}>
+      {type === 'ok' ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
+      {text}
+    </div>
+  );
+}
+
 /* ── Types ──────────────────────────────────────── */
 interface OscPerfil {
   id: string; user_id: string; osc_id: string;
   razao_social: string | null; cnpj: string | null;
   natureza_juridica: string | null;
+  nome_fantasia?: string | null;
   responsavel: string | null; telefone: string | null;
   email_osc: string | null;
   logradouro: string | null; numero_endereco: string | null;
@@ -59,15 +84,22 @@ interface ChecklistItem {
   data_validade?: string | null; analise?: string | null;
   status?: string | null;
 }
+interface SectionFieldValue {
+  status?: string | null;
+  codigo?: string | null;
+  data_emissao?: string | null;
+  data_validade?: string | null;
+  analise?: string | null;
+}
 interface Relatorio {
   id: string; osc_id: string; numero: string | null;
   status: 'em_preenchimento' | 'em_analise' | 'aprovado' | 'reprovado';
   dados_entidade: Record<string, string> | null;
-  habilitacao_juridica: any;
-  regularidade_fiscal: any;
-  qualificacao_economica: any;
-  qualificacao_tecnica: any;
-  outros_registros?: any;
+  habilitacao_juridica: ChecklistItem[] | Record<string, SectionFieldValue> | null;
+  regularidade_fiscal: ChecklistItem[] | Record<string, SectionFieldValue> | null;
+  qualificacao_economica: ChecklistItem[] | Record<string, SectionFieldValue> | null;
+  qualificacao_tecnica: ChecklistItem[] | Record<string, SectionFieldValue> | null;
+  outros_registros?: ChecklistItem[] | Record<string, SectionFieldValue> | null;
   observacao_admin: string | null;
   submitted_at: string | null;
   reviewed_at: string | null;
@@ -136,7 +168,7 @@ const OUTROS_REGISTROS = [
 
 /* Converte o campo habilitacao_juridica (Record OU Array) em ChecklistItem[] para uma seção */
 function buildChecklistItems(
-  rawField: any,
+  rawField: ChecklistItem[] | Record<string, SectionFieldValue> | null | undefined,
   section: { id: string; title: string }[]
 ): ChecklistItem[] {
   if (!rawField) return section.map(s => ({ id: s.id, label: s.title, checked: false }));
@@ -147,7 +179,7 @@ function buildChecklistItems(
   }
 
   // Formato atual: Record<id, {status, codigo, data_emissao, ...}>
-  const rec = rawField as Record<string, any>;
+  const rec = rawField as Record<string, SectionFieldValue>;
   return section.map(s => {
     const d = rec[s.id] ?? {};
     return {
@@ -498,8 +530,6 @@ export default function OscDetailPage() {
   const handleGenerateAdminDocx = async () => {
     if (!perfil || !relatorio) return;
     try {
-      // Use dados_entidade from the relatório (what the user submitted from OSC panel)
-      // Fall back to perfil fields if dados_entidade is empty
       const de = relatorio.dados_entidade ?? {};
       const enderecoGeral = [
         de.logradouro || perfil.logradouro,
@@ -509,46 +539,65 @@ export default function OscDetailPage() {
         de.estado || perfil.estado,
       ].filter(Boolean).join(', ');
 
-      // Helper to convert checklist items to the array format the generator expects
-      function toDocxRows(rawField: any, sectionDef: { id: string; title: string }[]) {
-        const items = buildChecklistItems(rawField, sectionDef);
-        return items.map(i => ({
-          label: i.label,
-          status: i.checked ? 'CONFORME' : (i.status === 'nao_se_aplica' ? 'N/A' : 'PENDENTE'),
-          codigo: i.codigo || '—',
-          emissao: i.data_emissao ? new Date(i.data_emissao).toLocaleDateString('pt-BR') : '—',
-          validade: i.data_validade ? new Date(i.data_validade).toLocaleDateString('pt-BR') : '—',
-          analise: i.analise || '—',
+      // Lê os itens de checklist da tabela normalizada (onde o painel OSC realmente persiste).
+      // As colunas JSONB de relatorios_conformidade ficam vazias e não devem ser usadas.
+      const { data: itensRows } = await supabase
+        .from('relatorio_itens')
+        .select('secao, descricao, is_header, ordem, codigo_controle, data_emissao, data_validade, analise_atual, status')
+        .eq('relatorio_id', relatorio.id)
+        .order('secao').order('ordem');
+
+      type ItemRow = {
+        secao: number; descricao: string; is_header: boolean;
+        codigo_controle: string | null; data_emissao: string | null;
+        data_validade: string | null; analise_atual: string | null; status: string;
+      };
+      const itens = (itensRows ?? []) as ItemRow[];
+      const fmt = (iso: string | null) => iso
+        ? new Date(iso + 'T12:00:00').toLocaleDateString('pt-BR')
+        : '—';
+      const STATUS_DOCX: Record<string,string> = {
+        conforme: 'CONFORME', nao_aplicavel: 'N/A',
+        nao_conforme: 'NÃO CONFORME', pendente: 'PENDENTE',
+      };
+      const rowsFromItens = (secao: number) => itens
+        .filter(i => i.secao === secao && !i.is_header)
+        .map(i => ({
+          label: i.descricao,
+          status: STATUS_DOCX[i.status] ?? 'PENDENTE',
+          codigo: i.codigo_controle || '—',
+          emissao: fmt(i.data_emissao),
+          validade: fmt(i.data_validade),
+          analise: i.analise_atual || '—',
         }));
-      }
 
       const docxData = {
-        // Entity data — prioritize what the user filled in the OSC panel
-        cnpj: de.cnpj || perfil.cnpj || 'Não Informado',
-        natureza_juridica: de.natureza_juridica || perfil.natureza_juridica || 'Não Informado',
-        razao_social: de.razao_social || perfil.razao_social || 'Não Informado',
-        nome_fantasia: de.nome_fantasia || (perfil as any).nome_fantasia || 'Não Informado',
-        endereco: enderecoGeral || 'Não Informado',
-        data_abertura: de.data_abertura_cnpj || perfil.data_abertura_cnpj || 'Não Informado',
-        email: de.email_osc || perfil.email_osc || 'Não Informado',
-        telefone: de.telefone || perfil.telefone || 'Não Informado',
-        responsavel: de.responsavel || perfil.responsavel || 'Não Informado',
-        // Report metadata
+        // Chaves alinhadas com ENTITY_LABELS em src/lib/docxGenerator.ts:265-274
+        cnpj:               de.cnpj               || perfil.cnpj               || 'Não Informado',
+        natureza_juridica:  de.natureza_juridica  || perfil.natureza_juridica  || 'Não Informado',
+        razao_social:       de.razao_social       || perfil.razao_social       || 'Não Informado',
+        nome_fantasia:      de.nome_fantasia      || perfil.nome_fantasia      || 'Não Informado',
+        logradouro:         enderecoGeral         || 'Não Informado',
+        data_abertura_cnpj: de.data_abertura_cnpj || perfil.data_abertura_cnpj || 'Não Informado',
+        email_osc:          de.email_osc          || perfil.email_osc          || 'Não Informado',
+        telefone:           de.telefone           || perfil.telefone           || 'Não Informado',
+        responsavel:        de.responsavel        || perfil.responsavel        || 'Não Informado',
+        // Metadados
         municipio_uf: [de.municipio || perfil.municipio, de.estado || perfil.estado].filter(Boolean).join('/') || 'Não Informado',
         numero_relatorio: relatorio.numero || `OBGP${new Date().getFullYear()}${perfil.id.substring(0, 4).toUpperCase()}`,
         codigo_controle: `RC${new Date().getTime().toString(36).toUpperCase()}`,
         data_hoje: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
-        // Checklist sections as arrays (the new docxGenerator expects this format)
-        habilitacao_juridica: toDocxRows(relatorio.habilitacao_juridica, HABILITACAO_JURIDICA),
-        regularidade_fiscal: toDocxRows(relatorio.regularidade_fiscal, REGULARIDADE_FISCAL),
-        qualificacao_economica: toDocxRows(relatorio.qualificacao_economica, QUALIFICACAO_FINANCEIRA),
-        qualificacao_tecnica: toDocxRows(relatorio.qualificacao_tecnica, QUALIFICACAO_TECNICA),
-        outros_registros: toDocxRows(relatorio.outros_registros, OUTROS_REGISTROS),
-        // Conclusion
+        // Checklist — agora vem de relatorio_itens (fonte de verdade)
+        habilitacao_juridica:   rowsFromItens(2),
+        regularidade_fiscal:    rowsFromItens(3),
+        qualificacao_economica: rowsFromItens(4),
+        qualificacao_tecnica:   rowsFromItens(5),
+        outros_registros:       rowsFromItens(6),
+        // Conclusão
         status_final: relatorio.status === 'aprovado' ? 'APROVADO' : 'EM ANÁLISE',
         observacao_admin: relatorio.observacao_admin || 'Nenhuma observação extra.',
       };
-      
+
       const blob = await gerarRelatorioDocx(docxData);
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -556,34 +605,13 @@ export default function OscDetailPage() {
       link.download = `RELATORIO_CONFORMIDADE_${perfil.osc_id}.docx`;
       link.click();
       window.URL.revokeObjectURL(url);
-    } catch (e: any) {
-      alert(`Erro ao gerar relatório: ${e.message}`);
+    } catch (e: unknown) {
+      alert(`Erro ao gerar relatório: ${e instanceof Error ? e.message : String(e)}`);
     }
   };
 
   /* ── Render helpers ── */
-  function msgParts(msg: string): ['ok' | 'error' | '', string] {
-    if (msg.startsWith('ok:')) return ['ok', msg.slice(3)];
-    if (msg.startsWith('error:')) return ['error', msg.slice(6)];
-    return ['', ''];
-  }
-
-  function MsgBanner({ msg }: { msg: string }) {
-    const [type, text] = msgParts(msg);
-    if (!text) return null;
-    return (
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px',
-        borderRadius: 8, marginBottom: 16, fontSize: '0.82rem', fontWeight: 500,
-        background: type === 'ok' ? 'var(--admin-success-bg)' : 'var(--admin-danger-bg)',
-        color: type === 'ok' ? 'var(--admin-success)' : 'var(--admin-danger)',
-        border: `1px solid ${type === 'ok' ? 'rgba(38,102,47,.2)' : 'rgba(220,38,38,.2)'}`,
-      }}>
-        {type === 'ok' ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
-        {text}
-      </div>
-    );
-  }
+  // msgParts and MsgBanner are defined at module level above
 
   /* ── Loading / not found ── */
   if (loading) return (

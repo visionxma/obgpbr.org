@@ -167,6 +167,7 @@ export async function GET(
 
   <!-- Header (PDF Style) -->
   <div style="text-align:center; margin-bottom: 30px; line-height: 1.5;">
+    <img src="/logo.png" alt="OBGP" style="height:90px; margin: 0 auto 10px; display:block;" />
     <div style="font-size:14px; font-weight:bold; color:#0D364F">ORGANIZAÇÃO BRASIL GESTAO DE PARCERIAS - OBGP</div>
     <div style="font-size:11px; color:#1f2937">Avenida L, N.º 10 D, Quadra 32, Bairro Morada do Sol, Município Paço do Lumiar/MA, CEP 65130-000</div>
     <div style="font-size:11px; color:#1f2937">E-mail: contato.org.obgp@gmail.com, Contato: (98)9 8710-0001</div>
