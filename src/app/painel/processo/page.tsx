@@ -776,47 +776,162 @@ export default function ProcessoPage() {
             <section style={{ marginBottom: 32, border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-xl)', overflow: 'hidden', background: '#fff' }}>
               <header style={{ background: 'var(--site-primary)', color: '#fff', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--site-gold)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800 }}>7</div>
-                <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#fff' }}>CONCLUSÃO (FORMATO OFICIAL)</h2>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#fff' }}>CONCLUSÃO E CHECKOUT</h2>
               </header>
-              <div style={{ padding: '32px 40px', background: 'rgba(197,171,118,0.03)' }}>
-                <div style={{ background: '#fff', border: '1px solid rgba(197,171,118,0.3)', padding: 32, borderRadius: 'var(--site-radius-lg)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', fontFamily: '"Times New Roman", Times, serif', fontSize: '1.1rem', lineHeight: 1.8, color: '#222', position: 'relative' }}>
-                  <div style={{ position: 'absolute', top: 20, right: 20, opacity: 0.1, pointerEvents: 'none' }}>
-                    <ShieldCheck size={120} />
+
+              {showCartModal ? (
+                <div style={{ animation:'slideUp .3s ease' }}>
+                  <div style={{ background:'linear-gradient(135deg,#0D364F 0%,#1a5276 100%)', padding:'24px 32px', color:'#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div>
+                      <h2 style={{ margin:0, fontSize:'1.4rem', fontWeight:800, display: 'flex', alignItems: 'center', gap: 10 }}><FileText size={24}/> Seu Carrinho</h2>
+                      <p style={{ margin:'4px 0 0', fontSize:'0.85rem', opacity:.85 }}>Revise os relatórios e documentos antes do pagamento.</p>
+                    </div>
+                    <button onClick={() => setShowCartModal(false)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' }}>✕ Fechar</button>
                   </div>
-                  <p style={{ textAlign: 'justify', marginBottom: 20 }}>
-                    Após análise documental, constata-se que a entidade, incluindo identificação completa (nome e CNPJ), apresenta a seguinte conformidade aos requisitos para gestão de parcerias:
-                  </p>
-                  <ul style={{ listStyleType: 'none', paddingLeft: 0, marginBottom: 20 }}>
-                    <li style={{ marginBottom: 8 }}><strong>Habilitação Jurídica</strong> – 100% conforme</li>
-                    <li style={{ marginBottom: 8 }}><strong>Regularidade Fiscal, Social e Trabalhista</strong> – 100% conforme</li>
-                    <li style={{ marginBottom: 8 }}><strong>Qualificação Econômico-Financeira</strong> – 100% conforme</li>
-                    <li style={{ marginBottom: 8 }}><strong>Qualificação Técnica</strong> – 100% conforme</li>
-                    <li style={{ marginBottom: 8 }}><strong>Outros Registros</strong> – 100% conforme</li>
-                  </ul>
-                  <p style={{ textAlign: 'justify', marginBottom: 20 }}>
-                    Portanto, recomenda-se certificação independente através do <strong>"SELO OSC GESTÃO DE PARCERIAS"</strong>.
-                  </p>
-                  <p style={{ textAlign: 'justify', fontSize: '0.9rem', color: '#666', borderTop: '1px solid #eee', paddingTop: 16, marginTop: 32 }}>
-                    A autenticidade do documento pode ser conferida através do website: https://obgpbr.org/selo-osc, mediante código de verificação e controle.
-                  </p>
-                </div>
-                <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--site-text-secondary)', fontWeight: 700, textAlign: 'center' }}>
-                    <ShieldCheck size={14} style={{ display: 'inline', position: 'relative', top: 2, marginRight: 4, color: '#16a34a' }} />
-                    Sua assinatura digital (.pfx) será aplicada automaticamente ao validar o pagamento.
-                  </span>
-                  
-                  <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 300 }}>
-                    <button onClick={handleConsultarPagamentoEEnviar} disabled={enviando} className="btn btn-gold" style={{ flex: 1, padding: '16px', borderRadius: 'var(--site-radius-full)', fontWeight: 800 }}>
-                      {enviando ? (
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Clock size={18} className="spin-anim" /> {mensagemEnviando || 'Processando...'}</span>
-                      ) : (
-                        <><Plus size={18} /> Adicionar ao Carrinho</>
-                      )}
+
+                  <div style={{ padding:'24px 32px', background: '#fff' }}>
+                    {cart.map((item, index) => (
+                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, marginBottom: 12 }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0D364F' }}>Relatório de Conformidade ({index + 1})</div>
+                          <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 4 }}>Entidade: {item.entidade.razao_social || item.entidade.cnpj}</div>
+                          <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: 2 }}>{new Date(item.createdAt).toLocaleString('pt-BR')}</div>
+                        </div>
+                        <div style={{ textAlign: 'right', marginLeft: 16 }}>
+                          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>R$ 350,00</div>
+                          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                            <button onClick={() => showAlert('Preview', 'Funcionalidade de preview do relatório em desenvolvimento.')} style={{ background: '#e2e8f0', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: '#475569', cursor: 'pointer' }}>Preview</button>
+                            <button onClick={() => handleRemoverDoCarrinho(item.id)} style={{ background: '#fee2e2', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: '#dc2626', cursor: 'pointer' }}>Remover</button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    <div style={{ marginTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px dashed #e2e8f0', paddingTop: 20 }}>
+                      <button onClick={handleAdicionarNovo} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#334155', padding: '10px 16px', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>
+                        <Plus size={16}/> Criar Novo Documento
+                      </button>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Valor Total</div>
+                        <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0D364F' }}>R$ {(cart.length * 350).toFixed(2).replace('.', ',')}</div>
+                      </div>
+                    </div>
+
+                    <button onClick={() => { setShowCartModal(false); setShowCheckoutModal(true); }} style={{ width: '100%', marginTop: 24, background: '#16a34a', color: '#fff', border: 'none', padding: '16px', borderRadius: 12, fontSize: '1.05rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                      <CheckCircle2 size={20}/> Finalizar Compra ({cart.length} itens)
                     </button>
                   </div>
                 </div>
-              </div>
+              ) : showCheckoutModal ? (
+                <div style={{ animation:'slideUp .3s ease', background: '#fff' }}>
+                  <div style={{ background:'linear-gradient(135deg,#0D364F 0%,#1a5276 100%)', padding:'24px 32px', color:'#fff', textAlign:'center', position: 'relative' }}>
+                    <button onClick={() => { setShowCheckoutModal(false); setShowCartModal(true); }} style={{ position: 'absolute', left: 20, top: 24, background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 'bold' }}>← Voltar</button>
+                    <div style={{ width:48, height:48, borderRadius:'50%', background:'rgba(255,255,255,.15)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
+                      <ShieldCheck size={24} />
+                    </div>
+                    <h2 style={{ margin:0, fontSize:'1.3rem', fontWeight:800 }}>Pagamento (PIX)</h2>
+                  </div>
+
+                  <div style={{ textAlign:'center', padding:'20px 32px 0' }}>
+                    <div style={{ fontSize:'0.7rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.1em', color:'#6b7280', marginBottom:4 }}>Valor Total a Pagar</div>
+                    <div style={{ fontSize:'2.6rem', fontWeight:800, color:'#16a34a', lineHeight:1 }}>
+                      R$ {(cart.length * 350).toFixed(2).replace('.', ',')}
+                    </div>
+                  </div>
+
+                  <div style={{ padding:'20px 32px' }}>
+                    <div style={{ background:'#f8fafc', borderRadius:14, border:'1px solid #e5e7eb', overflow:'hidden' }}>
+                      {[
+                        { label: 'Titular', value: 'C. E. DOS SANTOS COELHO', key: 'titular' },
+                        { label: 'Empresa', value: 'SEMPRE - Gestão de Projetos e Negócios Empresariais', key: 'empresa' },
+                        { label: 'CNPJ / PIX', value: '14.796.065/0001-09', key: 'pix' },
+                        { label: 'Banco', value: 'Bradesco - 237', key: 'banco' },
+                        { label: 'Agência', value: '408-1', key: 'agencia' },
+                        { label: 'Conta Corrente', value: '49035-0', key: 'conta' },
+                      ].map(({ label, value, key }, i) => (
+                        <div key={key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 16px', borderBottom: i < 5 ? '1px solid #e5e7eb' : 'none' }}>
+                          <div>
+                            <div style={{ fontSize:'0.62rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', color:'#9ca3af' }}>{label}</div>
+                            <div style={{ fontSize:'0.85rem', fontWeight:600, color:'#1f2937', marginTop:1 }}>{value}</div>
+                          </div>
+                          <button onClick={() => copyToClipboard(value, key)}
+                            style={{ background: copiedField === key ? '#16a34a' : '#0D364F', color:'#fff', border:'none', borderRadius:8, padding:'5px 10px', fontSize:'0.68rem', fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:4, transition:'background .2s' }}>
+                            {copiedField === key ? <><CheckCircle2 size={11}/> Copiado!</> : <><Copy size={11}/> Copiar</>}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div style={{ marginTop: 24, padding: 16, border: '2px dashed #cbd5e1', borderRadius: 12, textAlign: 'center', background: comprovanteFile ? '#f0fdf4' : '#fafafa' }}>
+                      <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0D364F', marginBottom: 8 }}>Anexe o Comprovante de Pagamento</div>
+                      <input 
+                        type="file" 
+                        accept="image/*,application/pdf"
+                        onChange={(e) => setComprovanteFile(e.target.files?.[0] || null)}
+                        style={{ display: 'none' }}
+                        id="comprovante-upload"
+                      />
+                      <label htmlFor="comprovante-upload" style={{ display: 'inline-block', background: '#0D364F', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>
+                        {comprovanteFile ? 'Mudar Arquivo' : 'Selecionar Arquivo'}
+                      </label>
+                      {comprovanteFile && <div style={{ marginTop: 8, fontSize: '0.75rem', color: '#16a34a', fontWeight: 'bold' }}>✅ {comprovanteFile.name} anexado</div>}
+                    </div>
+
+                    <div style={{ marginTop:16, padding:'14px 16px', background:'rgba(245,158,11,.1)', borderRadius:12, border:'1px solid rgba(245,158,11,.2)' }}>
+                      <div style={{ fontSize:'0.75rem', color:'#b45309', lineHeight:1.5 }}>
+                        <strong>Atenção:</strong> A análise dos documentos iniciará somente após a confirmação do pagamento. O administrador irá conferir o comprovante anexado.
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={handleSubmitCheckout} 
+                      disabled={enviando || !comprovanteFile}
+                      style={{ width: '100%', marginTop: 24, marginBottom: 12, background: (enviando || !comprovanteFile) ? '#cbd5e1' : '#0D364F', color: '#fff', border: 'none', padding: '16px', borderRadius: 12, fontSize: '1rem', fontWeight: 800, cursor: (enviando || !comprovanteFile) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                      {enviando ? <span className="spin-anim">⏳ Enviando...</span> : 'Enviar Comprovante e Finalizar'}
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ padding: '32px 40px', background: 'rgba(197,171,118,0.03)' }}>
+                  <div style={{ background: '#fff', border: '1px solid rgba(197,171,118,0.3)', padding: 32, borderRadius: 'var(--site-radius-lg)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', fontFamily: '"Times New Roman", Times, serif', fontSize: '1.1rem', lineHeight: 1.8, color: '#222', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: 20, right: 20, opacity: 0.1, pointerEvents: 'none' }}>
+                      <ShieldCheck size={120} />
+                    </div>
+                    <p style={{ textAlign: 'justify', marginBottom: 20 }}>
+                      Após análise documental, constata-se que a entidade, incluindo identificação completa (nome e CNPJ), apresenta a seguinte conformidade aos requisitos para gestão de parcerias:
+                    </p>
+                    <ul style={{ listStyleType: 'none', paddingLeft: 0, marginBottom: 20 }}>
+                      <li style={{ marginBottom: 8 }}><strong>Habilitação Jurídica</strong> – 100% conforme</li>
+                      <li style={{ marginBottom: 8 }}><strong>Regularidade Fiscal, Social e Trabalhista</strong> – 100% conforme</li>
+                      <li style={{ marginBottom: 8 }}><strong>Qualificação Econômico-Financeira</strong> – 100% conforme</li>
+                      <li style={{ marginBottom: 8 }}><strong>Qualificação Técnica</strong> – 100% conforme</li>
+                      <li style={{ marginBottom: 8 }}><strong>Outros Registros</strong> – 100% conforme</li>
+                    </ul>
+                    <p style={{ textAlign: 'justify', marginBottom: 20 }}>
+                      Portanto, recomenda-se certificação independente através do <strong>"SELO OSC GESTÃO DE PARCERIAS"</strong>.
+                    </p>
+                    <p style={{ textAlign: 'justify', fontSize: '0.9rem', color: '#666', borderTop: '1px solid #eee', paddingTop: 16, marginTop: 32 }}>
+                      A autenticidade do documento pode ser conferida através do website: https://obgpbr.org/selo-osc, mediante código de verificação e controle.
+                    </p>
+                  </div>
+                  <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                    <span style={{ fontSize: '0.85rem', color: 'var(--site-text-secondary)', fontWeight: 700, textAlign: 'center' }}>
+                      <ShieldCheck size={14} style={{ display: 'inline', position: 'relative', top: 2, marginRight: 4, color: '#16a34a' }} />
+                      Sua assinatura digital (.pfx) será aplicada automaticamente ao validar o pagamento.
+                    </span>
+                    
+                    <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 300 }}>
+                      <button onClick={handleConsultarPagamentoEEnviar} disabled={enviando} className="btn btn-gold" style={{ flex: 1, padding: '16px', borderRadius: 'var(--site-radius-full)', fontWeight: 800 }}>
+                        {enviando ? (
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Clock size={18} className="spin-anim" /> {mensagemEnviando || 'Processando...'}</span>
+                        ) : (
+                          <><Plus size={18} /> Adicionar ao Carrinho</>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </section>
           )}
 
@@ -848,160 +963,3 @@ export default function ProcessoPage() {
               <h2 className="panel-modal-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 {modal.type === 'confirm' ? <AlertCircle className="text-gold" size={24} /> : <CheckCircle2 className="text-gold" size={24} />}
                 {modal.title}
-              </h2>
-            </div>
-            <div className="panel-modal-body">
-              <p style={{ margin: 0, color: 'var(--site-text-secondary)', lineHeight: 1.6, fontSize: '0.95rem' }}>
-                {modal.message}
-              </p>
-            </div>
-            <div className="panel-modal-footer">
-              {modal.type === 'confirm' && (
-                <button 
-                  className="panel-btn panel-btn-ghost" 
-                  onClick={() => setModal({ ...modal, show: false })}
-                >
-                  Cancelar
-                </button>
-              )}
-              <button 
-                className="panel-btn panel-btn-primary"
-                onClick={() => {
-                  setModal({ ...modal, show: false });
-                  if (modal.type === 'confirm' && modal.onConfirm) modal.onConfirm();
-                }}
-              >
-                {modal.type === 'confirm' ? 'Confirmar' : 'Entendi'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── MODAL DE CARRINHO ── */}
-      {showCartModal && (
-        <div style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, backdropFilter:'blur(4px)' }}>
-          <div style={{ background:'#fff', borderRadius:20, maxWidth:600, width:'100%', maxHeight:'90vh', overflowY:'auto', boxShadow:'0 25px 60px rgba(0,0,0,.25)', animation:'slideUp .3s ease' }}>
-            
-            <div style={{ background:'linear-gradient(135deg,#0D364F 0%,#1a5276 100%)', borderRadius:'20px 20px 0 0', padding:'24px 32px', color:'#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div>
-                <h2 style={{ margin:0, fontSize:'1.4rem', fontWeight:800, display: 'flex', alignItems: 'center', gap: 10 }}><FileText size={24}/> Seu Carrinho</h2>
-                <p style={{ margin:'4px 0 0', fontSize:'0.85rem', opacity:.85 }}>Revise os relatórios e documentos antes do pagamento.</p>
-              </div>
-              <button onClick={() => setShowCartModal(false)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' }}>✕ Fechar</button>
-            </div>
-
-            <div style={{ padding:'24px 32px' }}>
-              {cart.map((item, index) => (
-                <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, marginBottom: 12 }}>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0D364F' }}>Relatório de Conformidade ({index + 1})</div>
-                    <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 4 }}>Entidade: {item.entidade.razao_social || item.entidade.cnpj}</div>
-                    <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: 2 }}>{new Date(item.createdAt).toLocaleString('pt-BR')}</div>
-                  </div>
-                  <div style={{ textAlign: 'right', marginLeft: 16 }}>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>R$ 350,00</div>
-                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                      <button onClick={() => showAlert('Preview', 'Funcionalidade de preview do relatório em desenvolvimento.')} style={{ background: '#e2e8f0', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: '#475569', cursor: 'pointer' }}>Preview</button>
-                      <button onClick={() => handleRemoverDoCarrinho(item.id)} style={{ background: '#fee2e2', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: '#dc2626', cursor: 'pointer' }}>Remover</button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <div style={{ marginTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px dashed #e2e8f0', paddingTop: 20 }}>
-                <button onClick={handleAdicionarNovo} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#334155', padding: '10px 16px', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>
-                  <Plus size={16}/> Criar Novo Documento
-                </button>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Valor Total</div>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0D364F' }}>R$ {(cart.length * 350).toFixed(2).replace('.', ',')}</div>
-                </div>
-              </div>
-
-              <button onClick={() => { setShowCartModal(false); setShowCheckoutModal(true); }} style={{ width: '100%', marginTop: 24, background: '#16a34a', color: '#fff', border: 'none', padding: '16px', borderRadius: 12, fontSize: '1.05rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                <CheckCircle2 size={20}/> Finalizar Compra ({cart.length} itens)
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── MODAL DE CHECKOUT (PAGAMENTO) ── */}
-      {showCheckoutModal && (
-        <div style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,.55)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, backdropFilter:'blur(4px)' }}>
-          <div style={{ background:'#fff', borderRadius:20, maxWidth:520, width:'100%', maxHeight:'90vh', overflowY:'auto', boxShadow:'0 25px 60px rgba(0,0,0,.25)', animation:'slideUp .3s ease' }}>
-            
-            <div style={{ background:'linear-gradient(135deg,#0D364F 0%,#1a5276 100%)', borderRadius:'20px 20px 0 0', padding:'24px 32px', color:'#fff', textAlign:'center', position: 'relative' }}>
-               <button onClick={() => { setShowCheckoutModal(false); setShowCartModal(true); }} style={{ position: 'absolute', left: 20, top: 24, background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 'bold' }}>← Voltar</button>
-              <div style={{ width:48, height:48, borderRadius:'50%', background:'rgba(255,255,255,.15)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
-                <ShieldCheck size={24} />
-              </div>
-              <h2 style={{ margin:0, fontSize:'1.3rem', fontWeight:800 }}>Pagamento (PIX)</h2>
-            </div>
-
-            <div style={{ textAlign:'center', padding:'20px 32px 0' }}>
-              <div style={{ fontSize:'0.7rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.1em', color:'#6b7280', marginBottom:4 }}>Valor Total a Pagar</div>
-              <div style={{ fontSize:'2.6rem', fontWeight:800, color:'#16a34a', lineHeight:1 }}>
-                R$ {(cart.length * 350).toFixed(2).replace('.', ',')}
-              </div>
-            </div>
-
-            <div style={{ padding:'20px 32px' }}>
-              <div style={{ background:'#f8fafc', borderRadius:14, border:'1px solid #e5e7eb', overflow:'hidden' }}>
-                {[
-                  { label: 'Titular', value: 'C. E. DOS SANTOS COELHO', key: 'titular' },
-                  { label: 'Empresa', value: 'SEMPRE - Gestão de Projetos e Negócios Empresariais', key: 'empresa' },
-                  { label: 'CNPJ / PIX', value: '14.796.065/0001-09', key: 'pix' },
-                  { label: 'Banco', value: 'Bradesco - 237', key: 'banco' },
-                  { label: 'Agência', value: '408-1', key: 'agencia' },
-                  { label: 'Conta Corrente', value: '49035-0', key: 'conta' },
-                ].map(({ label, value, key }, i) => (
-                  <div key={key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'10px 16px', borderBottom: i < 5 ? '1px solid #e5e7eb' : 'none' }}>
-                    <div>
-                      <div style={{ fontSize:'0.62rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.06em', color:'#9ca3af' }}>{label}</div>
-                      <div style={{ fontSize:'0.85rem', fontWeight:600, color:'#1f2937', marginTop:1 }}>{value}</div>
-                    </div>
-                    <button onClick={() => copyToClipboard(value, key)}
-                      style={{ background: copiedField === key ? '#16a34a' : '#0D364F', color:'#fff', border:'none', borderRadius:8, padding:'5px 10px', fontSize:'0.68rem', fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:4, transition:'background .2s' }}>
-                      {copiedField === key ? <><CheckCircle2 size={11}/> Copiado!</> : <><Copy size={11}/> Copiar</>}
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              {/* Upload Comprovante */}
-              <div style={{ marginTop: 24, padding: 16, border: '2px dashed #cbd5e1', borderRadius: 12, textAlign: 'center', background: comprovanteFile ? '#f0fdf4' : '#fafafa' }}>
-                <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0D364F', marginBottom: 8 }}>Anexe o Comprovante de Pagamento</div>
-                <input 
-                  type="file" 
-                  accept="image/*,application/pdf"
-                  onChange={(e) => setComprovanteFile(e.target.files?.[0] || null)}
-                  style={{ display: 'none' }}
-                  id="comprovante-upload"
-                />
-                <label htmlFor="comprovante-upload" style={{ display: 'inline-block', background: '#0D364F', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>
-                  {comprovanteFile ? 'Mudar Arquivo' : 'Selecionar Arquivo'}
-                </label>
-                {comprovanteFile && <div style={{ marginTop: 8, fontSize: '0.75rem', color: '#16a34a', fontWeight: 'bold' }}>✅ {comprovanteFile.name} anexado</div>}
-              </div>
-
-              <div style={{ marginTop:16, padding:'14px 16px', background:'rgba(245,158,11,.1)', borderRadius:12, border:'1px solid rgba(245,158,11,.2)' }}>
-                <div style={{ fontSize:'0.75rem', color:'#b45309', lineHeight:1.5 }}>
-                  <strong>Atenção:</strong> A análise dos documentos iniciará somente após a confirmação do pagamento. O administrador irá conferir o comprovante anexado.
-                </div>
-              </div>
-
-              <button 
-                onClick={handleSubmitCheckout} 
-                disabled={enviando || !comprovanteFile}
-                style={{ width: '100%', marginTop: 24, background: (enviando || !comprovanteFile) ? '#cbd5e1' : '#0D364F', color: '#fff', border: 'none', padding: '16px', borderRadius: 12, fontSize: '1rem', fontWeight: 800, cursor: (enviando || !comprovanteFile) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                {enviando ? <span className="spin-anim">⏳ Enviando...</span> : 'Enviar Comprovante e Finalizar'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </>
-  );
-}
