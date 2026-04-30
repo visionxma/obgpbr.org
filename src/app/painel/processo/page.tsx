@@ -867,7 +867,7 @@ export default function ProcessoPage() {
                               <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: 2 }}>{new Date(item.createdAt).toLocaleString('pt-BR')}</div>
                             </div>
                             <div style={{ textAlign: 'right', marginLeft: 16 }}>
-                              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>R$ 350,00</div>
+                              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>R$ 389,96</div>
                               <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                                 <button onClick={() => setPreviewCartItem(item)} style={{ background: '#e2e8f0', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}><Eye size={12}/> Preview</button>
                                 <button onClick={() => handleRemoverDoCarrinho(item.id)} style={{ background: '#fee2e2', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: '#dc2626', cursor: 'pointer' }}>Remover</button>
@@ -882,7 +882,7 @@ export default function ProcessoPage() {
                       </button>
                       <div style={{ textAlign: 'right' }}>
                         <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Valor Total</div>
-                        <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0D364F' }}>R$ {(cart.length * 350).toFixed(2).replace('.', ',')}</div>
+                        <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0D364F' }}>R$ {(cart.length * 389.96).toFixed(2).replace('.', ',')}</div>
                       </div>
                     </div>
 
@@ -902,7 +902,7 @@ export default function ProcessoPage() {
                     </button>
                     <div style={{ flex:1, textAlign:'center' }}>
                       <div style={{ fontSize:'0.7rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.1em', color:'rgba(255,255,255,0.6)', marginBottom:2 }}>Valor Total a Pagar</div>
-                      <div style={{ fontSize:'2rem', fontWeight:900, color:'#4ade80', lineHeight:1 }}>R$ {(cart.length * 350).toFixed(2).replace('.', ',')}</div>
+                      <div style={{ fontSize:'2rem', fontWeight:900, color:'#4ade80', lineHeight:1 }}>R$ {(cart.length * 389.96).toFixed(2).replace('.', ',')}</div>
                       <div style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.5)', marginTop:4 }}>{cart.length} relatório{cart.length > 1 ? 's' : ''} de conformidade</div>
                     </div>
                     <div style={{ width:40 }} />
@@ -923,10 +923,7 @@ export default function ProcessoPage() {
                         <div style={{ fontSize:'0.75rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'.08em', color:'#0D364F' }}>Dados PIX</div>
 
                         {[
-                          { label: 'Beneficiário', value: 'C. E. DOS SANTOS COELHO', key: 'titular', highlight: false },
-                          { label: 'Empresa', value: 'SEMPRE Gestão de Projetos', key: 'empresa', highlight: false },
                           { label: 'Chave PIX (CNPJ)', value: '14.796.065/0001-08', key: 'pix', highlight: true },
-                          { label: 'Banco', value: 'Bradesco - 237', key: 'banco', highlight: false },
                         ].map(({ label, value, key, highlight }, i) => (
                           <div key={key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, padding:'8px 10px', background: highlight ? 'rgba(13,54,79,0.05)' : '#fff', border:`1px solid ${highlight ? '#0D364F' : '#e5e7eb'}`, borderRadius:8 }}>
                             <div>
@@ -951,7 +948,7 @@ export default function ProcessoPage() {
                         <li>Abra o aplicativo do seu banco</li>
                         <li>Acesse a área PIX → <strong>Pagar</strong></li>
                         <li>Escaneie o QR Code ou copie a <strong>Chave PIX (CNPJ)</strong></li>
-                        <li>Confirme o valor de <strong>R$ {(cart.length * 350).toFixed(2).replace('.', ',')}</strong></li>
+                        <li>Confirme o valor de <strong>R$ {(cart.length * 389.96).toFixed(2).replace('.', ',')}</strong></li>
                         <li>Salve o comprovante e anexe abaixo</li>
                       </ol>
                     </div>
