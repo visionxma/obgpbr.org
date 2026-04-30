@@ -257,6 +257,8 @@ export default function ProcessoPage() {
         setEntidadeData(ent);
         setActivePerfil({ razao_social: ent.razao_social || 'Instituição Convidada', osc_id: `OBGP-${ent.cnpj?.slice(-8) || 'GUEST'}` });
         setShowCnpjStep(false);
+        const savedStep = localStorage.getItem('obgp_guest_step');
+        if (savedStep) setStep(Number(savedStep));
       }
       
       if (savedDocs) {
@@ -273,6 +275,12 @@ export default function ProcessoPage() {
       setLoadingData(false);
     }
   };
+
+  useEffect(() => {
+    if (step >= 1 && !showCnpjStep) {
+      localStorage.setItem('obgp_guest_step', step.toString());
+    }
+  }, [step, showCnpjStep]);
 
   const handleCnpjInputChange = (e: React.ChangeEvent<HTMLInputElement>, ref: React.RefObject<HTMLInputElement | null>, skipFormat = false) => {
     let val = e.target.value;
@@ -403,6 +411,7 @@ export default function ProcessoPage() {
       try {
         localStorage.removeItem('obgp_guest_entidade');
         localStorage.removeItem('obgp_guest_docs');
+        localStorage.removeItem('obgp_guest_step');
         setData({});
         setEntidadeData({ cnpj: '', natureza_juridica: '', razao_social: '', nome_fantasia: '', cep: '', logradouro: '', numero_endereco: '', bairro: '', municipio: '', estado: '', data_abertura_cnpj: '', email_osc: '', telefone: '', responsavel: '' });
         setStep(1);
@@ -430,15 +439,25 @@ export default function ProcessoPage() {
     // Salva o progresso atual em localStorage primeiro
     await saveProgress();
 
-    // Cria um item de carrinho com os dados atuais
-    const newCartItem = {
-      id: Date.now().toString(),
-      entidade: entidadeData,
-      docs: data,
-      createdAt: new Date().toISOString()
-    };
+    const existingIndex = cart.findIndex(item => item.entidade.cnpj === entidadeData.cnpj);
+    let newCart = [...cart];
     
-    const newCart = [...cart, newCartItem];
+    if (existingIndex >= 0) {
+      // Atualiza o documento no carrinho se já existe para evitar duplicação em caso de F5
+      newCart[existingIndex] = {
+        ...newCart[existingIndex],
+        docs: data,
+      };
+    } else {
+      // Adiciona um novo item
+      newCart.push({
+        id: Date.now().toString(),
+        entidade: entidadeData,
+        docs: data,
+        createdAt: new Date().toISOString()
+      });
+    }
+    
     setCart(newCart);
     localStorage.setItem('obgp_guest_cart', JSON.stringify(newCart));
     
@@ -460,6 +479,7 @@ export default function ProcessoPage() {
     // Limpa apenas o formulário atual (entidade e docs), mantém o carrinho
     localStorage.removeItem('obgp_guest_entidade');
     localStorage.removeItem('obgp_guest_docs');
+    localStorage.removeItem('obgp_guest_step');
     setData({});
     setEntidadeData({ cnpj: '', natureza_juridica: '', razao_social: '', nome_fantasia: '', cep: '', logradouro: '', numero_endereco: '', bairro: '', municipio: '', estado: '', data_abertura_cnpj: '', email_osc: '', telefone: '', responsavel: '' });
     setStep(1);
@@ -499,6 +519,7 @@ export default function ProcessoPage() {
          localStorage.removeItem('obgp_guest_entidade');
          localStorage.removeItem('obgp_guest_docs');
          localStorage.removeItem('obgp_guest_cart');
+         localStorage.removeItem('obgp_guest_step');
          window.location.href = '/'; // Redirect to home or reset
       });
       
