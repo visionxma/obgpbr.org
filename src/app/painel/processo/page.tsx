@@ -618,7 +618,6 @@ export default function ProcessoPage() {
                   </div>
                 )}
               </div>
-              </>
             ) : (
               <div style={{ padding: 16, borderRadius: 12, background: 'rgba(22,163,74,0.05)', border: '1px solid rgba(22,163,74,0.1)', textAlign: 'center' }}>
                 <div style={{ color: '#16a34a', fontWeight: 800, fontSize: '1.1rem', marginBottom: 4 }}>CNPJ Validado!</div>
