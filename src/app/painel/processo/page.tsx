@@ -1076,8 +1076,9 @@ export default function ProcessoPage() {
           }}
           style={{
             position: 'fixed',
-            bottom: 30,
+            top: '50%',
             right: 30,
+            transform: 'translateY(-50%) scale(1)',
             background: 'var(--site-gold)',
             color: '#fff',
             border: 'none',
@@ -1093,8 +1094,8 @@ export default function ProcessoPage() {
             zIndex: 9999,
             transition: 'transform 0.2s',
           }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(-50%) scale(1)'}
         >
           <div style={{ position: 'relative' }}>
             <ShoppingCart size={24} />
