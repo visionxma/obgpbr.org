@@ -48,6 +48,7 @@ interface RelatorioData {
     obs?: string;
     status: DocStatus;
     file_url?: string;
+    descricao?: string;
   };
 }
 
@@ -159,6 +160,10 @@ function DocumentSection({ number, title, items, data, handleUpdate, showErrors 
                 </div>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--site-text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Descrição / Nome do Documento</label>
+                  <input type="text" placeholder="Ex: Termo de Colaboração do Ministério dos Direitos Humanos..." value={doc.descricao || ''} onChange={(e) => handleUpdate(item.id, 'descricao', e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid var(--site-border)', fontSize: '0.85rem', fontWeight: 600 }} />
+                </div>
                 <div>
                   <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--site-text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Código de Controle</label>
                   <input type="text" placeholder="Ex: DOC-2026-001" value={doc.codigo || ''} onChange={(e) => handleUpdate(item.id, 'codigo', e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid var(--site-border)', fontSize: '0.85rem' }} />

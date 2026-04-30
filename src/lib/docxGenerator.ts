@@ -21,6 +21,7 @@ interface ChecklistRow {
   emissao: string;
   validade: string;
   analise: string;
+  descricao?: string;
 }
 
 interface RelatorioData {
@@ -161,7 +162,19 @@ function makeTextRun(text: string, bold = false): string {
 function injectTextIntoCell(cellXml: string, text: string, bold = false): string {
   const lastPEnd = cellXml.lastIndexOf('</w:p>');
   if (lastPEnd === -1) return cellXml;
-  return cellXml.substring(0, lastPEnd) + makeTextRun(text, bold) + cellXml.substring(lastPEnd);
+  
+  const parts = text.split('\n');
+  let runsXml = '';
+  for (let i = 0; i < parts.length; i++) {
+    if (parts[i].trim() || parts.length > 1) {
+      runsXml += makeTextRun(parts[i], bold);
+    }
+    if (i < parts.length - 1) {
+      runsXml += '<w:r><w:br/></w:r>';
+    }
+  }
+  
+  return cellXml.substring(0, lastPEnd) + runsXml + cellXml.substring(lastPEnd);
 }
 
 /**
@@ -387,8 +400,25 @@ export async function gerarRelatorioDocx(dados: RelatorioData): Promise<Blob> {
     const checkRow = matched.section[matched.index];
     if (!checkRow) continue;
 
-    // Fill cells 2-5 from RIGHT to LEFT (preserves indices)
     let newContent = row.content;
+
+    // Se houver descrição, injeta na primeira célula (coluna 1) abaixo do label
+    if (checkRow.descricao) {
+      const cell = cells[0];
+      const cellXml = newContent.substring(cell.start, cell.end);
+      // Injeta com uma quebra de linha e entre parênteses
+      const newCellXml = injectTextIntoCell(cellXml, `\n(${checkRow.descricao})`, false);
+      newContent = newContent.substring(0, cell.start) + newCellXml + newContent.substring(cell.end);
+      
+      // Recalcula posições das células subsequentes nesta linha
+      const diff = newCellXml.length - (cell.end - cell.start);
+      for (let j = 1; j < cells.length; j++) {
+        cells[j].start += diff;
+        cells[j].end += diff;
+      }
+    }
+
+    // Fill cells 2-5 from RIGHT to LEFT (preserves indices)
     const fillData = [
       checkRow.analise || '—',   // cell 5: Análise
       checkRow.validade || '—',  // cell 4: Validade
