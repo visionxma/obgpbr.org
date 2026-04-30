@@ -314,7 +314,7 @@ export async function gerarRelatorioDocx(dados: RelatorioData): Promise<Blob> {
     const fieldKey = ENTITY_LABELS[cell1Text];
     if (!fieldKey) continue;
 
-    const value = String((d as Record<string, unknown>)[fieldKey] || 'Não informado');
+    const value = String((d as unknown as Record<string, unknown>)[fieldKey] || 'Não informado');
     const cell2Xml = row.content.substring(cells[1].start, cells[1].end);
     const newCell2 = injectTextIntoCell(cell2Xml, value);
 
