@@ -19,7 +19,9 @@ import {
   Search,
   Copy,
   FileText,
-  Plus
+  Plus,
+  Eye,
+  Edit2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../PainelContext';
@@ -213,6 +215,7 @@ export default function ProcessoPage() {
   const [cart, setCart] = useState<any[]>([]);
   const [showCartModal, setShowCartModal] = useState(false);
   const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [previewCartItem, setPreviewCartItem] = useState<any | null>(null);
   const [comprovanteFile, setComprovanteFile] = useState<File|null>(null);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
@@ -815,22 +818,61 @@ export default function ProcessoPage() {
                   </div>
 
                   <div style={{ padding:'24px 32px', background: '#fff' }}>
-                    {cart.map((item, index) => (
-                      <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, marginBottom: 12 }}>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0D364F' }}>Relatório de Conformidade ({index + 1})</div>
-                          <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 4 }}>Entidade: {item.entidade.razao_social || item.entidade.cnpj}</div>
-                          <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: 2 }}>{new Date(item.createdAt).toLocaleString('pt-BR')}</div>
+                    {previewCartItem ? (
+                      <div style={{ animation: 'panelPageIn .3s ease' }}>
+                        <button onClick={() => setPreviewCartItem(null)} style={{ background: 'transparent', border: 'none', color: '#64748b', fontWeight: 800, cursor: 'pointer', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <ChevronLeft size={16} /> Voltar para o Carrinho
+                        </button>
+                        <h3 style={{ margin: '0 0 16px', color: '#0D364F', fontSize: '1.2rem', fontWeight: 900 }}>Resumo do Relatório</h3>
+                        
+                        <div style={{ background: '#f8fafc', padding: '20px', borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 24 }}>
+                           <h4 style={{ margin: '0 0 12px', color: '#334155', fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase' }}>Dados da Entidade</h4>
+                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                             <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569' }}><strong style={{ color: '#0D364F' }}>Razão Social:</strong> {previewCartItem.entidade.razao_social || 'Não informado'}</p>
+                             <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569' }}><strong style={{ color: '#0D364F' }}>CNPJ:</strong> {previewCartItem.entidade.cnpj}</p>
+                             <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569' }}><strong style={{ color: '#0D364F' }}>Email:</strong> {previewCartItem.entidade.email_osc || 'Não informado'}</p>
+                             <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569' }}><strong style={{ color: '#0D364F' }}>Telefone:</strong> {previewCartItem.entidade.telefone || 'Não informado'}</p>
+                             <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', gridColumn: '1 / -1' }}><strong style={{ color: '#0D364F' }}>Endereço:</strong> {previewCartItem.entidade.logradouro}, {previewCartItem.entidade.numero_endereco} - {previewCartItem.entidade.bairro}, {previewCartItem.entidade.municipio}/{previewCartItem.entidade.estado}</p>
+                           </div>
+                           
+                           <h4 style={{ margin: '24px 0 12px', color: '#334155', fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase', borderTop: '1px solid #e2e8f0', paddingTop: 16 }}>Análise de Preenchimento</h4>
+                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                             <div style={{ background: 'rgba(22,163,74,0.1)', color: '#16a34a', padding: '6px 12px', borderRadius: 8, fontSize: '0.8rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                               <CheckCircle2 size={14} /> {Object.keys(previewCartItem.docs).length} respostas salvas
+                             </div>
+                           </div>
                         </div>
-                        <div style={{ textAlign: 'right', marginLeft: 16 }}>
-                          <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>R$ 350,00</div>
-                          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                            <button onClick={() => showAlert('Preview', 'Funcionalidade de preview do relatório em desenvolvimento.')} style={{ background: '#e2e8f0', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: '#475569', cursor: 'pointer' }}>Preview</button>
-                            <button onClick={() => handleRemoverDoCarrinho(item.id)} style={{ background: '#fee2e2', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: '#dc2626', cursor: 'pointer' }}>Remover</button>
-                          </div>
+
+                        <div style={{ display: 'flex', gap: 12 }}>
+                          <button onClick={() => {
+                            setEntidadeData(previewCartItem.entidade);
+                            setData(previewCartItem.docs);
+                            setStep(1);
+                            setShowCartModal(false);
+                            setPreviewCartItem(null);
+                          }} style={{ flex: 1, background: 'var(--site-gold)', color: '#fff', border: 'none', padding: '14px', borderRadius: 10, fontSize: '0.95rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'opacity 0.2s' }}>
+                            <Edit2 size={18} /> Editar Respostas deste Relatório
+                          </button>
                         </div>
                       </div>
-                    ))}
+                    ) : (
+                      <>
+                        {cart.map((item, index) => (
+                          <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, marginBottom: 12 }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0D364F' }}>Relatório de Conformidade ({index + 1})</div>
+                              <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 4 }}>Entidade: {item.entidade.razao_social || item.entidade.cnpj}</div>
+                              <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: 2 }}>{new Date(item.createdAt).toLocaleString('pt-BR')}</div>
+                            </div>
+                            <div style={{ textAlign: 'right', marginLeft: 16 }}>
+                              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>R$ 350,00</div>
+                              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                                <button onClick={() => setPreviewCartItem(item)} style={{ background: '#e2e8f0', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}><Eye size={12}/> Preview</button>
+                                <button onClick={() => handleRemoverDoCarrinho(item.id)} style={{ background: '#fee2e2', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: '#dc2626', cursor: 'pointer' }}>Remover</button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
 
                     <div style={{ marginTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px dashed #e2e8f0', paddingTop: 20 }}>
                       <button onClick={handleAdicionarNovo} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#334155', padding: '10px 16px', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>
@@ -845,6 +887,8 @@ export default function ProcessoPage() {
                     <button onClick={() => { setShowCartModal(false); setShowCheckoutModal(true); }} style={{ width: '100%', marginTop: 24, background: '#16a34a', color: '#fff', border: 'none', padding: '16px', borderRadius: 12, fontSize: '1.05rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                       <CheckCircle2 size={20}/> Finalizar Compra ({cart.length} itens)
                     </button>
+                      </>
+                    )}
                   </div>
                 </div>
               ) : showCheckoutModal ? (
