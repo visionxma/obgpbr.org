@@ -1,5 +1,6 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { 
   FileUp, 
   CheckCircle2, 
@@ -1067,7 +1068,7 @@ export default function ProcessoPage() {
 
 
       {/* FLOATING CART BUTTON */}
-      {cart.length > 0 && !(showCartModal || showCheckoutModal) && !showCnpjStep && (
+      {cart.length > 0 && !(showCartModal || showCheckoutModal) && !showCnpjStep && typeof document !== 'undefined' && createPortal(
         <button
           onClick={() => {
             setStep(7);
@@ -1091,7 +1092,7 @@ export default function ProcessoPage() {
             display: 'flex',
             alignItems: 'center',
             gap: 12,
-            zIndex: 9999,
+            zIndex: 99999,
             transition: 'transform 0.2s',
           }}
           onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)'}
@@ -1104,7 +1105,8 @@ export default function ProcessoPage() {
             </span>
           </div>
           <span>Ver Carrinho</span>
-        </button>
+        </button>,
+        document.body
       )}
     </>
   );
