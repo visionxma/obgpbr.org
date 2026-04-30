@@ -21,7 +21,8 @@ import {
   FileText,
   Plus,
   Eye,
-  Edit2
+  Edit2,
+  ShoppingCart
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../PainelContext';
@@ -1062,6 +1063,47 @@ export default function ProcessoPage() {
             </div>
           </div>
         </div>
+      )}
+
+
+      {/* FLOATING CART BUTTON */}
+      {cart.length > 0 && !(showCartModal || showCheckoutModal) && !showCnpjStep && (
+        <button
+          onClick={() => {
+            setStep(7);
+            setShowCartModal(true);
+            document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          style={{
+            position: 'fixed',
+            bottom: 30,
+            right: 30,
+            background: 'var(--site-gold)',
+            color: '#fff',
+            border: 'none',
+            borderRadius: '50px',
+            padding: '14px 24px',
+            fontSize: '1.05rem',
+            fontWeight: 800,
+            cursor: 'pointer',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12,
+            zIndex: 9999,
+            transition: 'transform 0.2s',
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+        >
+          <div style={{ position: 'relative' }}>
+            <ShoppingCart size={24} />
+            <span style={{ position: 'absolute', top: -10, right: -12, background: '#dc2626', color: '#fff', fontSize: '0.75rem', fontWeight: 900, width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: '2px solid var(--site-gold)' }}>
+              {cart.length}
+            </span>
+          </div>
+          <span>Ver Carrinho</span>
+        </button>
       )}
     </>
   );
