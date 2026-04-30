@@ -963,3 +963,35 @@ export default function ProcessoPage() {
               <h2 className="panel-modal-title" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 {modal.type === 'confirm' ? <AlertCircle className="text-gold" size={24} /> : <CheckCircle2 className="text-gold" size={24} />}
                 {modal.title}
+              </h2>
+            </div>
+            <div className="panel-modal-body">
+              <p style={{ margin: 0, color: 'var(--site-text-secondary)', lineHeight: 1.6, fontSize: '0.95rem' }}>
+                {modal.message}
+              </p>
+            </div>
+            <div className="panel-modal-footer">
+              {modal.type === 'confirm' && (
+                <button 
+                  className="panel-btn panel-btn-ghost" 
+                  onClick={() => setModal({ ...modal, show: false })}
+                >
+                  Cancelar
+                </button>
+              )}
+              <button 
+                className="panel-btn panel-btn-primary"
+                onClick={() => {
+                  setModal({ ...modal, show: false });
+                  if (modal.type === 'confirm' && modal.onConfirm) modal.onConfirm();
+                }}
+              >
+                {modal.type === 'confirm' ? 'Confirmar' : 'Entendi'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
