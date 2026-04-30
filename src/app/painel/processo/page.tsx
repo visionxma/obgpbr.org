@@ -584,8 +584,10 @@ export default function ProcessoPage() {
         </div>
       ) : (
         <div id="painel-top" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60 }}>
-          <div className="processo-header-wrap">
-            <div>
+          {!(showCartModal || showCheckoutModal) && (
+            <>
+              <div className="processo-header-wrap">
+                <div>
               <h1 style={{ fontSize: 'clamp(1.4rem, 4vw, 1.8rem)', fontWeight: 900, color: 'var(--site-primary)', letterSpacing: '-0.02em', marginBottom: 4 }}>
                 Relatório de Conformidade
               </h1>
@@ -669,6 +671,8 @@ export default function ProcessoPage() {
               </button>
             )}
           </div>
+            </>
+          )}
 
           {/* DOCUMENT SECTIONS */}
           {step === 1 && (
@@ -936,22 +940,24 @@ export default function ProcessoPage() {
           )}
 
           {/* NAVIGATION (BOTTOM) */}
-          <div className="processo-nav-btns" style={{ display: 'flex', justifyContent: step === 1 ? 'flex-end' : 'space-between', alignItems: 'center', marginTop: 8 }}>
-            {step > 1 && (
-              <button onClick={handleBack} className="btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', fontSize: '0.9rem', background: 'var(--site-surface-warm)', color: 'var(--site-text-primary)', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', fontWeight: 700 }}>
-                <ChevronLeft size={18} /> Voltar
-              </button>
-            )}
-            {step < 7 && (
-              <button onClick={handleNext} disabled={saving} className="btn btn-gold" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 28px', fontSize: '0.95rem', fontWeight: 700, opacity: saving ? 0.7 : 1 }}>
-                {saving ? (
-                  <><Loader2 size={18} className="spin-anim" /> Salvando...</>
-                ) : (
-                  <>Salvar e Avançar <ChevronRight size={18} /></>
-                )}
-              </button>
-            )}
-          </div>
+          {!(showCartModal || showCheckoutModal) && (
+            <div className="processo-nav-btns" style={{ display: 'flex', justifyContent: step === 1 ? 'flex-end' : 'space-between', alignItems: 'center', marginTop: 8 }}>
+              {step > 1 && (
+                <button onClick={handleBack} className="btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', fontSize: '0.9rem', background: 'var(--site-surface-warm)', color: 'var(--site-text-primary)', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', fontWeight: 700 }}>
+                  <ChevronLeft size={18} /> Voltar
+                </button>
+              )}
+              {step < 7 && (
+                <button onClick={handleNext} disabled={saving} className="btn btn-gold" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 28px', fontSize: '0.95rem', fontWeight: 700, opacity: saving ? 0.7 : 1 }}>
+                  {saving ? (
+                    <><Loader2 size={18} className="spin-anim" /> Salvando...</>
+                  ) : (
+                    <>Salvar e Avançar <ChevronRight size={18} /></>
+                  )}
+                </button>
+              )}
+            </div>
+          )}
         </div>
       )}
 
