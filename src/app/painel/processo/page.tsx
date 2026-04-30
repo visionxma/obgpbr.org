@@ -319,7 +319,7 @@ export default function ProcessoPage() {
       const dataJson = await res.json();
       if (dataJson.error) {
         setCnpjError(dataJson.error);
-        showAlert('CNPJ não encontrado', dataJson.error);
+        // Não mostramos mais o alert aqui para não interromper o fluxo, o erro aparece na tela
       } else {
         const newData = {
           ...entidadeData,
@@ -348,10 +348,17 @@ export default function ProcessoPage() {
       }
     } catch (err) {
       setCnpjError('Falha na consulta. Tente preencher manualmente.');
-      showAlert('Erro de Conexão', 'Não foi possível consultar o CNPJ automaticamente no momento.');
     } finally {
-      if (!cnpjSuccess) setLoadingData(false);
+      setLoadingData(false);
     }
+  };
+
+  const handleManualEntry = () => {
+    setLoadingData(false);
+    setCnpjError('');
+    setShowCnpjStep(false);
+    // Inicializa com o CNPJ que já foi digitado se houver
+    localStorage.setItem('obgp_guest_entidade', JSON.stringify(entidadeData));
   };
 
   const handleUpdate = (id: string, field: string, val: string) => {
@@ -570,7 +577,7 @@ export default function ProcessoPage() {
             </div>
 
             {!cnpjSuccess ? (
-              <>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div style={{ display: 'flex', gap: 12, flexDirection: 'row' }}>
                   <button 
                     className="panel-btn panel-btn-primary" 
@@ -580,7 +587,7 @@ export default function ProcessoPage() {
                   >
                     {cnpjError ? (
                       <>
-                        <RefreshCcw size={18} />
+                        <RefreshCcw size={18} className={loadingData ? 'spin-anim' : ''} />
                         Tentar Novamente
                       </>
                     ) : loadingData ? (
@@ -593,11 +600,24 @@ export default function ProcessoPage() {
                     )}
                   </button>
                 </div>
+
                 {cnpjError && (
-                  <div style={{ marginTop: 16, padding: 12, borderRadius: 8, background: 'rgba(220,38,38,0.05)', border: '1px solid rgba(220,38,38,0.1)', color: '#dc2626', fontSize: '0.85rem', fontWeight: 600 }}>
-                    {cnpjError}
+                  <div style={{ animation: 'fadeIn .3s ease' }}>
+                    <div style={{ padding: 12, borderRadius: 8, background: 'rgba(220,38,38,0.05)', border: '1px solid rgba(220,38,38,0.1)', color: '#dc2626', fontSize: '0.85rem', fontWeight: 600, marginBottom: 16 }}>
+                      {cnpjError}
+                    </div>
+                    
+                    <button 
+                      onClick={handleManualEntry}
+                      style={{ background: 'none', border: '1px solid var(--site-border)', color: 'var(--site-text-secondary)', padding: '12px 20px', borderRadius: 10, fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', width: '100%', transition: 'all .2s' }}
+                      onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = 'var(--site-primary)'; }}
+                      onMouseOut={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--site-text-secondary)'; }}
+                    >
+                      Preencher Dados Manualmente
+                    </button>
                   </div>
                 )}
+              </div>
               </>
             ) : (
               <div style={{ padding: 16, borderRadius: 12, background: 'rgba(22,163,74,0.05)', border: '1px solid rgba(22,163,74,0.1)', textAlign: 'center' }}>
