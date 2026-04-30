@@ -17,7 +17,9 @@ import {
   Info,
   Calendar,
   Search,
-  Copy
+  Copy,
+  FileText,
+  Plus
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../PainelContext';
@@ -208,6 +210,10 @@ export default function ProcessoPage() {
   const [cnpjError, setCnpjError] = useState('');
   const [cnpjSuccess, setCnpjSuccess] = useState(false);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
+  const [cart, setCart] = useState<any[]>([]);
+  const [showCartModal, setShowCartModal] = useState(false);
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [comprovanteFile, setComprovanteFile] = useState<File|null>(null);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
 
@@ -255,6 +261,11 @@ export default function ProcessoPage() {
       
       if (savedDocs) {
         setData(JSON.parse(savedDocs));
+      }
+      
+      const savedCart = localStorage.getItem('obgp_guest_cart');
+      if (savedCart) {
+        setCart(JSON.parse(savedCart));
       }
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
@@ -416,20 +427,84 @@ export default function ProcessoPage() {
   };
 
   const handleConsultarPagamentoEEnviar = async () => {
-    if (forceGating) {
-      setShowPaymentModal(true);
+    // Salva o progresso atual em localStorage primeiro
+    await saveProgress();
+
+    // Cria um item de carrinho com os dados atuais
+    const newCartItem = {
+      id: Date.now().toString(),
+      entidade: entidadeData,
+      docs: data,
+      createdAt: new Date().toISOString()
+    };
+    
+    const newCart = [...cart, newCartItem];
+    setCart(newCart);
+    localStorage.setItem('obgp_guest_cart', JSON.stringify(newCart));
+    
+    // Abre o modal de carrinho
+    setShowCartModal(true);
+  };
+
+  const handleRemoverDoCarrinho = (id: string) => {
+    const newCart = cart.filter(item => item.id !== id);
+    setCart(newCart);
+    localStorage.setItem('obgp_guest_cart', JSON.stringify(newCart));
+    if (newCart.length === 0) {
+      setShowCartModal(false);
+    }
+  };
+
+  const handleAdicionarNovo = () => {
+    setShowCartModal(false);
+    // Limpa apenas o formulário atual (entidade e docs), mantém o carrinho
+    localStorage.removeItem('obgp_guest_entidade');
+    localStorage.removeItem('obgp_guest_docs');
+    setData({});
+    setEntidadeData({ cnpj: '', natureza_juridica: '', razao_social: '', nome_fantasia: '', cep: '', logradouro: '', numero_endereco: '', bairro: '', municipio: '', estado: '', data_abertura_cnpj: '', email_osc: '', telefone: '', responsavel: '' });
+    setStep(1);
+    setShowCnpjStep(true);
+    setCnpjSuccess(false);
+    setCnpjError('');
+  };
+
+  const handleSubmitCheckout = async () => {
+    if (!comprovanteFile) {
+      showAlert('Atenção', 'É obrigatório anexar o comprovante de pagamento para prosseguir.');
       return;
     }
-
-    // Fluxo normal — salvar e enviar
+    
     setEnviando(true);
-    setMensagemEnviando('Salvando e enviando relatório...');
+    setMensagemEnviando('Processando pagamento e enviando...');
+    
     try {
-      await saveProgress();
-      showAlert('Relatório Enviado!', 'Seu relatório de conformidade foi salvo e enviado com sucesso. A equipe OBGP analisará os dados e retornará em breve.');
-    } catch (err) {
-      console.error('Erro ao enviar:', err);
-      showAlert('Erro', 'Ocorreu um erro ao enviar o relatório. Tente novamente.');
+      const formData = new FormData();
+      formData.append('cart', JSON.stringify(cart));
+      formData.append('comprovante', comprovanteFile);
+
+      const res = await fetch('/api/painel/checkout', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!res.ok) {
+        const errJson = await res.json();
+        throw new Error(errJson.error || 'Erro na comunicação com o servidor');
+      }
+
+      setShowCheckoutModal(false);
+      
+      showConfirm('Sucesso!', 'Seus documentos e pagamento foram enviados para validação. Nossa equipe entrará em contato em breve.', () => {
+         // Clear everything
+         localStorage.removeItem('obgp_guest_entidade');
+         localStorage.removeItem('obgp_guest_docs');
+         localStorage.removeItem('obgp_guest_cart');
+         window.location.href = '/'; // Redirect to home or reset
+      });
+      
+    } catch (err: any) {
+      console.error('Erro no checkout:', err);
+      showAlert('Erro', `Falha ao processar: ${err.message}`);
     } finally {
       setEnviando(false);
       setMensagemEnviando('');
@@ -736,7 +811,7 @@ export default function ProcessoPage() {
                       {enviando ? (
                         <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Clock size={18} className="spin-anim" /> {mensagemEnviando || 'Processando...'}</span>
                       ) : (
-                        <><CheckCircle2 size={18} /> Validar e Enviar Relatório</>
+                        <><Plus size={18} /> Adicionar ao Carrinho</>
                       )}
                     </button>
                   </div>
@@ -803,33 +878,76 @@ export default function ProcessoPage() {
         </div>
       )}
 
-      {/* ── MODAL DE PAGAMENTO (quando forceGating = true) ── */}
-      {showPaymentModal && (
-        <div style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,.55)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, backdropFilter:'blur(4px)' }}
-          onClick={() => setShowPaymentModal(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ background:'#fff', borderRadius:20, maxWidth:520, width:'100%', maxHeight:'90vh', overflowY:'auto', boxShadow:'0 25px 60px rgba(0,0,0,.25)', animation:'slideUp .3s ease' }}>
+      {/* ── MODAL DE CARRINHO ── */}
+      {showCartModal && (
+        <div style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,.6)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, backdropFilter:'blur(4px)' }}>
+          <div style={{ background:'#fff', borderRadius:20, maxWidth:600, width:'100%', maxHeight:'90vh', overflowY:'auto', boxShadow:'0 25px 60px rgba(0,0,0,.25)', animation:'slideUp .3s ease' }}>
             
-            {/* Header */}
-            <div style={{ background:'linear-gradient(135deg,#0D364F 0%,#1a5276 100%)', borderRadius:'20px 20px 0 0', padding:'28px 32px', color:'#fff', textAlign:'center' }}>
-              <div style={{ width:56, height:56, borderRadius:'50%', background:'rgba(255,255,255,.15)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
-                <ShieldCheck size={28} />
+            <div style={{ background:'linear-gradient(135deg,#0D364F 0%,#1a5276 100%)', borderRadius:'20px 20px 0 0', padding:'24px 32px', color:'#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <div>
+                <h2 style={{ margin:0, fontSize:'1.4rem', fontWeight:800, display: 'flex', alignItems: 'center', gap: 10 }}><FileText size={24}/> Seu Carrinho</h2>
+                <p style={{ margin:'4px 0 0', fontSize:'0.85rem', opacity:.85 }}>Revise os relatórios e documentos antes do pagamento.</p>
               </div>
-              <h2 style={{ margin:0, fontSize:'1.3rem', fontWeight:800 }}>Pagamento da Certificação</h2>
-              <p style={{ margin:'6px 0 0', fontSize:'0.85rem', opacity:.85 }}>Selo OSC Gestão de Parcerias — OBGP</p>
+              <button onClick={() => setShowCartModal(false)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' }}>✕ Fechar</button>
             </div>
 
-            {/* Valor */}
+            <div style={{ padding:'24px 32px' }}>
+              {cart.map((item, index) => (
+                <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, marginBottom: 12 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0D364F' }}>Relatório de Conformidade ({index + 1})</div>
+                    <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 4 }}>Entidade: {item.entidade.razao_social || item.entidade.cnpj}</div>
+                    <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: 2 }}>{new Date(item.createdAt).toLocaleString('pt-BR')}</div>
+                  </div>
+                  <div style={{ textAlign: 'right', marginLeft: 16 }}>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>R$ 350,00</div>
+                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                      <button onClick={() => showAlert('Preview', 'Funcionalidade de preview do relatório em desenvolvimento.')} style={{ background: '#e2e8f0', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: '#475569', cursor: 'pointer' }}>Preview</button>
+                      <button onClick={() => handleRemoverDoCarrinho(item.id)} style={{ background: '#fee2e2', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: '#dc2626', cursor: 'pointer' }}>Remover</button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              <div style={{ marginTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px dashed #e2e8f0', paddingTop: 20 }}>
+                <button onClick={handleAdicionarNovo} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#334155', padding: '10px 16px', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>
+                  <Plus size={16}/> Criar Novo Documento
+                </button>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Valor Total</div>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0D364F' }}>R$ {(cart.length * 350).toFixed(2).replace('.', ',')}</div>
+                </div>
+              </div>
+
+              <button onClick={() => { setShowCartModal(false); setShowCheckoutModal(true); }} style={{ width: '100%', marginTop: 24, background: '#16a34a', color: '#fff', border: 'none', padding: '16px', borderRadius: 12, fontSize: '1.05rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                <CheckCircle2 size={20}/> Finalizar Compra ({cart.length} itens)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL DE CHECKOUT (PAGAMENTO) ── */}
+      {showCheckoutModal && (
+        <div style={{ position:'fixed', inset:0, zIndex:9999, background:'rgba(0,0,0,.55)', display:'flex', alignItems:'center', justifyContent:'center', padding:16, backdropFilter:'blur(4px)' }}>
+          <div style={{ background:'#fff', borderRadius:20, maxWidth:520, width:'100%', maxHeight:'90vh', overflowY:'auto', boxShadow:'0 25px 60px rgba(0,0,0,.25)', animation:'slideUp .3s ease' }}>
+            
+            <div style={{ background:'linear-gradient(135deg,#0D364F 0%,#1a5276 100%)', borderRadius:'20px 20px 0 0', padding:'24px 32px', color:'#fff', textAlign:'center', position: 'relative' }}>
+               <button onClick={() => { setShowCheckoutModal(false); setShowCartModal(true); }} style={{ position: 'absolute', left: 20, top: 24, background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 'bold' }}>← Voltar</button>
+              <div style={{ width:48, height:48, borderRadius:'50%', background:'rgba(255,255,255,.15)', display:'flex', alignItems:'center', justifyContent:'center', margin:'0 auto 12px' }}>
+                <ShieldCheck size={24} />
+              </div>
+              <h2 style={{ margin:0, fontSize:'1.3rem', fontWeight:800 }}>Pagamento (PIX)</h2>
+            </div>
+
             <div style={{ textAlign:'center', padding:'20px 32px 0' }}>
-              <div style={{ fontSize:'0.7rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.1em', color:'#6b7280', marginBottom:4 }}>Investimento Único</div>
-              <div style={{ fontSize:'2.8rem', fontWeight:800, color:'#0D364F', lineHeight:1 }}>
-                R$ 350<span style={{ fontSize:'1.1rem', fontWeight:500, color:'#9ca3af' }}>,00</span>
+              <div style={{ fontSize:'0.7rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.1em', color:'#6b7280', marginBottom:4 }}>Valor Total a Pagar</div>
+              <div style={{ fontSize:'2.6rem', fontWeight:800, color:'#16a34a', lineHeight:1 }}>
+                R$ {(cart.length * 350).toFixed(2).replace('.', ',')}
               </div>
             </div>
 
-            {/* Dados Bancários */}
             <div style={{ padding:'20px 32px' }}>
-              <div style={{ fontSize:'0.7rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'.1em', color:'#0D364F', marginBottom:12 }}>Dados para Pagamento</div>
-              
               <div style={{ background:'#f8fafc', borderRadius:14, border:'1px solid #e5e7eb', overflow:'hidden' }}>
                 {[
                   { label: 'Titular', value: 'C. E. DOS SANTOS COELHO', key: 'titular' },
@@ -845,42 +963,40 @@ export default function ProcessoPage() {
                       <div style={{ fontSize:'0.85rem', fontWeight:600, color:'#1f2937', marginTop:1 }}>{value}</div>
                     </div>
                     <button onClick={() => copyToClipboard(value, key)}
-                      style={{ background: copiedField === key ? '#16a34a' : '#0D364F', color:'#fff', border:'none', borderRadius:8, padding:'5px 10px', fontSize:'0.68rem', fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:4, transition:'background .2s', whiteSpace:'nowrap' }}>
+                      style={{ background: copiedField === key ? '#16a34a' : '#0D364F', color:'#fff', border:'none', borderRadius:8, padding:'5px 10px', fontSize:'0.68rem', fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:4, transition:'background .2s' }}>
                       {copiedField === key ? <><CheckCircle2 size={11}/> Copiado!</> : <><Copy size={11}/> Copiar</>}
                     </button>
                   </div>
                 ))}
               </div>
 
-              {/* Instruções */}
-              <div style={{ marginTop:16, padding:'14px 16px', background:'rgba(22,163,74,.05)', borderRadius:12, border:'1px solid rgba(22,163,74,.15)' }}>
-                <div style={{ fontSize:'0.72rem', fontWeight:700, color:'#15803d', marginBottom:6 }}>📋 Instruções:</div>
-                <ol style={{ margin:0, paddingLeft:18, fontSize:'0.78rem', color:'#166534', lineHeight:1.7 }}>
-                  <li>Realize o <strong>PIX</strong> ou <strong>transferência</strong> para os dados acima</li>
-                  <li>Envie o comprovante pelo WhatsApp abaixo</li>
-                  <li>Aguarde a liberação (até 30 minutos em horário comercial)</li>
-                </ol>
+              {/* Upload Comprovante */}
+              <div style={{ marginTop: 24, padding: 16, border: '2px dashed #cbd5e1', borderRadius: 12, textAlign: 'center', background: comprovanteFile ? '#f0fdf4' : '#fafafa' }}>
+                <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#0D364F', marginBottom: 8 }}>Anexe o Comprovante de Pagamento</div>
+                <input 
+                  type="file" 
+                  accept="image/*,application/pdf"
+                  onChange={(e) => setComprovanteFile(e.target.files?.[0] || null)}
+                  style={{ display: 'none' }}
+                  id="comprovante-upload"
+                />
+                <label htmlFor="comprovante-upload" style={{ display: 'inline-block', background: '#0D364F', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}>
+                  {comprovanteFile ? 'Mudar Arquivo' : 'Selecionar Arquivo'}
+                </label>
+                {comprovanteFile && <div style={{ marginTop: 8, fontSize: '0.75rem', color: '#16a34a', fontWeight: 'bold' }}>✅ {comprovanteFile.name} anexado</div>}
               </div>
 
-              {/* WhatsApp */}
-              <a href="https://wa.me/5598987100001?text=Ol%C3%A1%2C+realizei+o+pagamento+da+certifica%C3%A7%C3%A3o+Selo+OSC+e+gostaria+de+enviar+o+comprovante." target="_blank" rel="noopener noreferrer"
-                style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:10, marginTop:16, padding:'14px 20px', background:'#25D366', color:'#fff', borderRadius:12, textDecoration:'none', fontWeight:800, fontSize:'0.9rem', boxShadow:'0 4px 12px rgba(37,211,102,.3)', transition:'transform .15s' }}
-                onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.02)')}
-                onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
-                Enviar Comprovante via WhatsApp
-              </a>
+              <div style={{ marginTop:16, padding:'14px 16px', background:'rgba(245,158,11,.1)', borderRadius:12, border:'1px solid rgba(245,158,11,.2)' }}>
+                <div style={{ fontSize:'0.75rem', color:'#b45309', lineHeight:1.5 }}>
+                  <strong>Atenção:</strong> A análise dos documentos iniciará somente após a confirmação do pagamento. O administrador irá conferir o comprovante anexado.
+                </div>
+              </div>
 
-              <p style={{ textAlign:'center', fontSize:'0.72rem', color:'#9ca3af', marginTop:12, lineHeight:1.5 }}>
-                Contato: <strong>(98) 9 8710-0001</strong> · contato.org.obgp@gmail.com
-              </p>
-            </div>
-
-            {/* Fechar */}
-            <div style={{ padding:'0 32px 24px', textAlign:'center' }}>
-              <button onClick={() => setShowPaymentModal(false)}
-                style={{ padding:'10px 32px', background:'#f1f5f9', border:'1px solid #e2e8f0', borderRadius:10, fontSize:'0.85rem', fontWeight:700, color:'#64748b', cursor:'pointer' }}>
-                Fechar
+              <button 
+                onClick={handleSubmitCheckout} 
+                disabled={enviando || !comprovanteFile}
+                style={{ width: '100%', marginTop: 24, background: (enviando || !comprovanteFile) ? '#cbd5e1' : '#0D364F', color: '#fff', border: 'none', padding: '16px', borderRadius: 12, fontSize: '1rem', fontWeight: 800, cursor: (enviando || !comprovanteFile) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                {enviando ? <span className="spin-anim">⏳ Enviando...</span> : 'Enviar Comprovante e Finalizar'}
               </button>
             </div>
           </div>
