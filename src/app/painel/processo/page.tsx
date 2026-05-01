@@ -293,7 +293,6 @@ export default function ProcessoPage() {
   const [files, setFiles] = useState<{ [docId: string]: File }>({});
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
-  const [showScrollHint, setShowScrollHint] = useState(false);
 
   const handleAttachFile = (id: string, file: File) => {
     setFiles(prev => ({ ...prev, [id]: file }));
@@ -309,20 +308,7 @@ export default function ProcessoPage() {
     handleUpdate(id, 'status', 'pendente');
   };
 
-  useEffect(() => {
-    const handleScroll = () => {
-      // FORÇA a exibição no passo 7 enquanto estiver na tela de pagamento
-      if (step === 7 && showPaymentScreen) {
-        setShowScrollHint(true);
-      } else {
-        setShowScrollHint(false);
-      }
-    };
 
-    window.addEventListener('scroll', handleScroll);
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [step, showPaymentScreen]);
 
   // ── Persistence Logic (Anti-Reset) ──────────────────────────
   
@@ -769,7 +755,7 @@ export default function ProcessoPage() {
           </div>
         </div>
       ) : (
-        <div id="painel-top" style={{ maxWidth: 1024, margin: '0 auto', paddingBottom: 60 }}>
+        <div id="painel-top" style={{ maxWidth: 1150, margin: '0 auto', paddingBottom: 60 }}>
           {/* ── HEADER BAR — Premium Glassmorphic ── */}
           <div className="processo-header-bar" style={{
             display: 'flex',
@@ -1530,48 +1516,6 @@ export default function ProcessoPage() {
         </div>
       )}
 
-
-
-      {/* INDICADOR DE SCROLL (Lateral Esquerda) - ELEGANTE E REFINADO */}
-      {showScrollHint && (
-        <div 
-          onClick={() => window.scrollTo({ top: window.scrollY + 600, behavior: 'smooth' })}
-          style={{
-            position: 'fixed',
-            left: 24,
-            top: '35%', // Subindo a posição conforme solicitado
-            transform: 'translateY(-50%)',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: 20,
-            zIndex: 99999,
-            cursor: 'pointer',
-            padding: '24px 12px',
-            background: 'rgba(13, 54, 79, 0.05)',
-            borderRadius: 'var(--site-radius-full)',
-            border: '1px solid rgba(197, 171, 118, 0.4)',
-            backdropFilter: 'blur(8px)',
-            animation: 'fadeInLeft .8s ease-out, glow 3s infinite ease-in-out'
-          }}
-        >
-          <div style={{ 
-            writingMode: 'vertical-rl', 
-            textTransform: 'uppercase', 
-            fontSize: '0.75rem', 
-            fontWeight: 800, 
-            color: 'var(--site-primary)',
-            letterSpacing: '0.3em',
-            opacity: 0.8,
-            fontFamily: 'var(--font-heading)'
-          }}>
-            Desça para concluir o processo
-          </div>
-          <div style={{ animation: 'bounceVertical 2s infinite', color: 'var(--site-gold)' }}>
-            <ChevronDown size={40} strokeWidth={2} />
-          </div>
-        </div>
-      )}
 
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes bounceVertical {
