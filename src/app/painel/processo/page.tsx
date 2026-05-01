@@ -24,7 +24,8 @@ import {
   Eye,
   Edit2,
   ShoppingCart,
-  ChevronDown
+  ChevronDown,
+  ArrowLeft
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../PainelContext';
