@@ -680,14 +680,14 @@ export default function ProcessoPage() {
         </div>
       ) : (
         <div id="painel-top" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60 }}>
-          <div className="processo-header-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40, gap: 20, flexWrap: 'wrap', position: 'relative' }}>
-            {/* LADO ESQUERDO: BOTÃO VOLTAR */}
-            <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-start' }}>
+          <div className="processo-header-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40, gap: 32, flexWrap: 'nowrap' }}>
+            {/* GRUPO ESQUERDO: VOLTAR + TÍTULO */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 32, flex: '1 1 auto' }}>
               {(step > 1 || showPaymentScreen) && (
                 <button 
                   onClick={handleBack}
                   style={{ 
-                    padding: '10px 22px', 
+                    padding: '12px 24px', 
                     fontSize: '0.85rem', 
                     fontWeight: 700, 
                     borderRadius: 'var(--site-radius-full)', 
@@ -698,10 +698,11 @@ export default function ProcessoPage() {
                     cursor: 'pointer', 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: 8, 
+                    gap: 10, 
                     transition: 'all .4s cubic-bezier(0.165, 0.84, 0.44, 1)',
                     boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-                    borderLeft: '3px solid var(--site-gold)'
+                    borderLeft: '3px solid var(--site-gold)',
+                    whiteSpace: 'nowrap'
                   }}
                   onMouseOver={(e) => { 
                     e.currentTarget.style.background = 'var(--site-primary)';
@@ -718,36 +719,31 @@ export default function ProcessoPage() {
                     e.currentTarget.style.borderLeftColor = 'var(--site-gold)';
                   }}
                 >
-                  <ArrowLeft size={16} strokeWidth={2.5} />
+                  <ArrowLeft size={18} strokeWidth={2.5} />
                   Voltar
                 </button>
               )}
-            </div>
 
-            {/* CENTRO: TÍTULO E INSTITUIÇÃO */}
-            <div style={{ flex: 2, textAlign: 'center', animation: 'fadeInDown 0.6s ease-out' }}>
-              <h1 style={{ 
-                fontSize: 'clamp(1.6rem, 5vw, 2.4rem)', 
-                fontWeight: 950, 
-                color: 'var(--site-primary)', 
-                letterSpacing: '-0.04em', 
-                marginBottom: 6, 
-                lineHeight: 1,
-                textTransform: 'none'
-              }}>
-                Relatório de Conformidade
-              </h1>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                <div style={{ height: 1, width: 20, background: 'var(--site-gold)', opacity: 0.5 }} />
-                <p style={{ color: 'var(--site-text-secondary)', fontSize: '1rem', fontWeight: 700, opacity: 0.9, margin: 0 }}>
+              <div style={{ animation: 'fadeInLeft 0.6s ease-out' }}>
+                <h1 style={{ 
+                  fontSize: 'clamp(1.4rem, 4.5vw, 2.1rem)', 
+                  fontWeight: 950, 
+                  color: 'var(--site-primary)', 
+                  letterSpacing: '-0.03em', 
+                  marginBottom: 2, 
+                  lineHeight: 1,
+                  whiteSpace: 'nowrap'
+                }}>
+                  Relatório de Conformidade
+                </h1>
+                <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.95rem', fontWeight: 600, opacity: 0.7, margin: 0 }}>
                   {activePerfil.razao_social}
                 </p>
-                <div style={{ height: 1, width: 20, background: 'var(--site-gold)', opacity: 0.5 }} />
               </div>
             </div>
             
-            {/* LADO DIREITO: REINICIAR E PROGRESSO */}
-            <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', gap: 14, alignItems: 'center' }}>
+            {/* GRUPO DIREITO: REINICIAR E PROGRESSO */}
+            <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexShrink: 0 }}>
               <button 
                 onClick={handleResetProcesso}
                 disabled={resetting}
