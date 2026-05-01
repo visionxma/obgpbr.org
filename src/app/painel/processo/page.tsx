@@ -229,10 +229,12 @@ export default function ProcessoPage() {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Mostra a seta se estiver no passo 7 e o usuário ainda não tiver chegado ao final da página
-      const reachedBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 150;
+      // Mostra a seta se estiver no passo 7 e houver mais conteúdo para rolar (pelo menos 50px)
+      const scrollTotal = document.documentElement.scrollHeight;
+      const scrollPos = window.innerHeight + window.scrollY;
+      const canScrollMore = scrollTotal > scrollPos + 50;
       
-      if (step === 7 && showPaymentScreen && !reachedBottom) {
+      if (step === 7 && showPaymentScreen && canScrollMore) {
         setShowScrollHint(true);
       } else {
         setShowScrollHint(false);
@@ -1108,6 +1110,10 @@ export default function ProcessoPage() {
           0% { box-shadow: 0 0 0 0 rgba(13, 54, 79, 0.4); }
           70% { box-shadow: 0 0 0 15px rgba(13, 54, 79, 0); }
           100% { box-shadow: 0 0 0 0 rgba(13, 54, 79, 0); }
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(-50%) translateX(-20px); }
+          to { opacity: 1; transform: translateY(-50%) translateX(0); }
         }
       `}} />
 
