@@ -1081,23 +1081,23 @@ export default function ProcessoPage() {
           )}
 
           {step === 2 && (
-            <DocumentSection number="2" title="HABILITAÇÃO JURÍDICA" items={HABILITACAO_JURIDICA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} files={files} handleAttachFile={handleAttachFile} handleRemoveFile={handleRemoveFile} />
+            <DocumentSection number="2" title="HABILITAÇÃO JURÍDICA" items={HABILITACAO_JURIDICA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} files={files} onAttachFile={handleAttachFile} onRemoveFile={handleRemoveFile} />
           )}
 
           {step === 3 && (
-            <DocumentSection number="3" title="REGULARIDADE FISCAL, SOCIAL E TRABALHISTA" items={REGULARIDADE_FISCAL} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} files={files} handleAttachFile={handleAttachFile} handleRemoveFile={handleRemoveFile} />
+            <DocumentSection number="3" title="REGULARIDADE FISCAL, SOCIAL E TRABALHISTA" items={REGULARIDADE_FISCAL} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} files={files} onAttachFile={handleAttachFile} onRemoveFile={handleRemoveFile} />
           )}
 
           {step === 4 && (
-            <DocumentSection number="4" title="QUALIFICAÇÃO ECONÔMICO-FINANCEIRA" items={QUALIFICACAO_FINANCEIRA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} files={files} handleAttachFile={handleAttachFile} handleRemoveFile={handleRemoveFile} />
+            <DocumentSection number="4" title="QUALIFICAÇÃO ECONÔMICO-FINANCEIRA" items={QUALIFICACAO_FINANCEIRA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} files={files} onAttachFile={handleAttachFile} onRemoveFile={handleRemoveFile} />
           )}
 
           {step === 5 && (
-            <DocumentSection number="5" title="QUALIFICAÇÃO TÉCNICA" items={QUALIFICACAO_TECNICA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} files={files} handleAttachFile={handleAttachFile} handleRemoveFile={handleRemoveFile} />
+            <DocumentSection number="5" title="QUALIFICAÇÃO TÉCNICA" items={QUALIFICACAO_TECNICA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} files={files} onAttachFile={handleAttachFile} onRemoveFile={handleRemoveFile} />
           )}
 
           {step === 6 && (
-            <DocumentSection number="6" title="OUTROS REGISTROS" items={OUTROS_REGISTROS} data={data} handleUpdate={handleUpdate} showErrors={false} files={files} handleAttachFile={handleAttachFile} handleRemoveFile={handleRemoveFile} />
+            <DocumentSection number="6" title="OUTROS REGISTROS" items={OUTROS_REGISTROS} data={data} handleUpdate={handleUpdate} showErrors={false} files={files} onAttachFile={handleAttachFile} onRemoveFile={handleRemoveFile} />
           )}
 
           {step === 7 && (
