@@ -1,6 +1,7 @@
 'use client';
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
 import { 
   FileUp, 
   CheckCircle2, 
@@ -258,6 +259,7 @@ function DocumentSection({ number, title, items, data, handleUpdate, showErrors,
 // ── Main Component ──────────────────────────────────────────
 
 export default function ProcessoPage() {
+  const router = useRouter();
   const { user } = usePainel();
   const [loadingData, setLoadingData] = useState(true);
   const [step, setStep] = useState(1);
