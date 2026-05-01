@@ -679,43 +679,72 @@ export default function ProcessoPage() {
         </div>
       ) : (
         <div id="painel-top" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60 }}>
-          <div className="processo-header-wrap">
-            <div>
-              <h1 style={{ fontSize: 'clamp(1.4rem, 4vw, 1.8rem)', fontWeight: 900, color: 'var(--site-primary)', letterSpacing: '-0.02em', marginBottom: 4 }}>
-                Relatório de Conformidade
-              </h1>
-              <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.9rem' }}>
-                {activePerfil.razao_social} ({activePerfil.osc_id})
-              </p>
-            </div>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+          <div className="processo-header-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32, gap: 20, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
               {(step > 1 || showPaymentScreen) && (
                 <button 
                   onClick={handleBack}
-                  style={{ padding: '8px 16px', fontSize: '0.8rem', fontWeight: 700, borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)', background: '#fff', color: 'var(--site-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all .2s' }}
-                  onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--site-gold)'; e.currentTarget.style.color = 'var(--site-primary)'; }}
-                  onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--site-border)'; e.currentTarget.style.color = 'var(--site-text-secondary)'; }}
+                  style={{ 
+                    padding: '14px 28px', 
+                    fontSize: '1rem', 
+                    fontWeight: 900, 
+                    borderRadius: 'var(--site-radius-lg)', 
+                    border: '2px solid var(--site-border)', 
+                    background: '#fff', 
+                    color: 'var(--site-primary)', 
+                    cursor: 'pointer', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 12, 
+                    transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em'
+                  }}
+                  onMouseOver={(e) => { 
+                    e.currentTarget.style.borderColor = 'var(--site-gold)'; 
+                    e.currentTarget.style.color = 'var(--site-gold)';
+                    e.currentTarget.style.transform = 'translateX(-6px)'; 
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(197, 171, 118, 0.15)';
+                  }}
+                  onMouseOut={(e) => { 
+                    e.currentTarget.style.borderColor = 'var(--site-border)'; 
+                    e.currentTarget.style.color = 'var(--site-primary)';
+                    e.currentTarget.style.transform = 'translateX(0)'; 
+                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.05)';
+                  }}
                 >
-                  <ChevronLeft size={14} />
+                  <ChevronLeft size={24} strokeWidth={3} />
                   Voltar
                 </button>
               )}
+              <div>
+                <h1 style={{ fontSize: 'clamp(1.5rem, 4.5vw, 2.2rem)', fontWeight: 900, color: 'var(--site-primary)', letterSpacing: '-0.03em', marginBottom: 4, lineHeight: 1.1 }}>
+                  Relatório de Conformidade
+                </h1>
+                <p style={{ color: 'var(--site-text-secondary)', fontSize: '1rem', fontWeight: 500, opacity: 0.8 }}>
+                  {activePerfil.razao_social} ({activePerfil.osc_id})
+                </p>
+              </div>
+            </div>
+            
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
               <button 
                 onClick={handleResetProcesso}
                 disabled={resetting}
-                style={{ padding: '8px 16px', fontSize: '0.8rem', fontWeight: 700, borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)', background: '#fff', color: 'var(--site-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all .2s' }}
+                style={{ padding: '12px 24px', fontSize: '0.85rem', fontWeight: 800, borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)', background: '#fff', color: 'var(--site-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, transition: 'all .2s' }}
                 onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--site-gold)'; e.currentTarget.style.color = 'var(--site-primary)'; }}
                 onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--site-border)'; e.currentTarget.style.color = 'var(--site-text-secondary)'; }}
               >
-                {resetting ? <Loader2 size={14} className="spin-anim" /> : <RefreshCcw size={14} />}
+                {resetting ? <Loader2 size={18} className="spin-anim" /> : <RefreshCcw size={18} />}
                 Reiniciar
               </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px', background: 'var(--site-surface-blue)', borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)' }}>
-                <div style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-primary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Progresso</div>
-                <div style={{ width: 'clamp(60px, 15vw, 120px)', height: 6, background: 'rgba(0,0,0,0.05)', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ width: `${progress}%`, height: '100%', background: 'var(--site-gold)', transition: 'width 0.4s ease' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 24px', background: 'var(--site-surface-blue)', borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
+                <div style={{ fontSize: '0.75rem', fontWeight: 900, color: 'var(--site-primary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Progresso</div>
+                <div style={{ width: 'clamp(80px, 15vw, 150px)', height: 8, background: 'rgba(0,0,0,0.05)', borderRadius: 4, overflow: 'hidden' }}>
+                  <div style={{ width: `${progress}%`, height: '100%', background: 'var(--site-gold)', transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 0 10px rgba(197, 171, 118, 0.4)' }} />
                 </div>
-                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--site-gold)' }}>{progress}%</div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 900, color: 'var(--site-gold)' }}>{progress}%</div>
               </div>
             </div>
           </div>
