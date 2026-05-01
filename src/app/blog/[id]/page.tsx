@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import PublicLayout from '../../components/PublicLayout';
 import { supabase } from '@/lib/supabase';
 import {
-  Calendar, Clock, Tag, Loader2, User, ArrowLeft, Share2, Facebook, Twitter, Linkedin, Link as LinkIcon, BookOpen
+  Calendar, Clock, Tag, Loader2, User, ArrowLeft, Share2, Link as LinkIcon, BookOpen
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -210,6 +210,25 @@ export default function BlogPostPage() {
                   color: #fff !important;
                   opacity: 1 !important;
                 }
+                .icon-btn {
+                  width: 38px;
+                  height: 38px;
+                  border-radius: 50%;
+                  border: 1px solid var(--site-border);
+                  background: #fff;
+                  color: var(--site-text-secondary);
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  cursor: pointer;
+                  transition: all .2s;
+                }
+                .icon-btn:hover {
+                  background: var(--site-primary);
+                  color: #fff;
+                  border-color: var(--site-primary);
+                  transform: translateY(-2px);
+                }
               `}</style>
             </div>
 
@@ -223,9 +242,7 @@ export default function BlogPostPage() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                 <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--site-text-secondary)' }}>Compartilhar:</span>
                 <div style={{ display: 'flex', gap: 10 }}>
-                  <button className="icon-btn" title="Facebook"><Facebook size={18} /></button>
-                  <button className="icon-btn" title="Twitter"><Twitter size={18} /></button>
-                  <button className="icon-btn" title="Linkedin"><Linkedin size={18} /></button>
+                  <button className="icon-btn" title="Compartilhar"><Share2 size={18} /></button>
                   <button className="icon-btn" title="Copiar Link"><LinkIcon size={18} /></button>
                 </div>
               </div>
@@ -235,27 +252,7 @@ export default function BlogPostPage() {
               </Link>
             </footer>
 
-            <style jsx>{`
-              .icon-btn {
-                width: 38px;
-                height: 38px;
-                border-radius: 50%;
-                border: 1px solid var(--site-border);
-                background: #fff;
-                color: var(--site-text-secondary);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: all .2s;
-              }
-              .icon-btn:hover {
-                background: var(--site-primary);
-                color: #fff;
-                border-color: var(--site-primary);
-                transform: translateY(-2px);
-              }
-            `}</style>
+
           </div>
         </section>
       </article>
