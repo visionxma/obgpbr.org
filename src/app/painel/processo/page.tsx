@@ -1237,7 +1237,8 @@ export default function ProcessoPage() {
                             borderRadius: 14, padding: '16px 20px', cursor: 'pointer',
                             background: comprovanteFile ? 'rgba(22,163,74,0.03)' : '#fafbfc',
                             transition: 'all .2s',
-                            minHeight: '100%'
+                            minHeight: '100%',
+                            maxWidth: 650
                           }}
                         >
                         <div style={{ 
