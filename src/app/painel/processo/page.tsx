@@ -755,7 +755,7 @@ export default function ProcessoPage() {
           </div>
         </div>
       ) : (
-        <div id="painel-top" style={{ maxWidth: 1350, margin: '0 auto', paddingBottom: 60 }}>
+        <div id="painel-top" style={{ maxWidth: 1600, margin: '0 auto', paddingBottom: 60 }}>
           {/* ── HEADER BAR — Premium Glassmorphic ── */}
           <div className="processo-header-bar" style={{
             display: 'flex',
@@ -1130,7 +1130,7 @@ export default function ProcessoPage() {
                   </div>
 
                   {/* ── Payment Body ── */}
-                  <div style={{ padding: 'clamp(16px, 4vw, 24px)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div style={{ padding: '24px clamp(16px, 2vw, 32px)', display: 'flex', flexDirection: 'column', gap: 16 }}>
                     
                     {/* PIX Section */}
                     <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden' }}>
