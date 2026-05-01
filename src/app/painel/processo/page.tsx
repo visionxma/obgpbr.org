@@ -53,14 +53,20 @@ interface RelatorioData {
   };
 }
 
+const WIZARD_PHASES = [
+  { id: 'identificacao', label: 'Identificação', description: 'Dados Iniciais', stepRange: [1, 1] },
+  { id: 'documentacao', label: 'Conformidade', description: 'Análise de Documentos', stepRange: [2, 6] },
+  { id: 'certificacao', label: 'Certificação', description: 'Validação Final', stepRange: [7, 7] },
+];
+
 const WIZARD_STEPS = [
-  { id: 'entidade', label: 'Dados da Entidade' },
-  { id: 'juridica', label: 'Habilitação Jurídica' },
-  { id: 'fiscal',   label: 'Regularidade Fiscal' },
-  { id: 'financeira', label: 'Qual. Econômica' },
-  { id: 'tecnica',  label: 'Qual. Técnica' },
-  { id: 'outros',   label: 'Outros Registros' },
-  { id: 'conclusao', label: 'Finalização' },
+  { id: 'entidade', label: 'Dados da Entidade', phaseId: 'identificacao' },
+  { id: 'juridica', label: 'Habilitação Jurídica', phaseId: 'documentacao' },
+  { id: 'fiscal',   label: 'Regularidade Fiscal', phaseId: 'documentacao' },
+  { id: 'financeira', label: 'Qual. Econômica', phaseId: 'documentacao' },
+  { id: 'tecnica',  label: 'Qual. Técnica', phaseId: 'documentacao' },
+  { id: 'outros',   label: 'Outros Registros', phaseId: 'documentacao' },
+  { id: 'conclusao', label: 'Finalização', phaseId: 'certificacao' },
 ];
 
 const HABILITACAO_JURIDICA: DocItem[] = [
@@ -661,39 +667,87 @@ export default function ProcessoPage() {
             </div>
           </div>
 
-          <div className="wizard-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+          <div className="wizard-card" style={{ padding: '24px 32px', position: 'relative', overflow: 'hidden' }}>
+            {/* Background pattern for depth */}
+            <div style={{ position: 'absolute', top: 0, right: 0, width: '30%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(197, 171, 118, 0.05))', pointerEvents: 'none' }} />
+            
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
               <div>
-                <h2 style={{ fontSize: '1rem', fontWeight: 800, margin: 0, color: '#fff' }}>PAINEL DE ACOMPANHAMENTO</h2>
-                <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', marginTop: 4 }}>
-                  Etapa {step} de {WIZARD_STEPS.length} — {WIZARD_STEPS[step - 1].label}
+                <h2 style={{ fontSize: '0.75rem', fontWeight: 900, margin: 0, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Painel de Conformidade</h2>
+                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fff', marginTop: 4, display: 'flex', alignItems: 'center', gap: 12 }}>
+                  {WIZARD_PHASES.find(p => step >= p.stepRange[0] && step <= p.stepRange[1])?.label}
+                  <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: 6 }}>
+                    {step} de {WIZARD_STEPS.length}
+                  </span>
+                </div>
+              </div>
+              
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--site-gold)' }}>
+                  {step === 1 && "Vamos começar!"}
+                  {step > 1 && step < 4 && "Ótimo progresso!"}
+                  {step >= 4 && step < 7 && "Quase lá, falta pouco!"}
+                  {step === 7 && "Tudo pronto para certificar!"}
+                </div>
+                <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                  {WIZARD_STEPS[step - 1].label}
                 </div>
               </div>
             </div>
 
-            <div style={{ position: 'relative' }}>
-              <div style={{ position: 'absolute', top: 14, left: 0, right: 0, height: 2, background: 'rgba(255,255,255,0.15)', zIndex: 0 }} />
-              <div style={{ position: 'absolute', top: 14, left: 0, width: `${progress}%`, height: 2, background: 'var(--site-gold)', zIndex: 1, transition: 'width 0.5s ease' }} />
-              <div className="wizard-steps-row">
+            <div style={{ position: 'relative', padding: '0 10px' }}>
+              {/* PHASES ROW */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, position: 'relative', zIndex: 2 }}>
+                {WIZARD_PHASES.map((phase, idx) => {
+                  const isCurrentPhase = step >= phase.stepRange[0] && step <= phase.stepRange[1];
+                  const isPastPhase = step > phase.stepRange[1];
+                  return (
+                    <div key={phase.id} style={{ flex: 1, textAlign: 'center', position: 'relative' }}>
+                      <div style={{ 
+                        fontSize: '0.65rem', 
+                        fontWeight: 900, 
+                        color: isCurrentPhase ? 'var(--site-gold)' : (isPastPhase ? '#fff' : 'rgba(255,255,255,0.2)'),
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em',
+                        transition: 'all 0.3s'
+                      }}>
+                        {phase.label}
+                      </div>
+                      <div style={{ 
+                        height: 4, 
+                        background: isCurrentPhase ? 'var(--site-gold)' : (isPastPhase ? 'var(--site-gold)' : 'rgba(255,255,255,0.1)'),
+                        marginTop: 8,
+                        borderRadius: 2,
+                        marginRight: idx < WIZARD_PHASES.length - 1 ? 8 : 0,
+                        boxShadow: isCurrentPhase ? '0 0 15px rgba(197, 171, 118, 0.4)' : 'none',
+                        transition: 'all 0.5s ease'
+                      }} />
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* MICRO STEPS ROW */}
+              <div className="wizard-steps-row" style={{ marginTop: 12, opacity: 0.8 }}>
                 {WIZARD_STEPS.map((s, i) => {
                   const done = step > i + 1;
                   const active = step === i + 1;
                   return (
-                    <div key={i} className={`wizard-step-item ${active ? 'active' : ''} ${done ? 'done' : ''}`}>
+                    <div key={i} className={`wizard-step-item ${active ? 'active' : ''} ${done ? 'done' : ''}`} style={{ opacity: active || done ? 1 : 0.3 }}>
                       <div 
                         className="wizard-step-circle"
                         style={{ 
-                          width: 30, height: 30, borderRadius: '50%', 
-                          background: done ? 'var(--site-gold)' : (active ? 'var(--site-primary)' : 'rgba(255,255,255,0.05)'), 
-                          border: done ? 'none' : (active ? '2px solid var(--site-gold)' : '2px solid rgba(255,255,255,0.2)'), 
+                          width: 22, height: 22, borderRadius: '50%', 
+                          background: done ? 'var(--site-gold)' : (active ? 'var(--site-primary)' : 'transparent'), 
+                          border: done ? 'none' : (active ? '2px solid var(--site-gold)' : '1px solid rgba(255,255,255,0.2)'), 
                           display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                          color: done ? '#fff' : (active ? 'var(--site-gold)' : 'rgba(255,255,255,0.4)'), 
-                          zIndex: 2 
+                          color: done ? '#fff' : (active ? 'var(--site-gold)' : 'rgba(255,255,255,0.2)'), 
+                          zIndex: 2,
+                          transition: 'all 0.3s'
                         }}
                       >
-                        {done ? <Check size={14} /> : <span style={{ fontSize: 11, fontWeight: 700 }}>{i + 1}</span>}
+                        {done ? <Check size={10} strokeWidth={4} /> : <span style={{ fontSize: 9, fontWeight: 800 }}>{i + 1}</span>}
                       </div>
-                      <span className="wizard-step-label">{s.label}</span>
                     </div>
                   );
                 })}
