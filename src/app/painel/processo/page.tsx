@@ -477,7 +477,11 @@ export default function ProcessoPage() {
   };
 
   const handleBack = () => {
-    setStep(s => Math.max(s - 1, 1));
+    if (showPaymentScreen) {
+      setShowPaymentScreen(false);
+    } else {
+      setStep(s => Math.max(s - 1, 1));
+    }
     document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
   };
   
@@ -675,10 +679,8 @@ export default function ProcessoPage() {
         </div>
       ) : (
         <div id="painel-top" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60 }}>
-          {!showPaymentScreen && (
-            <>
-              <div className="processo-header-wrap">
-                <div>
+          <div className="processo-header-wrap">
+            <div>
               <h1 style={{ fontSize: 'clamp(1.4rem, 4vw, 1.8rem)', fontWeight: 900, color: 'var(--site-primary)', letterSpacing: '-0.02em', marginBottom: 4 }}>
                 Relatório de Conformidade
               </h1>
@@ -687,7 +689,7 @@ export default function ProcessoPage() {
               </p>
             </div>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
-              {step > 1 && (
+              {(step > 1 || showPaymentScreen) && (
                 <button 
                   onClick={handleBack}
                   style={{ padding: '8px 16px', fontSize: '0.8rem', fontWeight: 700, borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)', background: '#fff', color: 'var(--site-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all .2s' }}
@@ -717,112 +719,112 @@ export default function ProcessoPage() {
               </div>
             </div>
           </div>
-
-          <div className="wizard-card" style={{ padding: '24px 32px', position: 'relative', overflow: 'hidden' }}>
-            {/* Background pattern for depth */}
-            <div style={{ position: 'absolute', top: 0, right: 0, width: '30%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(197, 171, 118, 0.05))', pointerEvents: 'none' }} />
-            
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
-              <div>
-                <h2 style={{ fontSize: '0.75rem', fontWeight: 900, margin: 0, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Painel de Conformidade</h2>
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fff', marginTop: 4, display: 'flex', alignItems: 'center', gap: 12 }}>
-                  {WIZARD_PHASES.find(p => step >= p.stepRange[0] && step <= p.stepRange[1])?.label}
-                  <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: 6 }}>
-                    {step} de {WIZARD_STEPS.length}
-                  </span>
-                </div>
-              </div>
-              
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--site-gold)' }}>
-                  {step === 1 && "Vamos começar!"}
-                  {step > 1 && step < 4 && "Ótimo progresso!"}
-                  {step >= 4 && step < 7 && "Quase lá, falta pouco!"}
-                  {step === 7 && "Tudo pronto para certificar!"}
-                </div>
-                <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
-                  {WIZARD_STEPS[step - 1].label}
-                </div>
-              </div>
-            </div>
-
-            <div style={{ position: 'relative', padding: '0 10px' }}>
-              {/* PHASES ROW */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, position: 'relative', zIndex: 2 }}>
-                {WIZARD_PHASES.map((phase, idx) => {
-                  const isCurrentPhase = step >= phase.stepRange[0] && step <= phase.stepRange[1];
-                  const isPastPhase = step > phase.stepRange[1];
-                  return (
-                    <div key={phase.id} style={{ flex: 1, textAlign: 'center', position: 'relative' }}>
-                      <div style={{ 
-                        fontSize: '0.65rem', 
-                        fontWeight: 900, 
-                        color: isCurrentPhase ? 'var(--site-gold)' : (isPastPhase ? '#fff' : 'rgba(255,255,255,0.2)'),
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.1em',
-                        transition: 'all 0.3s'
-                      }}>
-                        {phase.label}
-                      </div>
-                      <div style={{ 
-                        height: 4, 
-                        background: isCurrentPhase ? 'var(--site-gold)' : (isPastPhase ? 'var(--site-gold)' : 'rgba(255,255,255,0.1)'),
-                        marginTop: 8,
-                        borderRadius: 2,
-                        marginRight: idx < WIZARD_PHASES.length - 1 ? 8 : 0,
-                        boxShadow: isCurrentPhase ? '0 0 15px rgba(197, 171, 118, 0.4)' : 'none',
-                        transition: 'all 0.5s ease'
-                      }} />
+          {!showPaymentScreen && (
+            <>
+              <div className="wizard-card" style={{ padding: '24px 32px', position: 'relative', overflow: 'hidden' }}>
+                {/* Background pattern for depth */}
+                <div style={{ position: 'absolute', top: 0, right: 0, width: '30%', height: '100%', background: 'linear-gradient(90deg, transparent, rgba(197, 171, 118, 0.05))', pointerEvents: 'none' }} />
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
+                  <div>
+                    <h2 style={{ fontSize: '0.75rem', fontWeight: 900, margin: 0, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Painel de Conformidade</h2>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#fff', marginTop: 4, display: 'flex', alignItems: 'center', gap: 12 }}>
+                      {WIZARD_PHASES.find(p => step >= p.stepRange[0] && step <= p.stepRange[1])?.label}
+                      <span style={{ fontSize: '0.85rem', fontWeight: 500, color: 'rgba(255,255,255,0.4)', background: 'rgba(255,255,255,0.1)', padding: '4px 10px', borderRadius: 6 }}>
+                        {step} de {WIZARD_STEPS.length}
+                      </span>
                     </div>
-                  );
-                })}
-              </div>
-
-              {/* MICRO STEPS ROW */}
-              <div className="wizard-steps-row" style={{ marginTop: 12, opacity: 0.8 }}>
-                {WIZARD_STEPS.map((s, i) => {
-                  const done = step > i + 1;
-                  const active = step === i + 1;
-                  return (
-                    <div key={i} className={`wizard-step-item ${active ? 'active' : ''} ${done ? 'done' : ''}`} style={{ opacity: active || done ? 1 : 0.3 }}>
-                      <div 
-                        className="wizard-step-circle"
-                        style={{ 
-                          width: 22, height: 22, borderRadius: '50%', 
-                          background: done ? 'var(--site-gold)' : (active ? 'var(--site-primary)' : 'transparent'), 
-                          border: done ? 'none' : (active ? '2px solid var(--site-gold)' : '1px solid rgba(255,255,255,0.2)'), 
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                          color: done ? '#fff' : (active ? 'var(--site-gold)' : 'rgba(255,255,255,0.2)'), 
-                          zIndex: 2,
-                          transition: 'all 0.3s'
-                        }}
-                      >
-                        {done ? <Check size={10} strokeWidth={4} /> : <span style={{ fontSize: 9, fontWeight: 800 }}>{i + 1}</span>}
-                      </div>
+                  </div>
+                  
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--site-gold)' }}>
+                      {step === 1 && "Vamos começar!"}
+                      {step > 1 && step < 4 && "Ótimo progresso!"}
+                      {step >= 4 && step < 7 && "Quase lá, falta pouco!"}
+                      {step === 7 && "Tudo pronto para certificar!"}
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
+                    <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
+                      {WIZARD_STEPS[step - 1].label}
+                    </div>
+                  </div>
+                </div>
 
-          {/* TOP NAVIGATION (DUPLICATE) */}
-          <div className="processo-nav-btns" style={{ display: 'flex', justifyContent: step === 1 ? 'flex-end' : 'space-between', alignItems: 'center', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid var(--site-border)' }}>
-            {step > 1 && (
-              <button onClick={handleBack} className="btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', fontSize: '0.85rem', background: 'var(--site-surface-warm)', color: 'var(--site-text-primary)', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', fontWeight: 700 }}>
-                <ChevronLeft size={16} /> Voltar
-              </button>
-            )}
-            {step < 7 && (
-              <button onClick={handleNext} disabled={saving} className="btn btn-gold" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', fontSize: '0.9rem', fontWeight: 700, opacity: saving ? 0.7 : 1 }}>
-                {saving ? (
-                  <><Loader2 size={16} className="spin-anim" /> Salvando...</>
-                ) : (
-                  <>Salvar e Avançar <ChevronRight size={16} /></>
+                <div style={{ position: 'relative', padding: '0 10px' }}>
+                  {/* PHASES ROW */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20, position: 'relative', zIndex: 2 }}>
+                    {WIZARD_PHASES.map((phase, idx) => {
+                      const isCurrentPhase = step >= phase.stepRange[0] && step <= phase.stepRange[1];
+                      const isPastPhase = step > phase.stepRange[1];
+                      return (
+                        <div key={phase.id} style={{ flex: 1, textAlign: 'center', position: 'relative' }}>
+                          <div style={{ 
+                            fontSize: '0.65rem', 
+                            fontWeight: 900, 
+                            color: isCurrentPhase ? 'var(--site-gold)' : (isPastPhase ? '#fff' : 'rgba(255,255,255,0.2)'),
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.1em',
+                            transition: 'all 0.3s'
+                          }}>
+                            {phase.label}
+                          </div>
+                          <div style={{ 
+                            height: 4, 
+                            background: isCurrentPhase ? 'var(--site-gold)' : (isPastPhase ? 'var(--site-gold)' : 'rgba(255,255,255,0.1)'),
+                            marginTop: 8,
+                            borderRadius: 2,
+                            marginRight: idx < WIZARD_PHASES.length - 1 ? 8 : 0,
+                            boxShadow: isCurrentPhase ? '0 0 15px rgba(197, 171, 118, 0.4)' : 'none',
+                            transition: 'all 0.5s ease'
+                          }} />
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* MICRO STEPS ROW */}
+                  <div className="wizard-steps-row" style={{ marginTop: 12, opacity: 0.8 }}>
+                    {WIZARD_STEPS.map((s, i) => {
+                      const done = step > i + 1;
+                      const active = step === i + 1;
+                      return (
+                        <div key={i} className={`wizard-step-item ${active ? 'active' : ''} ${done ? 'done' : ''}`} style={{ opacity: active || done ? 1 : 0.3 }}>
+                          <div 
+                            className="wizard-step-circle"
+                            style={{ 
+                              width: 22, height: 22, borderRadius: '50%', 
+                              background: done ? 'var(--site-gold)' : (active ? 'var(--site-primary)' : 'transparent'), 
+                              border: done ? 'none' : (active ? '2px solid var(--site-gold)' : '1px solid rgba(255,255,255,0.2)'), 
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                              color: done ? '#fff' : (active ? 'var(--site-gold)' : 'rgba(255,255,255,0.2)'), 
+                              zIndex: 2,
+                              transition: 'all 0.3s'
+                            }}
+                          >
+                            {done ? <Check size={10} strokeWidth={4} /> : <span style={{ fontSize: 9, fontWeight: 800 }}>{i + 1}</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="processo-nav-btns" style={{ display: 'flex', justifyContent: step === 1 ? 'flex-end' : 'space-between', alignItems: 'center', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid var(--site-border)' }}>
+                {step > 1 && (
+                  <button onClick={handleBack} className="btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', fontSize: '0.85rem', background: 'var(--site-surface-warm)', color: 'var(--site-text-primary)', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', fontWeight: 700 }}>
+                    <ChevronLeft size={16} /> Voltar
+                  </button>
                 )}
-              </button>
-            )}
-          </div>
+                {step < 7 && (
+                  <button onClick={handleNext} disabled={saving} className="btn btn-gold" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', fontSize: '0.9rem', fontWeight: 700, opacity: saving ? 0.7 : 1 }}>
+                    {saving ? (
+                      <><Loader2 size={16} className="spin-anim" /> Salvando...</>
+                    ) : (
+                      <>Salvar e Avançar <ChevronRight size={16} /></>
+                    )}
+                  </button>
+                )}
+              </div>
             </>
           )}
 
