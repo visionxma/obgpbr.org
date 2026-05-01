@@ -84,8 +84,22 @@ export default function PainelLayout({ children }: { children: React.ReactNode }
 
 // Componente intermediário para acessar o contexto antes de renderizar PublicLayout
 function PainelInner({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isActive = pathname === '/painel/processos';
+
   return (
-    <PublicLayout navRightSlot={<OscIdBadge />}>
+    <PublicLayout navRightSlot={
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <Link 
+          href="/painel/processos" 
+          className={`hdr-link ${isActive ? 'active' : ''}`}
+          style={{ padding: '8px 16px', fontWeight: isActive ? 700 : 500 }}
+        >
+          Processos
+        </Link>
+        <OscIdBadge />
+      </div>
+    }>
       <PainelShell>{children}</PainelShell>
     </PublicLayout>
   );
