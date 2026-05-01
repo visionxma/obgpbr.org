@@ -148,7 +148,7 @@ export default function BlogPostPage() {
               <div style={{ 
                 marginTop: -60, borderRadius: 'var(--site-radius-xl)', 
                 overflow: 'hidden', boxShadow: 'var(--site-shadow-xl)',
-                position: 'relative', z-index: 10, marginBottom: 60
+                position: 'relative', zIndex: 10, marginBottom: 60
               }}>
                 <img src={post.image_url} alt={post.title} className="img-cover" style={{ width: '100%', maxHeight: 540 }} />
               </div>
