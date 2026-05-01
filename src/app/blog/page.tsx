@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import PublicLayout from '../components/PublicLayout';
 import { supabase } from '@/lib/supabase';
 import {
-  Calendar, Clock, Tag, Loader2, BookOpen, User, Search, ArrowRight
+  Calendar, Clock, Tag, Loader2, BookOpen, User, Search, ArrowRight, ArrowLeft
 } from 'lucide-react';
+import Link from 'next/link';
 
 interface BlogPost {
   id: string;
@@ -179,7 +180,7 @@ function FeaturedPost({ post }: { post: BlogPost }) {
       overflow: 'hidden',
     }}>
       {/* Imagem */}
-      <div style={{ minHeight: 260, overflow: 'hidden', position: 'relative' }}>
+      <Link href={`/blog/${post.id}`} style={{ minHeight: 260, overflow: 'hidden', position: 'relative' }}>
         {post.image_url ? (
           <img
             src={post.image_url}
@@ -205,7 +206,7 @@ function FeaturedPost({ post }: { post: BlogPost }) {
         }}>
           DESTAQUE
         </span>
-      </div>
+      </Link>
 
       {/* Texto */}
       <div style={{ padding: '36px 36px 36px' }}>
@@ -219,9 +220,11 @@ function FeaturedPost({ post }: { post: BlogPost }) {
             <Tag size={11} /> {post.category}
           </span>
         )}
-        <h2 style={{ marginBottom: 14, lineHeight: 1.3, fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)' }}>
-          {post.title}
-        </h2>
+        <Link href={`/blog/${post.id}`}>
+          <h2 style={{ marginBottom: 14, lineHeight: 1.3, fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', cursor: 'pointer', transition: 'color .2s' }} className="hdr-link-hover">
+            {post.title}
+          </h2>
+        </Link>
         {post.summary && (
           <p style={{
             color: 'var(--site-text-secondary)',
@@ -252,7 +255,7 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
       style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}
     >
       {/* Imagem */}
-      <div style={{ height: 180, overflow: 'hidden' }}>
+      <Link href={`/blog/${post.id}`} style={{ height: 180, overflow: 'hidden' }}>
         {post.image_url ? (
           <img src={post.image_url} alt={post.title} className="img-cover" style={{ height: '100%' }} />
         ) : (
@@ -264,7 +267,7 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
             <BookOpen size={28} color="var(--site-gold-dark)" style={{ opacity: 0.3 }} />
           </div>
         )}
-      </div>
+      </Link>
 
       {/* Corpo */}
       <div style={{ padding: '24px 24px 28px', display: 'flex', flexDirection: 'column', flex: 1 }}>
@@ -278,7 +281,9 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
             <Tag size={10} /> {post.category}
           </span>
         )}
-        <h3 className="h3-card" style={{ marginBottom: 10 }}>{post.title}</h3>
+        <Link href={`/blog/${post.id}`}>
+          <h3 className="h3-card" style={{ marginBottom: 10, cursor: 'pointer', transition: 'color .2s' }}>{post.title}</h3>
+        </Link>
         {post.summary && (
           <p style={{
             color: 'var(--site-text-secondary)',
