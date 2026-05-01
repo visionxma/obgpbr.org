@@ -769,7 +769,7 @@ export default function ProcessoPage() {
           </div>
         </div>
       ) : (
-        <div id="painel-top" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60 }}>
+        <div id="painel-top" style={{ maxWidth: 1024, margin: '0 auto', paddingBottom: 60 }}>
           {/* ── HEADER BAR — Premium Glassmorphic ── */}
           <div className="processo-header-bar" style={{
             display: 'flex',
@@ -1129,7 +1129,7 @@ export default function ProcessoPage() {
                   {/* ── Value Banner ── */}
                   <div style={{ 
                     background: 'linear-gradient(135deg, #0D364F 0%, #164e6e 50%, #0D364F 100%)', 
-                    padding: '28px 32px', 
+                    padding: '20px 32px', 
                     color: '#fff', 
                     textAlign: 'center',
                     position: 'relative',
@@ -1137,28 +1137,28 @@ export default function ProcessoPage() {
                   }}>
                     <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 30% 50%, rgba(197,171,118,0.08), transparent 60%)', pointerEvents: 'none' }} />
                     <div style={{ position: 'relative', zIndex: 1 }}>
-                      <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.15em', color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Valor Total do Relatório</div>
-                      <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#4ade80', lineHeight: 1, letterSpacing: '-0.02em' }}>R$ 389,96</div>
-                      <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginTop: 6, fontWeight: 500 }}>Relatório de Conformidade — Certificação Individual</div>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.15em', color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>Valor Total do Relatório</div>
+                      <div style={{ fontSize: '2rem', fontWeight: 900, color: '#4ade80', lineHeight: 1, letterSpacing: '-0.02em' }}>R$ 389,96</div>
+                      <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: 4, fontWeight: 500 }}>Relatório de Conformidade — Certificação Individual</div>
                     </div>
                   </div>
 
                   {/* ── Payment Body ── */}
-                  <div style={{ padding: 'clamp(20px, 4vw, 32px)', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <div style={{ padding: 'clamp(16px, 4vw, 24px)', display: 'flex', flexDirection: 'column', gap: 16 }}>
                     
                     {/* PIX Section */}
                     <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden' }}>
-                      <div style={{ padding: '14px 20px', borderBottom: '1px solid #e2e8f0', background: 'rgba(13,54,79,0.02)' }}>
+                      <div style={{ padding: '10px 16px', borderBottom: '1px solid #e2e8f0', background: 'rgba(13,54,79,0.02)' }}>
                         <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.1em', color: '#0D364F', display: 'flex', alignItems: 'center', gap: 8 }}>
                           <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--site-gold)' }} />
                           Dados para Pagamento PIX
                         </div>
                       </div>
-                      <div style={{ padding: '24px 20px', display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+                      <div style={{ padding: '16px 20px', display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
                         {/* QR Code */}
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                          <div style={{ padding: 10, background: '#fff', borderRadius: 14, border: '2px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-                            <img src="/pix_qrcode.png" alt="QR Code PIX" style={{ width: 160, height: 160, borderRadius: 6, objectFit: 'cover', display: 'block' }} />
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                          <div style={{ padding: 8, background: '#fff', borderRadius: 14, border: '2px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                            <img src="/pix_qrcode.png" alt="QR Code PIX" style={{ width: 140, height: 140, borderRadius: 6, objectFit: 'cover', display: 'block' }} />
                           </div>
                           <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#94a3b8' }}>Escaneie com seu app bancário</span>
                         </div>
@@ -1202,7 +1202,7 @@ export default function ProcessoPage() {
                           </div>
                           <div style={{ 
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, 
-                            padding: '14px 18px', 
+                            padding: '12px 18px', 
                             background: '#fff', 
                             border: '1px solid #e2e8f0', 
                             borderRadius: 12 
@@ -1216,24 +1216,26 @@ export default function ProcessoPage() {
                       </div>
                     </div>
 
-                    {/* Instructions */}
-                    <div style={{ background: 'rgba(59,130,246,0.03)', border: '1px solid rgba(59,130,246,0.1)', borderRadius: 14, padding: '18px 22px' }}>
-                      <div style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 800, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Info size={16}/> Como realizar o pagamento:
+                    {/* Horizontal Split for Instructions and Upload */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 16, alignItems: 'stretch' }}>
+                      {/* Instructions */}
+                      <div style={{ background: 'rgba(59,130,246,0.03)', border: '1px solid rgba(59,130,246,0.1)', borderRadius: 14, padding: '16px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <div style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 800, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <Info size={16}/> Como realizar o pagamento:
+                        </div>
+                        <ol style={{ margin: 0, paddingLeft: 22, fontSize: '0.8rem', color: '#475569', lineHeight: 1.8, fontWeight: 500 }}>
+                          <li>Abra o app do seu banco e acesse <strong>PIX → Pagar</strong></li>
+                          <li>Escaneie o QR Code acima ou cole a <strong>Chave PIX (CNPJ)</strong></li>
+                          <li>Confirme o valor de <strong>R$ 389,96</strong></li>
+                          <li>Após pagar, anexe o comprovante ao lado</li>
+                        </ol>
                       </div>
-                      <ol style={{ margin: 0, paddingLeft: 22, fontSize: '0.82rem', color: '#475569', lineHeight: 2, fontWeight: 500 }}>
-                        <li>Abra o app do seu banco e acesse <strong>PIX → Pagar</strong></li>
-                        <li>Escaneie o QR Code acima ou cole a <strong>Chave PIX (CNPJ)</strong></li>
-                        <li>Confirme o valor de <strong>R$ 389,96</strong></li>
-                        <li>Após pagar, anexe o comprovante abaixo</li>
-                      </ol>
-                    </div>
 
-                    {/* Upload Comprovante */}
-                    <div>
-                      <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0D364F', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <FileUp size={18}/> Comprovante de Pagamento <span style={{ color: '#dc2626', fontSize: '0.9rem' }}>*</span>
-                      </div>
+                      {/* Upload Comprovante */}
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0D364F', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <FileUp size={16}/> Comprovante de Pagamento <span style={{ color: '#dc2626', fontSize: '0.9rem' }}>*</span>
+                        </div>
                       <input
                         type="file"
                         accept="image/*,application/pdf"
@@ -1241,16 +1243,17 @@ export default function ProcessoPage() {
                         style={{ display: 'none' }}
                         id="comprovante-upload"
                       />
-                      <label
-                        htmlFor="comprovante-upload"
-                        style={{
-                          display: 'flex', alignItems: 'center', gap: 16,
-                          border: comprovanteFile ? '2px solid #16a34a' : '2px dashed #cbd5e1',
-                          borderRadius: 14, padding: '20px 24px', cursor: 'pointer',
-                          background: comprovanteFile ? 'rgba(22,163,74,0.03)' : '#fafbfc',
-                          transition: 'all .2s'
-                        }}
-                      >
+                        <label
+                          htmlFor="comprovante-upload"
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: 16, flex: 1,
+                            border: comprovanteFile ? '2px solid #16a34a' : '2px dashed #cbd5e1',
+                            borderRadius: 14, padding: '16px 20px', cursor: 'pointer',
+                            background: comprovanteFile ? 'rgba(22,163,74,0.03)' : '#fafbfc',
+                            transition: 'all .2s',
+                            minHeight: '100%'
+                          }}
+                        >
                         <div style={{ 
                           width: 48, height: 48, borderRadius: 12, flexShrink: 0,
                           background: comprovanteFile ? 'rgba(22,163,74,0.1)' : '#e2e8f0', 
@@ -1281,7 +1284,8 @@ export default function ProcessoPage() {
                         }}>
                           {comprovanteFile ? 'Trocar' : 'Selecionar'}
                         </span>
-                      </label>
+                        </label>
+                      </div>
                     </div>
 
                     {/* Warning */}
