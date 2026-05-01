@@ -229,9 +229,10 @@ export default function ProcessoPage() {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Mostra a seta se estiver no passo 7 e o usuário não tiver descido muito na seção
-      const isTop = window.scrollY < 1200; // Aumentado para garantir visibilidade no meio da página
-      if (step === 7 && showPaymentScreen && isTop) {
+      // Mostra a seta se estiver no passo 7 e o usuário ainda não tiver chegado ao final da página
+      const reachedBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 150;
+      
+      if (step === 7 && showPaymentScreen && !reachedBottom) {
         setShowScrollHint(true);
       } else {
         setShowScrollHint(false);
