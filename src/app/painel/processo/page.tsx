@@ -1238,7 +1238,8 @@ export default function ProcessoPage() {
                             background: comprovanteFile ? 'rgba(22,163,74,0.03)' : '#fafbfc',
                             transition: 'all .2s',
                             minHeight: '100%',
-                            maxWidth: 650
+                            width: 'fit-content',
+                            minWidth: 420
                           }}
                         >
                         <div style={{ 
@@ -1249,7 +1250,7 @@ export default function ProcessoPage() {
                         }}>
                           {comprovanteFile ? <CheckCircle2 size={24} /> : <FileUp size={22} />}
                         </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ minWidth: 0 }}>
                           {comprovanteFile ? (
                             <>
                               <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#16a34a' }}>Comprovante anexado</div>
