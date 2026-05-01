@@ -23,7 +23,8 @@ import {
   Plus,
   Eye,
   Edit2,
-  ShoppingCart
+  ShoppingCart,
+  ChevronDown
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../PainelContext';
@@ -224,6 +225,24 @@ export default function ProcessoPage() {
   const [comprovanteFile, setComprovanteFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [showScrollHint, setShowScrollHint] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // Mostra a seta se o usuário estiver no topo e no passo 7 (ou onde houver muito conteúdo)
+      if (window.scrollY < 100 && step === 7 && showPaymentScreen) {
+        setShowScrollHint(true);
+      } else {
+        setShowScrollHint(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    // Trigger inicial
+    handleScroll();
+    
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [step, showPaymentScreen]);
 
   const [enviando, setEnviando] = useState(false);
   const [mensagemEnviando, setMensagemEnviando] = useState('');
@@ -1037,6 +1056,50 @@ export default function ProcessoPage() {
       )}
 
 
+
+      {/* INDICADOR DE SCROLL (Lateral Esquerda) */}
+      {showScrollHint && (
+        <div style={{
+          position: 'fixed',
+          left: '2vw',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 12,
+          zIndex: 9999,
+          pointerEvents: 'none',
+          animation: 'fadeInOut 2s infinite'
+        }}>
+          <div style={{ 
+            writingMode: 'vertical-rl', 
+            textTransform: 'uppercase', 
+            fontSize: '0.7rem', 
+            fontWeight: 900, 
+            color: 'var(--site-gold)', 
+            letterSpacing: '0.2em',
+            opacity: 0.8
+          }}>
+            Role para mais informações
+          </div>
+          <div style={{ animation: 'bounceVertical 2s infinite', color: 'var(--site-gold)' }}>
+            <ChevronDown size={48} strokeWidth={3} />
+          </div>
+        </div>
+      )}
+
+      <style dangerouslySetInnerHTML={{ __html: `
+        @keyframes bounceVertical {
+          0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+          40% { transform: translateY(-10px); }
+          60% { transform: translateY(-5px); }
+        }
+        @keyframes fadeInOut {
+          0%, 100% { opacity: 0.3; }
+          50% { opacity: 1; }
+        }
+      `}} />
 
     </>
   );
