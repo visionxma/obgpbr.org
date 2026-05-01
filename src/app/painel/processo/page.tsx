@@ -763,7 +763,11 @@ export default function ProcessoPage() {
                 <div style={{ width: 'clamp(60px, 10vw, 100px)', height: 6, background: 'rgba(0,0,0,0.05)', borderRadius: 3, overflow: 'hidden' }}>
                   <div style={{ width: `${progress}%`, height: '100%', background: 'var(--site-gold)', transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 0 10px rgba(197, 171, 118, 0.4)' }} />
                 </div>
+                <div style={{ fontSize: '0.85rem', fontWeight: 900, color: 'var(--site-gold)' }}>{progress}%</div>
+              </div>
+            </div>
           </div>
+
           {!showPaymentScreen && (
             <>
               <div className="wizard-card" style={{ padding: '24px 32px', position: 'relative', overflow: 'hidden' }}>
