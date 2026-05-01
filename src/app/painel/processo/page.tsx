@@ -25,7 +25,11 @@ import {
   Edit2,
   ShoppingCart,
   ChevronDown,
-  ArrowLeft
+  ArrowLeft,
+  Paperclip,
+  X as XIcon,
+  Sparkles,
+  Lock
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../PainelContext';
@@ -145,7 +149,55 @@ function InputField({ id, label, value, onChange, type = 'text', showError }: { 
   );
 }
 
-function DocumentSection({ number, title, items, data, handleUpdate, showErrors }: { number: string; title: string; items: DocItem[]; data: RelatorioData; handleUpdate: (id: string, field: string, val: string) => void; showErrors: boolean }) {
+function DocFileField({ itemId, file, onAttach, onRemove }: { itemId: string; file: File | null; onAttach: (file: File) => void; onRemove: () => void }) {
+  const inputId = `doc-file-${itemId}`;
+  return (
+    <div style={{ gridColumn: '1 / -1' }}>
+      <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--site-text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Anexar Arquivo do Documento</label>
+      <input
+        id={inputId}
+        type="file"
+        accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+        style={{ display: 'none' }}
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onAttach(f);
+          e.target.value = '';
+        }}
+      />
+      {file ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 10, border: '1px solid rgba(22,163,74,0.25)', background: 'rgba(22,163,74,0.05)' }}>
+          <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(22,163,74,0.12)', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <FileText size={18} />
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--site-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{file.name}</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--site-text-secondary)', marginTop: 2 }}>{(file.size / 1024).toFixed(0)} KB · Pronto para envio</div>
+          </div>
+          <label htmlFor={inputId} style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid var(--site-border)', background: '#fff', color: 'var(--site-text-secondary)', fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', cursor: 'pointer' }}>
+            Trocar
+          </label>
+          <button type="button" onClick={onRemove} aria-label="Remover anexo" style={{ width: 32, height: 32, borderRadius: 8, border: '1px solid var(--site-border)', background: '#fff', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <XIcon size={14} />
+          </button>
+        </div>
+      ) : (
+        <label htmlFor={inputId} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 10, border: '1px dashed var(--site-border)', background: '#fff', cursor: 'pointer', transition: 'all .15s' }}>
+          <div style={{ width: 36, height: 36, borderRadius: 8, background: 'rgba(197,171,118,0.12)', color: 'var(--site-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <Paperclip size={18} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--site-text-primary)' }}>Clique para anexar o arquivo</div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--site-text-secondary)', marginTop: 2 }}>PDF, PNG, JPG, DOC ou DOCX · até 10 MB</div>
+          </div>
+          <span style={{ padding: '6px 14px', borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-gold)', color: 'var(--site-gold)', fontSize: '0.72rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Selecionar</span>
+        </label>
+      )}
+    </div>
+  );
+}
+
+function DocumentSection({ number, title, items, data, handleUpdate, showErrors, files, onAttachFile, onRemoveFile }: { number: string; title: string; items: DocItem[]; data: RelatorioData; handleUpdate: (id: string, field: string, val: string) => void; showErrors: boolean; files: Record<string, File>; onAttachFile: (id: string, file: File) => void; onRemoveFile: (id: string) => void }) {
   return (
     <section style={{ marginBottom: 32, border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-xl)', overflow: 'hidden', background: '#fff' }}>
       <header style={{ background: 'var(--site-primary)', color: '#fff', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -185,9 +237,15 @@ function DocumentSection({ number, title, items, data, handleUpdate, showErrors 
                   <input type="date" value={doc.validade || ''} onChange={(e) => handleUpdate(item.id, 'validade', e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid var(--site-border)', fontSize: '0.85rem' }} />
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--site-text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Análise da Situação Atual</label>
-                  <textarea placeholder="Descreva observações sobre o documento..." value={doc.obs || ''} onChange={(e) => handleUpdate(item.id, 'obs', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--site-border)', fontSize: '0.85rem', minHeight: 80, resize: 'vertical' }} />
+                  <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--site-text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Observações da OSC (opcional)</label>
+                  <textarea placeholder="Inclua aqui qualquer observação relevante sobre o documento. A análise técnica será realizada pela equipe OBGP." value={doc.obs || ''} onChange={(e) => handleUpdate(item.id, 'obs', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--site-border)', fontSize: '0.85rem', minHeight: 80, resize: 'vertical' }} />
                 </div>
+                <DocFileField
+                  itemId={item.id}
+                  file={files[item.id] || null}
+                  onAttach={(f) => onAttachFile(item.id, f)}
+                  onRemove={() => onRemoveFile(item.id)}
+                />
               </div>
             </div>
           );
@@ -230,9 +288,24 @@ export default function ProcessoPage() {
   const [cart, setCart] = useState<any[]>([]);
   const [showPaymentScreen, setShowPaymentScreen] = useState(false);
   const [comprovanteFile, setComprovanteFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<{ [docId: string]: string }>({});
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(false);
+
+  const handleAttachFile = (id: string, fileUrl: string) => {
+    setFiles(prev => ({ ...prev, [id]: fileUrl }));
+    handleUpdate(id, 'status', 'em_analise');
+  };
+
+  const handleRemoveFile = (id: string) => {
+    setFiles(prev => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    handleUpdate(id, 'status', 'pendente');
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -680,86 +753,138 @@ export default function ProcessoPage() {
         </div>
       ) : (
         <div id="painel-top" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60 }}>
-          <div className="processo-header-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 40, gap: 32, flexWrap: 'nowrap' }}>
-            {/* GRUPO ESQUERDO: VOLTAR + TÍTULO */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 32, flex: '1 1 auto' }}>
+          {/* ── HEADER BAR — Premium Glassmorphic ── */}
+          <div className="processo-header-bar" style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 28,
+            padding: '14px 28px',
+            background: 'rgba(255,255,255,0.92)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            borderRadius: 18,
+            border: '1px solid rgba(13,54,79,0.06)',
+            boxShadow: '0 4px 24px rgba(13,54,79,0.04), 0 1px 2px rgba(0,0,0,0.02)',
+            gap: 16,
+            position: 'sticky',
+            top: 80,
+            zIndex: 40,
+            transition: 'box-shadow .3s ease'
+          }}>
+            {/* LEFT: Back + Title */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20, flex: '1 1 auto', minWidth: 0 }}>
               {(step > 1 || showPaymentScreen) && (
                 <button 
                   onClick={handleBack}
                   style={{ 
-                    padding: '12px 24px', 
-                    fontSize: '0.85rem', 
+                    padding: '10px 20px', 
+                    fontSize: '0.8rem', 
                     fontWeight: 700, 
                     borderRadius: 'var(--site-radius-full)', 
-                    border: '1px solid rgba(13, 54, 79, 0.1)', 
-                    background: 'rgba(255, 255, 255, 0.6)', 
-                    backdropFilter: 'blur(8px)',
+                    border: '1px solid var(--site-border)', 
+                    background: '#fff',
                     color: 'var(--site-primary)', 
                     cursor: 'pointer', 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: 10, 
-                    transition: 'all .4s cubic-bezier(0.165, 0.84, 0.44, 1)',
-                    boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
-                    borderLeft: '3px solid var(--site-gold)',
-                    whiteSpace: 'nowrap'
+                    gap: 8, 
+                    transition: 'all .25s ease',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0
                   }}
                   onMouseOver={(e) => { 
                     e.currentTarget.style.background = 'var(--site-primary)';
                     e.currentTarget.style.color = '#fff';
-                    e.currentTarget.style.transform = 'translateX(-4px)'; 
-                    e.currentTarget.style.boxShadow = '0 10px 25px rgba(13, 54, 79, 0.2)';
-                    e.currentTarget.style.borderLeftColor = '#fff';
+                    e.currentTarget.style.borderColor = 'var(--site-primary)';
+                    e.currentTarget.style.transform = 'translateX(-3px)'; 
+                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(13,54,79,0.15)';
                   }}
                   onMouseOut={(e) => { 
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.6)';
+                    e.currentTarget.style.background = '#fff';
                     e.currentTarget.style.color = 'var(--site-primary)';
+                    e.currentTarget.style.borderColor = 'var(--site-border)';
                     e.currentTarget.style.transform = 'translateX(0)'; 
-                    e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.03)';
-                    e.currentTarget.style.borderLeftColor = 'var(--site-gold)';
+                    e.currentTarget.style.boxShadow = 'none';
                   }}
                 >
-                  <ArrowLeft size={18} strokeWidth={2.5} />
+                  <ArrowLeft size={16} strokeWidth={2.5} />
                   Voltar
                 </button>
               )}
 
-              <div style={{ animation: 'fadeInLeft 0.6s ease-out' }}>
+              <div style={{ minWidth: 0 }}>
                 <h1 style={{ 
-                  fontSize: 'clamp(1.4rem, 4.5vw, 2.1rem)', 
-                  fontWeight: 950, 
+                  fontSize: 'clamp(1.15rem, 3vw, 1.5rem)', 
+                  fontWeight: 900, 
                   color: 'var(--site-primary)', 
-                  letterSpacing: '-0.03em', 
-                  marginBottom: 2, 
-                  lineHeight: 1,
-                  whiteSpace: 'nowrap'
+                  letterSpacing: '-0.025em', 
+                  margin: 0, 
+                  lineHeight: 1.15,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  fontFamily: 'var(--font-heading)'
                 }}>
                   Relatório de Conformidade
                 </h1>
-                <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.95rem', fontWeight: 600, opacity: 0.7, margin: 0 }}>
+                <p style={{ 
+                  color: 'var(--site-text-secondary)', 
+                  fontSize: '0.78rem', 
+                  fontWeight: 600, 
+                  margin: '3px 0 0', 
+                  opacity: 0.6,
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis'
+                }}>
                   {activePerfil.razao_social}
                 </p>
               </div>
             </div>
-            
-            {/* GRUPO DIREITO: REINICIAR E PROGRESSO */}
-            <div style={{ display: 'flex', gap: 14, alignItems: 'center', flexShrink: 0 }}>
+
+            {/* RIGHT: Reset + Progress */}
+            <div className="processo-header-actions" style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
               <button 
                 onClick={handleResetProcesso}
                 disabled={resetting}
-                style={{ padding: '10px 20px', fontSize: '0.8rem', fontWeight: 800, borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)', background: '#fff', color: 'var(--site-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, transition: 'all .2s' }}
-                onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--site-gold)'; e.currentTarget.style.color = 'var(--site-primary)'; }}
-                onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--site-border)'; e.currentTarget.style.color = 'var(--site-text-secondary)'; }}
+                style={{ 
+                  padding: '8px 16px', 
+                  fontSize: '0.72rem', 
+                  fontWeight: 700, 
+                  borderRadius: 'var(--site-radius-full)', 
+                  border: '1px solid var(--site-border)', 
+                  background: 'transparent', 
+                  color: 'var(--site-text-secondary)', 
+                  cursor: 'pointer', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: 6, 
+                  transition: 'all .2s',
+                  whiteSpace: 'nowrap',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em'
+                }}
+                onMouseOver={(e) => { e.currentTarget.style.borderColor = '#dc2626'; e.currentTarget.style.color = '#dc2626'; e.currentTarget.style.background = 'rgba(220,38,38,0.04)'; }}
+                onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--site-border)'; e.currentTarget.style.color = 'var(--site-text-secondary)'; e.currentTarget.style.background = 'transparent'; }}
               >
-                {resetting ? <Loader2 size={16} className="spin-anim" /> : <RefreshCcw size={16} />}
+                {resetting ? <Loader2 size={13} className="spin-anim" /> : <RefreshCcw size={13} />}
                 Reiniciar
               </button>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 20px', background: 'var(--site-surface-blue)', borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)' }}>
-                <div style={{ fontSize: '0.7rem', fontWeight: 900, color: 'var(--site-primary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Progresso</div>
-                <div style={{ width: 'clamp(60px, 10vw, 100px)', height: 6, background: 'rgba(0,0,0,0.05)', borderRadius: 3, overflow: 'hidden' }}>
-                  <div style={{ width: `${progress}%`, height: '100%', background: 'var(--site-gold)', transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 0 10px rgba(197, 171, 118, 0.4)' }} />
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 10, 
+                padding: '8px 18px', 
+                background: 'linear-gradient(135deg, rgba(13,54,79,0.03), rgba(197,171,118,0.08))', 
+                borderRadius: 'var(--site-radius-full)', 
+                border: '1px solid rgba(197,171,118,0.18)' 
+              }}>
+                <span style={{ fontSize: '0.62rem', fontWeight: 900, color: 'var(--site-primary)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Progresso</span>
+                <div style={{ width: 'clamp(50px, 8vw, 80px)', height: 5, background: 'rgba(0,0,0,0.06)', borderRadius: 3, overflow: 'hidden' }}>
+                  <div style={{ width: `${progress}%`, height: '100%', background: 'linear-gradient(90deg, var(--site-gold), #d4a855)', transition: 'width 0.6s cubic-bezier(0.4, 0, 0.2, 1)', borderRadius: 3 }} />
                 </div>
-                <div style={{ fontSize: '0.85rem', fontWeight: 900, color: 'var(--site-gold)' }}>{progress}%</div>
+                <span style={{ fontSize: '0.8rem', fontWeight: 900, color: 'var(--site-gold)', minWidth: 30, textAlign: 'right' }}>{progress}%</span>
               </div>
             </div>
           </div>
@@ -956,23 +1081,23 @@ export default function ProcessoPage() {
           )}
 
           {step === 2 && (
-            <DocumentSection number="2" title="HABILITAÇÃO JURÍDICA" items={HABILITACAO_JURIDICA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} />
+            <DocumentSection number="2" title="HABILITAÇÃO JURÍDICA" items={HABILITACAO_JURIDICA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} files={files} handleAttachFile={handleAttachFile} handleRemoveFile={handleRemoveFile} />
           )}
 
           {step === 3 && (
-            <DocumentSection number="3" title="REGULARIDADE FISCAL, SOCIAL E TRABALHISTA" items={REGULARIDADE_FISCAL} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} />
+            <DocumentSection number="3" title="REGULARIDADE FISCAL, SOCIAL E TRABALHISTA" items={REGULARIDADE_FISCAL} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} files={files} handleAttachFile={handleAttachFile} handleRemoveFile={handleRemoveFile} />
           )}
 
           {step === 4 && (
-            <DocumentSection number="4" title="QUALIFICAÇÃO ECONÔMICO-FINANCEIRA" items={QUALIFICACAO_FINANCEIRA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} />
+            <DocumentSection number="4" title="QUALIFICAÇÃO ECONÔMICO-FINANCEIRA" items={QUALIFICACAO_FINANCEIRA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} files={files} handleAttachFile={handleAttachFile} handleRemoveFile={handleRemoveFile} />
           )}
 
           {step === 5 && (
-            <DocumentSection number="5" title="QUALIFICAÇÃO TÉCNICA" items={QUALIFICACAO_TECNICA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} />
+            <DocumentSection number="5" title="QUALIFICAÇÃO TÉCNICA" items={QUALIFICACAO_TECNICA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} files={files} handleAttachFile={handleAttachFile} handleRemoveFile={handleRemoveFile} />
           )}
 
           {step === 6 && (
-            <DocumentSection number="6" title="OUTROS REGISTROS" items={OUTROS_REGISTROS} data={data} handleUpdate={handleUpdate} showErrors={false} />
+            <DocumentSection number="6" title="OUTROS REGISTROS" items={OUTROS_REGISTROS} data={data} handleUpdate={handleUpdate} showErrors={false} files={files} handleAttachFile={handleAttachFile} handleRemoveFile={handleRemoveFile} />
           )}
 
           {step === 7 && (
@@ -983,63 +1108,114 @@ export default function ProcessoPage() {
               </header>
 
               {showPaymentScreen ? (
-                <div style={{ animation:'slideUp .3s ease', background: '#fff', minHeight: 400 }}>
-                  <div style={{ background:'linear-gradient(135deg,#0D364F 0%,#1a5276 100%)', padding:'24px 32px', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', position: 'relative' }}>
-                    <div style={{ textAlign:'center' }}>
-                      <div style={{ fontSize:'0.75rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.12em', color:'rgba(255,255,255,0.6)', marginBottom:4 }}>Valor Total a Pagar</div>
-                      <div style={{ fontSize:'2.4rem', fontWeight:900, color:'#4ade80', lineHeight:1 }}>R$ 389,96</div>
-                      <div style={{ fontSize:'0.85rem', color:'rgba(255,255,255,0.5)', marginTop:6 }}>Relatório de conformidade individual</div>
+                <div style={{ animation:'panelPageIn .3s ease', background: '#fff' }}>
+                  {/* ── Value Banner ── */}
+                  <div style={{ 
+                    background: 'linear-gradient(135deg, #0D364F 0%, #164e6e 50%, #0D364F 100%)', 
+                    padding: '28px 32px', 
+                    color: '#fff', 
+                    textAlign: 'center',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}>
+                    <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 30% 50%, rgba(197,171,118,0.08), transparent 60%)', pointerEvents: 'none' }} />
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.15em', color: 'rgba(255,255,255,0.5)', marginBottom: 6 }}>Valor Total do Relatório</div>
+                      <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#4ade80', lineHeight: 1, letterSpacing: '-0.02em' }}>R$ 389,96</div>
+                      <div style={{ fontSize: '0.78rem', color: 'rgba(255,255,255,0.4)', marginTop: 6, fontWeight: 500 }}>Relatório de Conformidade — Certificação Individual</div>
                     </div>
                   </div>
 
-                  <div style={{ padding:'32px', display:'flex', flexDirection:'column', gap:24 }}>
-                    <div style={{ display:'grid', gridTemplateColumns:'auto 1fr', gap:32, alignItems:'start', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:20, padding:32 }}>
-                      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
-                        <div style={{ padding: 12, background: '#fff', borderRadius: 16, border: '2px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                          <img src="/pix_qrcode.png" alt="QR Code PIX Bradesco" style={{ width:180, height:180, borderRadius:8, objectFit:'cover' }} />
+                  {/* ── Payment Body ── */}
+                  <div style={{ padding: 'clamp(20px, 4vw, 32px)', display: 'flex', flexDirection: 'column', gap: 20 }}>
+                    
+                    {/* PIX Section */}
+                    <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 16, overflow: 'hidden' }}>
+                      <div style={{ padding: '14px 20px', borderBottom: '1px solid #e2e8f0', background: 'rgba(13,54,79,0.02)' }}>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.1em', color: '#0D364F', display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--site-gold)' }} />
+                          Dados para Pagamento PIX
                         </div>
-                        <div style={{ fontSize:'0.65rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'.1em', color:'#64748b' }}>Escaneie com seu banco</div>
                       </div>
-
-                      <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
-                        <div style={{ fontSize:'0.9rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'.12em', color:'#0D364F' }}>Dados para Pagamento PIX</div>
-                        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, padding:'16px 20px', background: 'rgba(13,54,79,0.03)', border:'1px solid #0D364F', borderRadius:16 }}>
-                          <div>
-                            <div style={{ fontSize:'0.65rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.1em', color: '#0D364F' }}>Chave PIX (CNPJ)</div>
-                            <div style={{ fontSize:'1rem', fontWeight: 800, color:'#1e293b', marginTop:3, fontFamily: 'monospace', letterSpacing: '.03em' }}>14.796.065/0001-08</div>
+                      <div style={{ padding: '24px 20px', display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+                        {/* QR Code */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                          <div style={{ padding: 10, background: '#fff', borderRadius: 14, border: '2px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+                            <img src="/pix_qrcode.png" alt="QR Code PIX" style={{ width: 160, height: 160, borderRadius: 6, objectFit: 'cover', display: 'block' }} />
                           </div>
-                          <button
-                            onClick={() => copyToClipboard('14.796.065/0001-08', 'pix')}
-                            style={{ 
-                              background: copiedField === 'pix' ? '#16a34a' : '#0D364F', 
-                              color: '#fff', border:'none', borderRadius:10, padding:'10px 18px', 
-                              fontSize:'0.8rem', fontWeight:800, cursor: 'pointer', 
-                              display:'flex', alignItems:'center', gap:8, transition:'all .2s',
-                              animation: copiedField !== 'pix' ? 'pulseGold 2s infinite' : 'none'
-                            }}
-                          >
-                            {copiedField === 'pix' ? <><CheckCircle2 size={14}/> Copiado!</> : <><Copy size={14}/> Copiar</>}
-                          </button>
+                          <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#94a3b8' }}>Escaneie com seu app bancário</span>
+                        </div>
+                        {/* PIX Key */}
+                        <div style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                          <div style={{ 
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, 
+                            padding: '14px 18px', 
+                            background: '#fff', 
+                            border: '1.5px solid var(--site-primary)', 
+                            borderRadius: 12 
+                          }}>
+                            <div>
+                              <div style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--site-text-secondary)' }}>Chave PIX (CNPJ)</div>
+                              <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--site-primary)', marginTop: 2, fontFamily: 'monospace', letterSpacing: '.04em' }}>14.796.065/0001-08</div>
+                            </div>
+                            <button
+                              onClick={() => copyToClipboard('14796065000108', 'pix')}
+                              style={{ 
+                                background: copiedField === 'pix' ? '#16a34a' : 'var(--site-primary)', 
+                                color: '#fff', border: 'none', borderRadius: 10, padding: '10px 16px', 
+                                fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', 
+                                display: 'flex', alignItems: 'center', gap: 6, transition: 'all .2s',
+                                whiteSpace: 'nowrap', flexShrink: 0
+                              }}
+                            >
+                              {copiedField === 'pix' ? <><CheckCircle2 size={14}/> Copiado!</> : <><Copy size={14}/> Copiar</>}
+                            </button>
+                          </div>
+                          <div style={{ 
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, 
+                            padding: '14px 18px', 
+                            background: '#fff', 
+                            border: '1px solid #e2e8f0', 
+                            borderRadius: 12 
+                          }}>
+                            <div>
+                              <div style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--site-text-secondary)' }}>Beneficiário</div>
+                              <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--site-text-primary)', marginTop: 2 }}>OBGP Brasil</div>
+                            </div>
+                          </div>
+                          <div style={{ 
+                            display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, 
+                            padding: '14px 18px', 
+                            background: '#fff', 
+                            border: '1px solid #e2e8f0', 
+                            borderRadius: 12 
+                          }}>
+                            <div>
+                              <div style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: 'var(--site-text-secondary)' }}>Valor</div>
+                              <div style={{ fontSize: '0.85rem', fontWeight: 800, color: '#16a34a', marginTop: 2 }}>R$ 389,96</div>
+                            </div>
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <div style={{ background:'rgba(59,130,246,0.04)', border:'1px solid rgba(59,130,246,0.12)', borderRadius:16, padding:'20px 24px' }}>
-                      <div style={{ fontSize:'0.9rem', color:'#1e40af', fontWeight:800, marginBottom:10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <Info size={18}/> Como realizar o pagamento:
+                    {/* Instructions */}
+                    <div style={{ background: 'rgba(59,130,246,0.03)', border: '1px solid rgba(59,130,246,0.1)', borderRadius: 14, padding: '18px 22px' }}>
+                      <div style={{ fontSize: '0.8rem', color: '#1e40af', fontWeight: 800, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Info size={16}/> Como realizar o pagamento:
                       </div>
-                      <ol style={{ margin:0, paddingLeft:24, fontSize:'0.85rem', color:'#3b82f6', lineHeight:2, fontWeight: 500 }}>
-                        <li>Abra o aplicativo do seu banco</li>
-                        <li>Acesse a área PIX → <strong>Pagar</strong></li>
-                        <li>Escaneie o QR Code ou cole a <strong>Chave PIX (CNPJ)</strong></li>
-                        <li>Confirme o valor exato de <strong>R$ 389,96</strong></li>
-                        <li>Após o pagamento, anexe o comprovante abaixo para validação</li>
+                      <ol style={{ margin: 0, paddingLeft: 22, fontSize: '0.82rem', color: '#475569', lineHeight: 2, fontWeight: 500 }}>
+                        <li>Abra o app do seu banco e acesse <strong>PIX → Pagar</strong></li>
+                        <li>Escaneie o QR Code acima ou cole a <strong>Chave PIX (CNPJ)</strong></li>
+                        <li>Confirme o valor de <strong>R$ 389,96</strong></li>
+                        <li>Após pagar, anexe o comprovante abaixo</li>
                       </ol>
                     </div>
 
-                    <div style={{ marginTop: 8 }}>
-                      <div style={{ fontSize:'0.9rem', fontWeight:800, color:'#0D364F', marginBottom:12, display:'flex', alignItems:'center', gap:8 }}>
-                        <FileUp size={20}/> Anexar Comprovante de Pagamento <span style={{ color:'#dc2626' }}>*</span>
+                    {/* Upload Comprovante */}
+                    <div>
+                      <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0D364F', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <FileUp size={18}/> Comprovante de Pagamento <span style={{ color: '#dc2626', fontSize: '0.9rem' }}>*</span>
                       </div>
                       <input
                         type="file"
@@ -1051,102 +1227,207 @@ export default function ProcessoPage() {
                       <label
                         htmlFor="comprovante-upload"
                         style={{
-                          display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:12,
+                          display: 'flex', alignItems: 'center', gap: 16,
                           border: comprovanteFile ? '2px solid #16a34a' : '2px dashed #cbd5e1',
-                          borderRadius:20, padding:'32px 24px', cursor:'pointer',
-                          background: comprovanteFile ? 'rgba(22,163,74,0.04)' : '#f8fafc',
-                          transition:'all .2s'
+                          borderRadius: 14, padding: '20px 24px', cursor: 'pointer',
+                          background: comprovanteFile ? 'rgba(22,163,74,0.03)' : '#fafbfc',
+                          transition: 'all .2s'
                         }}
                       >
-                        {comprovanteFile ? (
-                          <>
-                            <div style={{ background: '#16a34a', color: '#fff', borderRadius: '50%', width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <CheckCircle2 size={32} />
-                            </div>
-                            <div style={{ fontSize:'1.1rem', fontWeight:800, color:'#16a34a' }}>Comprovante anexado!</div>
-                            <div style={{ fontSize:'0.8rem', color:'#64748b', maxWidth:300, textAlign:'center', wordBreak:'break-all' }}>{comprovanteFile.name}</div>
-                            <div style={{ fontSize:'0.75rem', color:'#94a3b8', textTransform: 'uppercase', fontWeight: 700, marginTop: 4 }}>Clique para substituir</div>
-                          </>
-                        ) : (
-                          <>
-                            <div style={{ background: '#e2e8f0', color: '#64748b', borderRadius: '50%', width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <FileUp size={28} />
-                            </div>
-                            <div style={{ fontSize:'1rem', fontWeight:800, color:'#334155' }}>Selecionar Comprovante</div>
-                            <div style={{ fontSize:'0.8rem', color:'#94a3b8' }}>PDF, PNG ou JPG do comprovante</div>
-                          </>
-                        )}
+                        <div style={{ 
+                          width: 48, height: 48, borderRadius: 12, flexShrink: 0,
+                          background: comprovanteFile ? 'rgba(22,163,74,0.1)' : '#e2e8f0', 
+                          color: comprovanteFile ? '#16a34a' : '#64748b', 
+                          display: 'flex', alignItems: 'center', justifyContent: 'center' 
+                        }}>
+                          {comprovanteFile ? <CheckCircle2 size={24} /> : <FileUp size={22} />}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          {comprovanteFile ? (
+                            <>
+                              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#16a34a' }}>Comprovante anexado</div>
+                              <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{comprovanteFile.name}</div>
+                            </>
+                          ) : (
+                            <>
+                              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#334155' }}>Selecionar comprovante</div>
+                              <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>PDF, PNG ou JPG · até 10 MB</div>
+                            </>
+                          )}
+                        </div>
+                        <span style={{ 
+                          padding: '8px 16px', borderRadius: 'var(--site-radius-full)', 
+                          border: comprovanteFile ? '1px solid #16a34a' : '1px solid var(--site-border)', 
+                          color: comprovanteFile ? '#16a34a' : 'var(--site-text-secondary)', 
+                          fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.04em',
+                          flexShrink: 0
+                        }}>
+                          {comprovanteFile ? 'Trocar' : 'Selecionar'}
+                        </span>
                       </label>
                     </div>
 
-                    <div style={{ padding:'20px', background:'rgba(245,158,11,.06)', border:'1px solid rgba(245,158,11,.15)', borderRadius:16, display: 'flex', gap: 16, alignItems: 'flex-start' }}>
-                      <AlertCircle size={20} style={{ color: '#92400e', marginTop: 2, flexShrink: 0 }} />
-                      <div style={{ fontSize:'0.82rem', color:'#92400e', lineHeight:1.8 }}>
+                    {/* Warning */}
+                    <div style={{ padding: '16px 20px', background: 'rgba(245,158,11,.05)', border: '1px solid rgba(245,158,11,.12)', borderRadius: 12, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                      <AlertCircle size={18} style={{ color: '#b45309', marginTop: 1, flexShrink: 0 }} />
+                      <div style={{ fontSize: '0.78rem', color: '#92400e', lineHeight: 1.7 }}>
                         <strong>Atenção:</strong> A análise dos documentos será iniciada somente após a confirmação do pagamento pelo administrador. Guarde seu comprovante.
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: 16 }}>
-                      <button onClick={() => setShowPaymentScreen(false)} style={{ padding:'16px 24px', borderRadius:16, border:'1px solid var(--site-border)', background: '#fff', color: 'var(--site-text-secondary)', fontWeight: 700, cursor: 'pointer' }}>Voltar</button>
+                    {/* Actions */}
+                    <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
+                      <button 
+                        onClick={() => setShowPaymentScreen(false)} 
+                        style={{ 
+                          padding: '14px 24px', borderRadius: 'var(--site-radius-full)', 
+                          border: '1px solid var(--site-border)', background: '#fff', 
+                          color: 'var(--site-text-secondary)', fontWeight: 700, cursor: 'pointer',
+                          fontSize: '0.85rem', transition: 'all .2s', display: 'flex', alignItems: 'center', gap: 8
+                        }}
+                      >
+                        <ArrowLeft size={16} /> Voltar
+                      </button>
                       <button
                         onClick={handleSubmitCheckout}
                         disabled={enviando || !comprovanteFile}
                         style={{
-                          flex: 1, padding:'20px', borderRadius:16, border:'none',
-                          background: (enviando || !comprovanteFile) ? '#e2e8f0' : 'linear-gradient(135deg,#16a34a,#15803d)',
+                          flex: 1, padding: '16px 24px', borderRadius: 'var(--site-radius-full)', border: 'none',
+                          background: (enviando || !comprovanteFile) ? '#e2e8f0' : 'linear-gradient(135deg, #16a34a, #15803d)',
                           color: (enviando || !comprovanteFile) ? '#94a3b8' : '#fff', 
-                          fontSize:'1.15rem', fontWeight:900, cursor: (enviando || !comprovanteFile) ? 'not-allowed' : 'pointer',
-                          display:'flex', alignItems:'center', justifyContent:'center', gap:12,
-                          boxShadow: (!enviando && comprovanteFile) ? '0 12px 36px rgba(22,163,74,0.3)' : 'none',
-                          transition:'all .2s'
+                          fontSize: '1rem', fontWeight: 900, cursor: (enviando || !comprovanteFile) ? 'not-allowed' : 'pointer',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                          boxShadow: (!enviando && comprovanteFile) ? '0 8px 28px rgba(22,163,74,0.25)' : 'none',
+                          transition: 'all .25s ease', letterSpacing: '-0.01em'
                         }}
                       >
                         {enviando
-                          ? <><Loader2 size={24} className="spin-anim"/> Enviando...</>
-                          : <><ShieldCheck size={24}/> Enviar para Validação Final</>
+                          ? <><Loader2 size={20} className="spin-anim"/> Enviando...</>
+                          : <><ShieldCheck size={20}/> Enviar para Validação Final</>
                         }
                       </button>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div style={{ padding: '32px 40px', background: 'rgba(197,171,118,0.03)' }}>
-                  <div style={{ background: '#fff', border: '1px solid rgba(197,171,118,0.3)', padding: 32, borderRadius: 'var(--site-radius-lg)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', fontFamily: '"Times New Roman", Times, serif', fontSize: '1.1rem', lineHeight: 1.8, color: '#222', position: 'relative' }}>
-                    <div style={{ position: 'absolute', top: 20, right: 20, opacity: 0.1, pointerEvents: 'none' }}>
-                      <ShieldCheck size={120} />
+                <div style={{ padding: 'clamp(20px, 4vw, 32px)' }}>
+                  {/* Document Preview Card */}
+                  <div style={{ 
+                    background: '#fff', 
+                    border: '1px solid rgba(197,171,118,0.25)', 
+                    borderRadius: 16, 
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.03)', 
+                    overflow: 'hidden',
+                    position: 'relative' 
+                  }}>
+                    {/* Document Header */}
+                    <div style={{ 
+                      padding: '20px 28px', 
+                      borderBottom: '1px solid rgba(197,171,118,0.15)', 
+                      background: 'linear-gradient(135deg, rgba(197,171,118,0.06), rgba(197,171,118,0.02))',
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(197,171,118,0.12)', color: 'var(--site-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <FileText size={18} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--site-primary)' }}>Prévia do Relatório de Conformidade</div>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--site-text-secondary)', marginTop: 1 }}>Documento final será gerado após validação do pagamento</div>
+                        </div>
+                      </div>
+                      <div style={{ padding: '5px 14px', borderRadius: 'var(--site-radius-full)', background: 'rgba(245,158,11,0.1)', color: '#b45309', fontSize: '0.68rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.06em', whiteSpace: 'nowrap' }}>
+                        Aguardando Pagamento
+                      </div>
                     </div>
-                    <p style={{ textAlign: 'justify', marginBottom: 20 }}>
-                      Após análise documental, constata-se que a entidade, incluindo identificação completa (nome e CNPJ), apresenta a seguinte conformidade aos requisitos para gestão de parcerias:
-                    </p>
-                    <ul style={{ listStyleType: 'none', paddingLeft: 0, marginBottom: 20 }}>
-                      <li style={{ marginBottom: 8 }}><strong>Habilitação Jurídica</strong> – 100% conforme</li>
-                      <li style={{ marginBottom: 8 }}><strong>Regularidade Fiscal, Social e Trabalhista</strong> – 100% conforme</li>
-                      <li style={{ marginBottom: 8 }}><strong>Qualificação Econômico-Financeira</strong> – 100% conforme</li>
-                      <li style={{ marginBottom: 8 }}><strong>Qualificação Técnica</strong> – 100% conforme</li>
-                      <li style={{ marginBottom: 8 }}><strong>Outros Registros</strong> – 100% conforme</li>
-                    </ul>
-                    <p style={{ textAlign: 'justify', marginBottom: 20 }}>
-                      Portanto, recomenda-se certificação independente através do <strong>"SELO OSC GESTÃO DE PARCERIAS"</strong>.
-                    </p>
-                    <p style={{ textAlign: 'justify', fontSize: '0.9rem', color: '#666', borderTop: '1px solid #eee', paddingTop: 16, marginTop: 32 }}>
-                      A autenticidade do documento pode ser conferida através do website: https://obgpbr.org/selo-osc, mediante código de verificação e controle.
-                    </p>
+
+                    {/* Document Body */}
+                    <div style={{ padding: '28px 28px 24px', position: 'relative' }}>
+                      <div style={{ position: 'absolute', top: 20, right: 24, opacity: 0.06, pointerEvents: 'none' }}>
+                        <ShieldCheck size={100} />
+                      </div>
+                      <p style={{ 
+                        textAlign: 'justify', marginBottom: 24, 
+                        fontSize: '0.92rem', lineHeight: 1.8, color: '#374151',
+                        fontFamily: '"Georgia", "Times New Roman", serif'
+                      }}>
+                        Após análise documental, constata-se que a entidade, incluindo identificação completa (nome e CNPJ), apresenta a seguinte conformidade aos requisitos para gestão de parcerias:
+                      </p>
+                      
+                      {/* Category Status List */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
+                        {[
+                          'Habilitação Jurídica',
+                          'Regularidade Fiscal, Social e Trabalhista',
+                          'Qualificação Econômico-Financeira',
+                          'Qualificação Técnica',
+                          'Outros Registros'
+                        ].map((cat, i) => (
+                          <div key={i} style={{ 
+                            display: 'flex', alignItems: 'center', gap: 12, 
+                            padding: '10px 16px', borderRadius: 10,
+                            background: 'rgba(197,171,118,0.04)',
+                            border: '1px solid rgba(197,171,118,0.1)'
+                          }}>
+                            <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(197,171,118,0.15)', color: 'var(--site-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <Clock size={11} />
+                            </div>
+                            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--site-text-primary)', flex: 1 }}>{cat}</span>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--site-gold)', textTransform: 'uppercase', letterSpacing: '.04em' }}>Pendente de análise</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <p style={{ 
+                        textAlign: 'justify', marginBottom: 0, 
+                        fontSize: '0.92rem', lineHeight: 1.8, color: '#374151',
+                        fontFamily: '"Georgia", "Times New Roman", serif'
+                      }}>
+                        Portanto, recomenda-se certificação independente através do <strong>"SELO OSC GESTÃO DE PARCERIAS"</strong>.
+                      </p>
+                    </div>
+
+                    {/* Document Footer */}
+                    <div style={{ padding: '14px 28px', borderTop: '1px solid rgba(0,0,0,0.04)', background: '#fafbfc' }}>
+                      <p style={{ fontSize: '0.75rem', color: '#94a3b8', margin: 0, lineHeight: 1.6 }}>
+                        A autenticidade do documento pode ser conferida através do website: <strong>https://obgpbr.org/selo-osc</strong>, mediante código de verificação e controle.
+                      </p>
+                    </div>
                   </div>
-                  <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: '0.85rem', color: 'var(--site-text-secondary)', fontWeight: 700, textAlign: 'center' }}>
-                      <ShieldCheck size={14} style={{ display: 'inline', position: 'relative', top: 2, marginRight: 4, color: '#16a34a' }} />
-                      Sua assinatura digital (.pfx) será aplicada automaticamente ao validar o pagamento.
-                    </span>
-                    
-                    <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 300 }}>
-                      <button onClick={handleConsultarPagamentoEEnviar} disabled={enviando} className="btn btn-gold" style={{ flex: 1, padding: '16px', borderRadius: 'var(--site-radius-full)', fontWeight: 800 }}>
-                        {enviando ? (
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Clock size={18} className="spin-anim" /> Processando...</span>
-                        ) : (
-                          <><ShieldCheck size={18} /> Realizar Pagamento</>
-                        )}
-                      </button>
+
+                  {/* CTA Section */}
+                  <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+                    <div style={{ 
+                      display: 'flex', alignItems: 'center', gap: 8, 
+                      padding: '10px 20px', borderRadius: 'var(--site-radius-full)',
+                      background: 'rgba(22,163,74,0.05)', border: '1px solid rgba(22,163,74,0.12)'
+                    }}>
+                      <ShieldCheck size={15} style={{ color: '#16a34a' }} />
+                      <span style={{ fontSize: '0.78rem', color: '#15803d', fontWeight: 600 }}>
+                        Sua assinatura digital (.pfx) será aplicada automaticamente ao validar o pagamento.
+                      </span>
                     </div>
+                    
+                    <button 
+                      onClick={handleConsultarPagamentoEEnviar} 
+                      disabled={enviando} 
+                      className="btn btn-gold" 
+                      style={{ 
+                        padding: '16px 40px', 
+                        borderRadius: 'var(--site-radius-full)', 
+                        fontWeight: 800, 
+                        fontSize: '1rem',
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        letterSpacing: '-0.01em',
+                        boxShadow: '0 6px 24px rgba(197,171,118,0.25)'
+                      }}
+                    >
+                      {enviando ? (
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Clock size={18} className="spin-anim" /> Processando...</span>
+                      ) : (
+                        <><ShieldCheck size={18} /> Realizar Pagamento</>
+                      )}
+                    </button>
                   </div>
                 </div>
               )}
