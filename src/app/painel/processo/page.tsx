@@ -366,6 +366,9 @@ export default function ProcessoPage() {
 
   const [enviando, setEnviando] = useState(false);
   const [mensagemEnviando, setMensagemEnviando] = useState('');
+  const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [showTracking, setShowTracking] = useState(false);
+  const [trackedProcesses, setTrackedProcesses] = useState<{id: string, data: string, status: string, entidade: string}[]>([]);
   const [importando, setImportando] = useState(false);
   const [importError, setImportError] = useState('');
   const [importSuccess, setImportSuccess] = useState(false);
@@ -415,6 +418,11 @@ export default function ProcessoPage() {
       const savedCart = localStorage.getItem('obgp_guest_cart');
       if (savedCart) {
         setCart(JSON.parse(savedCart));
+      }
+      
+      const savedTracking = localStorage.getItem('obgp_guest_tracking');
+      if (savedTracking) {
+        setTrackedProcesses(JSON.parse(savedTracking));
       }
     } catch (err) {
       console.error('Erro ao carregar dados:', err);
@@ -648,16 +656,24 @@ export default function ProcessoPage() {
         throw new Error(errJson.error || 'Erro na comunicação com o servidor');
       }
 
-      setShowPaymentScreen(false);
+      const trackingInfo = {
+        id: Date.now().toString(),
+        data: new Date().toISOString(),
+        status: 'em_analise',
+        entidade: entidadeData.razao_social || entidadeData.cnpj
+      };
       
-      showConfirm('Sucesso!', 'Seus documentos e pagamento foram enviados para validação. Nossa equipe entrará em contato em breve.', () => {
-         // Clear everything
-         localStorage.removeItem('obgp_guest_entidade');
-         localStorage.removeItem('obgp_guest_docs');
-         localStorage.removeItem('obgp_guest_cart');
-         localStorage.removeItem('obgp_guest_step');
-         window.location.href = '/'; // Redirect to home or reset
-      });
+      const newTracking = [trackingInfo, ...trackedProcesses];
+      setTrackedProcesses(newTracking);
+      localStorage.setItem('obgp_guest_tracking', JSON.stringify(newTracking));
+
+      // Clear the form data
+      localStorage.removeItem('obgp_guest_entidade');
+      localStorage.removeItem('obgp_guest_docs');
+      localStorage.removeItem('obgp_guest_cart');
+      localStorage.removeItem('obgp_guest_step');
+      
+      setCheckoutSuccess(true);
       
     } catch (err: any) {
       console.error('Erro no checkout:', err);
@@ -676,7 +692,52 @@ export default function ProcessoPage() {
 
   return (
     <>
-      {showCnpjStep ? (
+      {showTracking ? (
+        <div style={{ flex: 1, padding: '40px 20px', maxWidth: 900, margin: '0 auto', width: '100%', minHeight: 'calc(100vh - 120px)', animation: 'panelPageIn .3s ease' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+            <div>
+              <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--site-primary)', fontFamily: 'var(--font-heading)', margin: 0 }}>Meus Processos</h2>
+              <p style={{ color: 'var(--site-text-secondary)', margin: '4px 0 0' }}>Acompanhe o status dos seus relatórios de conformidade.</p>
+            </div>
+            <button onClick={() => setShowTracking(false)} style={{ background: '#fff', border: '1px solid var(--site-border)', color: 'var(--site-text-secondary)', display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 'var(--site-radius-full)', fontWeight: 700, cursor: 'pointer' }}>
+              <ArrowLeft size={16} /> Voltar
+            </button>
+          </div>
+          
+          {trackedProcesses.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: 60, background: '#fff', borderRadius: 16, border: '1px solid var(--site-border)' }}>
+              <FolderOpen size={40} style={{ color: 'var(--site-text-tertiary)', marginBottom: 16 }} />
+              <div style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--site-text-primary)', marginBottom: 8 }}>Nenhum processo em andamento</div>
+              <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.9rem' }}>Você ainda não enviou nenhum relatório para análise.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {trackedProcesses.map(p => (
+                <div key={p.id} style={{ background: '#fff', borderRadius: 16, border: '1px solid var(--site-border)', padding: 24, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                      <span style={{ fontSize: '0.75rem', fontWeight: 800, color: 'var(--site-primary)', background: 'rgba(13,54,79,0.06)', padding: '4px 10px', borderRadius: 6 }}>Protocolo: {p.id.slice(-6).toUpperCase()}</span>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--site-text-secondary)' }}><Calendar size={12} style={{ display: 'inline', marginRight: 4, transform: 'translateY(-1px)' }}/> {new Date(p.data).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--site-primary)' }}>{p.entidade}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--site-text-secondary)', marginTop: 4 }}>Relatório de Conformidade MROSC</div>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ 
+                      padding: '8px 16px', borderRadius: 999, fontSize: '0.8rem', fontWeight: 800, textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 6,
+                      background: p.status === 'em_analise' ? 'rgba(245,158,11,0.1)' : p.status === 'aprovado' ? 'rgba(22,163,74,0.1)' : 'rgba(220,38,38,0.1)',
+                      color: p.status === 'em_analise' ? '#b45309' : p.status === 'aprovado' ? '#16a34a' : '#dc2626'
+                    }}>
+                      {p.status === 'em_analise' ? <Clock size={14} /> : p.status === 'aprovado' ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
+                      {p.status === 'em_analise' ? 'Em Análise' : p.status === 'aprovado' ? 'Aprovado' : 'Pendência'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : showCnpjStep ? (
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px 0', minHeight: 'calc(100vh - 120px)', animation: 'panelPageIn .3s ease' }}>
           <div className="panel-card" style={{ maxWidth: 600, width: '92%', padding: 'clamp(20px, 5vw, 40px)', textAlign: 'center', boxShadow: '0 20px 50px rgba(0,0,0,0.1)', background: '#fff', borderRadius: 'var(--site-radius-xl)' }}>
             <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'center' }}>
@@ -845,6 +906,12 @@ export default function ProcessoPage() {
 
             {/* RIGHT: Reset + Progress */}
             <div className="processo-header-actions" style={{ display: 'flex', gap: 10, alignItems: 'center', flexShrink: 0 }}>
+              {trackedProcesses.length > 0 && !showTracking && (
+                <button onClick={() => setShowTracking(true)} style={{ padding: '8px 16px', fontSize: '0.72rem', fontWeight: 700, borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-primary)', background: 'var(--site-primary)', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all .2s' }}>
+                  <Eye size={13} />
+                  Processos
+                </button>
+              )}
               <button 
                 onClick={handleResetProcesso}
                 disabled={resetting}
@@ -1275,38 +1342,53 @@ export default function ProcessoPage() {
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
-                      <button 
-                        onClick={() => setShowPaymentScreen(false)} 
-                        style={{ 
-                          padding: '14px 24px', borderRadius: 'var(--site-radius-full)', 
-                          border: '1px solid var(--site-border)', background: '#fff', 
-                          color: 'var(--site-text-secondary)', fontWeight: 700, cursor: 'pointer',
-                          fontSize: '0.85rem', transition: 'all .2s', display: 'flex', alignItems: 'center', gap: 8
-                        }}
-                      >
-                        <ArrowLeft size={16} /> Voltar
-                      </button>
-                      <button
-                        onClick={handleSubmitCheckout}
-                        disabled={enviando || !comprovanteFile}
-                        style={{
-                          flex: 1, padding: '16px 24px', borderRadius: 'var(--site-radius-full)', border: 'none',
-                          background: (enviando || !comprovanteFile) ? '#e2e8f0' : 'linear-gradient(135deg, #16a34a, #15803d)',
-                          color: (enviando || !comprovanteFile) ? '#94a3b8' : '#fff', 
-                          fontSize: '1rem', fontWeight: 900, cursor: (enviando || !comprovanteFile) ? 'not-allowed' : 'pointer',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-                          boxShadow: (!enviando && comprovanteFile) ? '0 8px 28px rgba(22,163,74,0.25)' : 'none',
-                          transition: 'all .25s ease', letterSpacing: '-0.01em'
-                        }}
-                      >
-                        {enviando
-                          ? <><Loader2 size={20} className="spin-anim"/> Enviando...</>
-                          : <><ShieldCheck size={20}/> Enviar para Validação Final</>
-                        }
-                      </button>
-                    </div>
+                    {/* Actions / Success State */}
+                    {checkoutSuccess ? (
+                      <div style={{ padding: '30px 20px', textAlign: 'center', background: '#fff', borderRadius: 16, border: '1px solid #16a34a', marginTop: 12, animation: 'fadeIn .4s ease' }}>
+                        <div style={{ width: 64, height: 64, background: 'rgba(22,163,74,0.1)', color: '#16a34a', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                          <CheckCircle2 size={32} />
+                        </div>
+                        <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#16a34a', marginBottom: 8 }}>Documentos Enviados!</h2>
+                        <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.95rem', marginBottom: 24 }}>
+                          O pagamento e os documentos estão <strong>em análise</strong>. Você pode acompanhar o status pela aba "Meus Processos".
+                        </p>
+                        <button onClick={() => { setCheckoutSuccess(false); setShowPaymentScreen(false); handleAdicionarNovo(); setShowTracking(true); }} className="panel-btn panel-btn-primary" style={{ padding: '14px 32px', display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: '1rem', borderRadius: 'var(--site-radius-full)' }}>
+                          <Eye size={18} /> Acompanhar Processo
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
+                        <button 
+                          onClick={() => setShowPaymentScreen(false)} 
+                          style={{ 
+                            padding: '14px 24px', borderRadius: 'var(--site-radius-full)', 
+                            border: '1px solid var(--site-border)', background: '#fff', 
+                            color: 'var(--site-text-secondary)', fontWeight: 700, cursor: 'pointer',
+                            fontSize: '0.85rem', transition: 'all .2s', display: 'flex', alignItems: 'center', gap: 8
+                          }}
+                        >
+                          <ArrowLeft size={16} /> Voltar
+                        </button>
+                        <button
+                          onClick={handleSubmitCheckout}
+                          disabled={enviando || !comprovanteFile}
+                          style={{
+                            flex: 1, padding: '16px 24px', borderRadius: 'var(--site-radius-full)', border: 'none',
+                            background: (enviando || !comprovanteFile) ? '#e2e8f0' : 'linear-gradient(135deg, #16a34a, #15803d)',
+                            color: (enviando || !comprovanteFile) ? '#94a3b8' : '#fff', 
+                            fontSize: '1rem', fontWeight: 900, cursor: (enviando || !comprovanteFile) ? 'not-allowed' : 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                            boxShadow: (!enviando && comprovanteFile) ? '0 8px 28px rgba(22,163,74,0.25)' : 'none',
+                            transition: 'all .25s ease', letterSpacing: '-0.01em'
+                          }}
+                        >
+                          {enviando
+                            ? <><Loader2 size={20} className="spin-anim"/> Enviando...</>
+                            : <><ShieldCheck size={20}/> Enviar para Validação Final</>
+                          }
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : (
