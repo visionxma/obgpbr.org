@@ -679,51 +679,53 @@ export default function ProcessoPage() {
         </div>
       ) : (
         <div id="painel-top" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60 }}>
-          <div className="processo-header-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32, gap: 20, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 28 }}>
+          <div className="processo-header-wrap" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32, gap: 24, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
               {(step > 1 || showPaymentScreen) && (
                 <button 
                   onClick={handleBack}
                   style={{ 
-                    padding: '14px 28px', 
-                    fontSize: '1rem', 
-                    fontWeight: 900, 
-                    borderRadius: 'var(--site-radius-lg)', 
-                    border: '2px solid var(--site-border)', 
-                    background: '#fff', 
+                    padding: '10px 22px', 
+                    fontSize: '0.85rem', 
+                    fontWeight: 700, 
+                    borderRadius: 'var(--site-radius-full)', 
+                    border: '1px solid rgba(13, 54, 79, 0.1)', 
+                    background: 'rgba(255, 255, 255, 0.6)', 
+                    backdropFilter: 'blur(8px)',
                     color: 'var(--site-primary)', 
                     cursor: 'pointer', 
                     display: 'flex', 
                     alignItems: 'center', 
-                    gap: 12, 
-                    transition: 'all .3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.05)',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
+                    gap: 8, 
+                    transition: 'all .4s cubic-bezier(0.165, 0.84, 0.44, 1)',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+                    borderLeft: '3px solid var(--site-gold)'
                   }}
                   onMouseOver={(e) => { 
-                    e.currentTarget.style.borderColor = 'var(--site-gold)'; 
-                    e.currentTarget.style.color = 'var(--site-gold)';
-                    e.currentTarget.style.transform = 'translateX(-6px)'; 
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(197, 171, 118, 0.15)';
+                    e.currentTarget.style.background = 'var(--site-primary)';
+                    e.currentTarget.style.color = '#fff';
+                    e.currentTarget.style.transform = 'translateX(-4px) translateY(-1px)'; 
+                    e.currentTarget.style.boxShadow = '0 10px 25px rgba(13, 54, 79, 0.2)';
+                    e.currentTarget.style.borderLeftColor = '#fff';
                   }}
                   onMouseOut={(e) => { 
-                    e.currentTarget.style.borderColor = 'var(--site-border)'; 
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.6)';
                     e.currentTarget.style.color = 'var(--site-primary)';
-                    e.currentTarget.style.transform = 'translateX(0)'; 
-                    e.currentTarget.style.boxShadow = '0 4px 15px rgba(0,0,0,0.05)';
+                    e.currentTarget.style.transform = 'translateX(0) translateY(0)'; 
+                    e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.03)';
+                    e.currentTarget.style.borderLeftColor = 'var(--site-gold)';
                   }}
                 >
-                  <ChevronLeft size={24} strokeWidth={3} />
+                  <ArrowLeft size={16} strokeWidth={2.5} />
                   Voltar
                 </button>
               )}
               <div>
-                <h1 style={{ fontSize: 'clamp(1.5rem, 4.5vw, 2.2rem)', fontWeight: 900, color: 'var(--site-primary)', letterSpacing: '-0.03em', marginBottom: 4, lineHeight: 1.1 }}>
+                <h1 style={{ fontSize: 'clamp(1.4rem, 4vw, 1.9rem)', fontWeight: 900, color: 'var(--site-primary)', letterSpacing: '-0.02em', marginBottom: 2, lineHeight: 1.2 }}>
                   Relatório de Conformidade
                 </h1>
-                <p style={{ color: 'var(--site-text-secondary)', fontSize: '1rem', fontWeight: 500, opacity: 0.8 }}>
-                  {activePerfil.razao_social} ({activePerfil.osc_id})
+                <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.9rem', fontWeight: 600, opacity: 0.7 }}>
+                  {activePerfil.razao_social}
                 </p>
               </div>
             </div>
