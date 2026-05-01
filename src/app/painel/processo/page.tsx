@@ -1140,7 +1140,7 @@ export default function ProcessoPage() {
                           Dados para Pagamento PIX
                         </div>
                       </div>
-                      <div style={{ padding: '16px 20px', display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' }}>
+                      <div style={{ padding: '16px 20px', display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-start' }}>
                         {/* QR Code */}
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                           <div style={{ padding: 8, background: '#fff', borderRadius: 14, border: '2px solid #e2e8f0', boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
@@ -1149,7 +1149,7 @@ export default function ProcessoPage() {
                           <span style={{ fontSize: '0.6rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.08em', color: '#94a3b8' }}>Escaneie com seu app bancário</span>
                         </div>
                         {/* PIX Key */}
-                        <div style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+                        <div style={{ flex: '1 1 400px', display: 'flex', flexDirection: 'column', gap: 12 }}>
                           <div style={{ 
                             display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, 
                             padding: '14px 18px', 
