@@ -229,8 +229,9 @@ export default function ProcessoPage() {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Mostra a seta se o usuário estiver no topo e no passo 7 (ou onde houver muito conteúdo)
-      if (window.scrollY < 100 && step === 7 && showPaymentScreen) {
+      // Mostra a seta se estiver no passo 7 e o usuário não tiver descido muito na seção
+      const isTop = window.scrollY < 1200; // Aumentado para garantir visibilidade no meio da página
+      if (step === 7 && showPaymentScreen && isTop) {
         setShowScrollHint(true);
       } else {
         setShowScrollHint(false);
@@ -858,7 +859,13 @@ export default function ProcessoPage() {
                           </div>
                           <button
                             onClick={() => copyToClipboard('14.796.065/0001-08', 'pix')}
-                            style={{ background: copiedField === 'pix' ? '#16a34a' : '#0D364F', color: '#fff', border:'none', borderRadius:10, padding:'10px 18px', fontSize:'0.8rem', fontWeight:800, cursor: 'pointer', display:'flex', alignItems:'center', gap:8, transition:'all .2s' }}
+                            style={{ 
+                              background: copiedField === 'pix' ? '#16a34a' : '#0D364F', 
+                              color: '#fff', border:'none', borderRadius:10, padding:'10px 18px', 
+                              fontSize:'0.8rem', fontWeight:800, cursor: 'pointer', 
+                              display:'flex', alignItems:'center', gap:8, transition:'all .2s',
+                              animation: copiedField !== 'pix' ? 'pulseGold 2s infinite' : 'none'
+                            }}
                           >
                             {copiedField === 'pix' ? <><CheckCircle2 size={14}/> Copiado!</> : <><Copy size={14}/> Copiar</>}
                           </button>
@@ -1057,47 +1064,49 @@ export default function ProcessoPage() {
 
 
 
-      {/* INDICADOR DE SCROLL (Lateral Esquerda) */}
+      {/* INDICADOR DE SCROLL (Lateral Esquerda) - Mais visível */}
       {showScrollHint && (
-        <div style={{
-          position: 'fixed',
-          left: '2vw',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          gap: 12,
-          zIndex: 9999,
-          pointerEvents: 'none',
-          animation: 'fadeInOut 2s infinite'
-        }}>
+        <div 
+          onClick={() => window.scrollTo({ top: window.scrollY + 500, behavior: 'smooth' })}
+          style={{
+            position: 'fixed',
+            left: 'clamp(10px, 4vw, 40px)',
+            bottom: '15%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 12,
+            zIndex: 9999,
+            cursor: 'pointer',
+            animation: 'fadeIn .5s ease'
+          }}
+        >
           <div style={{ 
             writingMode: 'vertical-rl', 
             textTransform: 'uppercase', 
-            fontSize: '0.7rem', 
+            fontSize: '0.8rem', 
             fontWeight: 900, 
-            color: 'var(--site-gold)', 
+            color: '#dc2626', // Vermelho para chamar atenção como o desenho do usuário
             letterSpacing: '0.2em',
-            opacity: 0.8
+            textShadow: '0 0 10px rgba(255,255,255,0.8)'
           }}>
-            Role para mais informações
+            MAIS INFORMAÇÕES ABAIXO
           </div>
-          <div style={{ animation: 'bounceVertical 2s infinite', color: 'var(--site-gold)' }}>
-            <ChevronDown size={48} strokeWidth={3} />
+          <div style={{ animation: 'bounceVertical 1.5s infinite', color: '#dc2626' }}>
+            <ChevronDown size={64} strokeWidth={4} />
           </div>
         </div>
       )}
 
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes bounceVertical {
-          0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-          40% { transform: translateY(-10px); }
-          60% { transform: translateY(-5px); }
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(15px); }
         }
-        @keyframes fadeInOut {
-          0%, 100% { opacity: 0.3; }
-          50% { opacity: 1; }
+        @keyframes pulseGold {
+          0% { box-shadow: 0 0 0 0 rgba(13, 54, 79, 0.4); }
+          70% { box-shadow: 0 0 0 15px rgba(13, 54, 79, 0); }
+          100% { box-shadow: 0 0 0 0 rgba(13, 54, 79, 0); }
         }
       `}} />
 
