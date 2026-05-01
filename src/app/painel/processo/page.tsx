@@ -686,11 +686,24 @@ export default function ProcessoPage() {
                 {activePerfil.razao_social} ({activePerfil.osc_id})
               </p>
             </div>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center' }}>
+              {step > 1 && (
+                <button 
+                  onClick={handleBack}
+                  style={{ padding: '8px 16px', fontSize: '0.8rem', fontWeight: 700, borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)', background: '#fff', color: 'var(--site-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all .2s' }}
+                  onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--site-gold)'; e.currentTarget.style.color = 'var(--site-primary)'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--site-border)'; e.currentTarget.style.color = 'var(--site-text-secondary)'; }}
+                >
+                  <ChevronLeft size={14} />
+                  Voltar
+                </button>
+              )}
               <button 
                 onClick={handleResetProcesso}
                 disabled={resetting}
-                style={{ padding: '8px 16px', fontSize: '0.8rem', fontWeight: 700, borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)', background: '#fff', color: 'var(--site-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+                style={{ padding: '8px 16px', fontSize: '0.8rem', fontWeight: 700, borderRadius: 'var(--site-radius-full)', border: '1px solid var(--site-border)', background: '#fff', color: 'var(--site-text-secondary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, transition: 'all .2s' }}
+                onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--site-gold)'; e.currentTarget.style.color = 'var(--site-primary)'; }}
+                onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--site-border)'; e.currentTarget.style.color = 'var(--site-text-secondary)'; }}
               >
                 {resetting ? <Loader2 size={14} className="spin-anim" /> : <RefreshCcw size={14} />}
                 Reiniciar
