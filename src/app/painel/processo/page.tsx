@@ -1081,9 +1081,9 @@ export default function ProcessoPage() {
             padding: '24px 12px',
             background: 'rgba(13, 54, 79, 0.05)',
             borderRadius: 'var(--site-radius-full)',
-            border: '1px solid rgba(197, 171, 118, 0.2)',
+            border: '1px solid rgba(197, 171, 118, 0.4)',
             backdropFilter: 'blur(8px)',
-            animation: 'fadeInLeft .8s ease-out'
+            animation: 'fadeInLeft .8s ease-out, glow 3s infinite ease-in-out'
           }}
         >
           <div style={{ 
@@ -1121,6 +1121,10 @@ export default function ProcessoPage() {
         @keyframes bounceVertical {
           0%, 100% { transform: translateY(0); }
           50% { transform: translateY(20px); }
+        }
+        @keyframes glow {
+          0%, 100% { box-shadow: 0 0 15px rgba(197, 171, 118, 0.2), inset 0 0 5px rgba(197, 171, 118, 0.1); border-color: rgba(197, 171, 118, 0.3); }
+          50% { box-shadow: 0 0 35px rgba(197, 171, 118, 0.6), inset 0 0 15px rgba(197, 171, 118, 0.2); border-color: rgba(197, 171, 118, 0.8); }
         }
       `}} />
     </>
