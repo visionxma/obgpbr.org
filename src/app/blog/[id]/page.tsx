@@ -132,14 +132,18 @@ export default function BlogPostPage() {
                   <span style={{ color: '#fff', fontWeight: 600 }}>{post.author}</span>
                 </div>
               )}
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Calendar size={18} color="var(--site-gold)" />
-                {formatDate(post.published_at)}
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Clock size={18} color="var(--site-gold)" />
-                {post.read_time} min de leitura
-              </div>
+              {post.published_at && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Calendar size={18} color="var(--site-gold)" />
+                  {formatDate(post.published_at)}
+                </div>
+              )}
+              {post.read_time && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Clock size={18} color="var(--site-gold)" />
+                  {post.read_time} min de leitura
+                </div>
+              )}
             </div>
           </div>
         </header>

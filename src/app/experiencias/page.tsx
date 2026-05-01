@@ -70,21 +70,7 @@ export default function ExperienciasPage() {
         .from('experiences').select('*')
         .eq('is_published', true)
         .order('created_at', { ascending: false });
-      const fetched = (data as Experience[]) || [];
-      const hasSempre = fetched.some(i => i.title.includes('SEMPRE'));
-      if (!hasSempre) {
-        fetched.push({
-          id: 'sempre-static',
-          title: 'SEMPRE - Gestão de Projetos e Negócios Empresariais',
-          description: 'Gestão de projetos e negócios empresariais, viabilizando oportunidades.',
-          image_url: null,
-          location: 'Nacional',
-          date: '2026',
-          is_published: true,
-          created_at: new Date().toISOString(),
-        });
-      }
-      setItems(fetched);
+      setItems((data as Experience[]) || []);
       setLoading(false);
     })();
   }, []);

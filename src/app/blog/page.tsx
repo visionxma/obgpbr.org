@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import PublicLayout from '../components/PublicLayout';
 import { supabase } from '@/lib/supabase';
 import {
-  Calendar, Clock, Tag, Loader2, BookOpen, User, Search, ArrowRight, ArrowLeft
+  Calendar, Clock, Tag, Loader2, BookOpen, User, Search
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -20,8 +20,6 @@ interface BlogPost {
   published_at: string | null;
   is_published: boolean;
   created_at: string;
-  cta_text?: string;
-  cta_link?: string;
 }
 
 function formatDate(dateStr: string | null) {
@@ -37,8 +35,6 @@ export default function BlogPage() {
   const [category, setCategory] = useState('Todas');
   const [loading, setLoading] = useState(true);
 
-  const categories = ['Todas', 'MROSC', 'Legislação', 'Certificação', 'Eventos'];
-
   useEffect(() => {
     (async () => {
       const { data } = await supabase
@@ -46,11 +42,13 @@ export default function BlogPage() {
         .select('*')
         .eq('is_published', true)
         .order('published_at', { ascending: false });
-      
+
       if (data) setPosts(data);
       setLoading(false);
     })();
   }, []);
+
+  const categories = ['Todas', ...Array.from(new Set(posts.map(p => p.category).filter((c): c is string => Boolean(c)))).sort()];
 
   const filteredPosts = posts.filter(p => {
     const matchesSearch = p.title.toLowerCase().includes(search.toLowerCase()) || (p.summary && p.summary.toLowerCase().includes(search.toLowerCase()));
@@ -235,13 +233,6 @@ function FeaturedPost({ post }: { post: BlogPost }) {
             {post.summary}
           </p>
         )}
-        {post.cta_text && (
-          <div style={{ marginBottom: 28 }}>
-            <a href={post.cta_link || '#'} target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ display: 'inline-flex', padding: '10px 20px', fontSize: '0.85rem' }}>
-              {post.cta_text} <ArrowRight size={14} style={{ marginLeft: 6 }} />
-            </a>
-          </div>
-        )}
         <PostMeta post={post} />
       </div>
     </article>
@@ -294,13 +285,6 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
           }}>
             {post.summary}
           </p>
-        )}
-        {post.cta_text && (
-          <div style={{ marginBottom: 24 }}>
-            <a href={post.cta_link || '#'} className="btn btn-outline-primary" style={{ padding: '8px 16px', fontSize: '0.8rem', display: 'inline-flex', alignItems: 'center' }}>
-              {post.cta_text} <ArrowRight size={13} style={{ marginLeft: 6 }} />
-            </a>
-          </div>
         )}
         <PostMeta post={post} />
       </div>
