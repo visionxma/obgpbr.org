@@ -244,11 +244,51 @@ export default function ProcessoPage() {
     };
 
     window.addEventListener('scroll', handleScroll);
-    // Trigger inicial
     handleScroll();
-    
     return () => window.removeEventListener('scroll', handleScroll);
   }, [step, showPaymentScreen]);
+
+  // ── Persistence Logic (Anti-Reset) ──────────────────────────
+  
+  // 1. Hydration: Load state from LocalStorage on mount
+  useEffect(() => {
+    const savedState = localStorage.getItem('obgp_processo_state');
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        if (parsed.step) setStep(parsed.step);
+        if (parsed.data) setData(parsed.data);
+        if (parsed.entidadeData) setEntidadeData(parsed.entidadeData);
+        if (parsed.activePerfil) setActivePerfil(parsed.activePerfil);
+        if (parsed.showCnpjStep !== undefined) setShowCnpjStep(parsed.showCnpjStep);
+        if (parsed.cnpjSuccess !== undefined) setCnpjSuccess(parsed.cnpjSuccess);
+        if (parsed.showPaymentScreen !== undefined) setShowPaymentScreen(parsed.showPaymentScreen);
+        if (parsed.relatorioId) setRelatorioId(parsed.relatorioId);
+        console.log('OBGP: Progresso restaurado com sucesso.');
+      } catch (e) {
+        console.error('Erro ao restaurar estado:', e);
+      }
+    }
+    setLoadingData(false);
+  }, []);
+
+  // 2. Sync: Save state to LocalStorage on change
+  useEffect(() => {
+    if (loadingData) return; // Não salva enquanto está carregando inicial
+    
+    const stateToSave = {
+      step,
+      data,
+      entidadeData,
+      activePerfil,
+      showCnpjStep,
+      cnpjSuccess,
+      showPaymentScreen,
+      relatorioId
+    };
+    
+    localStorage.setItem('obgp_processo_state', JSON.stringify(stateToSave));
+  }, [step, data, entidadeData, activePerfil, showCnpjStep, cnpjSuccess, showPaymentScreen, relatorioId, loadingData]);
 
   const [enviando, setEnviando] = useState(false);
   const [mensagemEnviando, setMensagemEnviando] = useState('');
@@ -385,27 +425,23 @@ export default function ProcessoPage() {
     setLoadingData(false);
     setCnpjError('');
     setShowCnpjStep(false);
-    // Inicializa com o CNPJ que já foi digitado se houver
-    localStorage.setItem('obgp_guest_entidade', JSON.stringify(entidadeData));
   };
 
   const handleUpdate = (id: string, field: string, val: string) => {
     const newData: RelatorioData = { ...data, [id]: { ...data[id], [field]: val, status: 'em_analise' as DocStatus } };
     setData(newData);
-    localStorage.setItem('obgp_guest_docs', JSON.stringify(newData));
   };
 
   const handleEntidadeUpdate = (field: string, val: string) => {
     const newData = { ...entidadeData, [field]: val };
     setEntidadeData(newData);
-    localStorage.setItem('obgp_guest_entidade', JSON.stringify(newData));
   };
 
   const saveProgress = async () => {
     setSaving(true);
     try {
-      localStorage.setItem('obgp_guest_entidade', JSON.stringify(entidadeData));
-      localStorage.setItem('obgp_guest_docs', JSON.stringify(data));
+      // O progresso já é salvo via useEffect em obgp_processo_state
+      // Aqui apenas garantimos que o estado foi sincronizado (opcional)
     } finally {
       setSaving(false);
     }
@@ -449,6 +485,7 @@ export default function ProcessoPage() {
     showConfirm('Reiniciar Processo', 'ATENÇÃO: Isso apagará todos os dados preenchidos e reiniciará o processo. Deseja continuar?', async () => {
       setResetting(true);
       try {
+        localStorage.removeItem('obgp_processo_state');
         localStorage.removeItem('obgp_guest_entidade');
         localStorage.removeItem('obgp_guest_docs');
         localStorage.removeItem('obgp_guest_step');
@@ -458,6 +495,7 @@ export default function ProcessoPage() {
         setShowCnpjStep(true);
         setCnpjSuccess(false);
         setCnpjError('');
+        setShowPaymentScreen(false);
       } finally {
         setResetting(false);
       }
