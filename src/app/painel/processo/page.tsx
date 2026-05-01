@@ -229,12 +229,8 @@ export default function ProcessoPage() {
 
   useEffect(() => {
     const handleScroll = () => {
-      // Mostra a seta se estiver no passo 7 e houver mais conteúdo para rolar (pelo menos 50px)
-      const scrollTotal = document.documentElement.scrollHeight;
-      const scrollPos = window.innerHeight + window.scrollY;
-      const canScrollMore = scrollTotal > scrollPos + 50;
-      
-      if (step === 7 && showPaymentScreen && canScrollMore) {
+      // FORÇA a exibição no passo 7 enquanto estiver na tela de pagamento
+      if (step === 7 && showPaymentScreen) {
         setShowScrollHint(true);
       } else {
         setShowScrollHint(false);
@@ -1067,36 +1063,42 @@ export default function ProcessoPage() {
 
 
 
-      {/* INDICADOR DE SCROLL (Lateral Esquerda) - Mais visível */}
+      {/* INDICADOR DE SCROLL (Lateral Esquerda) - FORÇADO E ULTRA VISÍVEL */}
       {showScrollHint && (
         <div 
-          onClick={() => window.scrollTo({ top: window.scrollY + 500, behavior: 'smooth' })}
+          onClick={() => window.scrollTo({ top: window.scrollY + 600, behavior: 'smooth' })}
           style={{
             position: 'fixed',
-            left: 'clamp(10px, 4vw, 40px)',
-            bottom: '15%',
+            left: 20,
+            top: '50%',
+            transform: 'translateY(-50%)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 12,
-            zIndex: 9999,
+            gap: 15,
+            zIndex: 99999,
             cursor: 'pointer',
-            animation: 'fadeIn .5s ease'
+            padding: '20px 10px',
+            background: 'rgba(220, 38, 38, 0.1)',
+            borderRadius: 'var(--site-radius-full)',
+            border: '1px solid rgba(220, 38, 38, 0.3)',
+            backdropFilter: 'blur(4px)',
+            animation: 'fadeInLeft .6s ease-out'
           }}
         >
           <div style={{ 
             writingMode: 'vertical-rl', 
             textTransform: 'uppercase', 
-            fontSize: '0.8rem', 
+            fontSize: '0.9rem', 
             fontWeight: 900, 
-            color: '#dc2626', // Vermelho para chamar atenção como o desenho do usuário
-            letterSpacing: '0.2em',
-            textShadow: '0 0 10px rgba(255,255,255,0.8)'
+            color: '#dc2626',
+            letterSpacing: '0.25em',
+            textShadow: '0 2px 4px rgba(0,0,0,0.1)'
           }}>
-            MAIS INFORMAÇÕES ABAIXO
+            DESÇA PARA ANEXAR O COMPROVANTE
           </div>
-          <div style={{ animation: 'bounceVertical 1.5s infinite', color: '#dc2626' }}>
-            <ChevronDown size={64} strokeWidth={4} />
+          <div style={{ animation: 'bounceVertical 1.2s infinite', color: '#dc2626' }}>
+            <ChevronDown size={72} strokeWidth={5} />
           </div>
         </div>
       )}
@@ -1111,12 +1113,15 @@ export default function ProcessoPage() {
           70% { box-shadow: 0 0 0 15px rgba(13, 54, 79, 0); }
           100% { box-shadow: 0 0 0 0 rgba(13, 54, 79, 0); }
         }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-50%) translateX(-20px); }
+        @keyframes fadeInLeft {
+          from { opacity: 0; transform: translateY(-50%) translateX(-40px); }
           to { opacity: 1; transform: translateY(-50%) translateX(0); }
         }
+        @keyframes bounceVertical {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(20px); }
+        }
       `}} />
-
     </>
   );
 }
