@@ -23,52 +23,6 @@ interface BlogPost {
   cta_link?: string;
 }
 
-const STATIC_POSTS: BlogPost[] = [
-  {
-    id: 'art-1',
-    title: 'Programa Instituição Legal: Maranhão Avança na Regularização das OSCs',
-    summary: 'Com a aprovação da MP 500/2025, o Governo do Maranhão e a SRS lançam o "Dia D" para tirar entidades da informalidade e habilitá-las a receber recursos.',
-    content: '',
-    image_url: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=800&h=500&fit=crop',
-    category: 'MROSC',
-    author: 'Equipe OBGP',
-    read_time: 4,
-    published_at: '2026-02-21T12:00:00Z',
-    is_published: true,
-    created_at: '2026-02-21T12:00:00Z',
-    cta_text: 'Ler Matéria Completa',
-    cta_link: 'https://forms.gle/exemplo_dia_d', // Link do Forms
-  },
-  {
-    id: 'art-2',
-    title: 'Selo OSC: O Mecanismo de Certificação que Sua Entidade Precisa',
-    summary: 'Entenda como o Selo atesta a regularidade e capacidade institucional das Organizações da Sociedade Civil para firmar parcerias entre a administração pública e as organizações da sociedade civil.',
-    content: '',
-    image_url: 'https://images.unsplash.com/photo-1573165231977-3f0e27806045?w=800&h=500&fit=crop',
-    category: 'Certificação',
-    author: 'Diretoria Executiva',
-    read_time: 3,
-    published_at: '2026-03-10T12:00:00Z',
-    is_published: true,
-    created_at: '2026-03-10T12:00:00Z',
-    cta_text: 'Ver Critérios do Selo',
-    cta_link: '/selo-osc',
-  },
-  {
-    id: 'art-3',
-    title: 'As 11 Principais Irregularidades Identificadas pelo MP-MA',
-    summary: 'Um guia prático sobre os erros mais comuns em estatutos, governança e obrigações fiscais que impedem o acesso a recursos do estado.',
-    content: '',
-    image_url: 'https://images.unsplash.com/photo-1589829085413-56de8ae18c73?w=800&h=500&fit=crop',
-    category: 'Legislação',
-    author: 'Consultoria Jurídica',
-    read_time: 5,
-    published_at: '2026-04-05T12:00:00Z',
-    is_published: true,
-    created_at: '2026-04-05T12:00:00Z',
-  }
-];
-
 function formatDate(dateStr: string | null) {
   if (!dateStr) return '';
   return new Date(dateStr).toLocaleDateString('pt-BR', {
@@ -85,12 +39,16 @@ export default function BlogPage() {
   const categories = ['Todas', 'MROSC', 'Legislação', 'Certificação', 'Eventos'];
 
   useEffect(() => {
-    // Simulando loading e injetando static posts em vez do supabase
-    const timer = setTimeout(() => {
-      setPosts(STATIC_POSTS);
+    (async () => {
+      const { data } = await supabase
+        .from('blog_posts')
+        .select('*')
+        .eq('is_published', true)
+        .order('published_at', { ascending: false });
+      
+      if (data) setPosts(data);
       setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+    })();
   }, []);
 
   const filteredPosts = posts.filter(p => {
