@@ -220,10 +220,8 @@ export default function ProcessoPage() {
   const [cnpjSuccess, setCnpjSuccess] = useState(false);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
   const [cart, setCart] = useState<any[]>([]);
-  const [showCartModal, setShowCartModal] = useState(false);
-  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
-  const [previewCartItem, setPreviewCartItem] = useState<any | null>(null);
-  const [comprovanteFile, setComprovanteFile] = useState<File|null>(null);
+  const [showPaymentScreen, setShowPaymentScreen] = useState(false);
+  const [comprovanteFile, setComprovanteFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
 
@@ -453,47 +451,20 @@ export default function ProcessoPage() {
   };
 
   const handleConsultarPagamentoEEnviar = async () => {
-    // Salva o progresso atual em localStorage primeiro
+    // Salva o progresso atual
     await saveProgress();
-
-    const existingIndex = cart.findIndex(item => item.entidade.cnpj === entidadeData.cnpj);
-    let newCart = [...cart];
-    
-    if (existingIndex >= 0) {
-      // Atualiza o documento no carrinho se já existe para evitar duplicação em caso de F5
-      newCart[existingIndex] = {
-        ...newCart[existingIndex],
-        docs: data,
-      };
-    } else {
-      // Adiciona um novo item
-      newCart.push({
-        id: Date.now().toString(),
-        entidade: entidadeData,
-        docs: data,
-        createdAt: new Date().toISOString()
-      });
-    }
-    
-    setCart(newCart);
-    localStorage.setItem('obgp_guest_cart', JSON.stringify(newCart));
-    
-    // Abre o modal de carrinho
-    setShowCartModal(true);
+    setShowPaymentScreen(true);
+    document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleRemoverDoCarrinho = (id: string) => {
     const newCart = cart.filter(item => item.id !== id);
     setCart(newCart);
     localStorage.setItem('obgp_guest_cart', JSON.stringify(newCart));
-    if (newCart.length === 0) {
-      setShowCartModal(false);
-    }
   };
 
   const handleAdicionarNovo = () => {
-    setShowCartModal(false);
-    // Limpa apenas o formulário atual (entidade e docs), mantém o carrinho
+    // Limpa apenas o formulário atual (entidade e docs)
     localStorage.removeItem('obgp_guest_entidade');
     localStorage.removeItem('obgp_guest_docs');
     localStorage.removeItem('obgp_guest_step');
@@ -516,7 +487,14 @@ export default function ProcessoPage() {
     
     try {
       const formData = new FormData();
-      formData.append('cart', JSON.stringify(cart));
+      // Criamos um "carrinho" virtual de 1 item para manter compatibilidade com o backend
+      const virtualCart = [{
+        id: Date.now().toString(),
+        entidade: entidadeData,
+        docs: data,
+        createdAt: new Date().toISOString()
+      }];
+      formData.append('cart', JSON.stringify(virtualCart));
       formData.append('comprovante', comprovanteFile);
 
       const res = await fetch('/api/painel/checkout', {
@@ -529,7 +507,7 @@ export default function ProcessoPage() {
         throw new Error(errJson.error || 'Erro na comunicação com o servidor');
       }
 
-      setShowCheckoutModal(false);
+      setShowPaymentScreen(false);
       
       showConfirm('Sucesso!', 'Seus documentos e pagamento foram enviados para validação. Nossa equipe entrará em contato em breve.', () => {
          // Clear everything
@@ -634,7 +612,7 @@ export default function ProcessoPage() {
         </div>
       ) : (
         <div id="painel-top" style={{ maxWidth: 900, margin: '0 auto', paddingBottom: 60 }}>
-          {!(showCartModal || showCheckoutModal) && (
+          {!showPaymentScreen && (
             <>
               <div className="processo-header-wrap">
                 <div>
@@ -830,157 +808,61 @@ export default function ProcessoPage() {
             <section style={{ marginBottom: 32, border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-xl)', overflow: 'hidden', background: '#fff' }}>
               <header style={{ background: 'var(--site-primary)', color: '#fff', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 28, height: 28, borderRadius: '50%', background: 'var(--site-gold)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.85rem', fontWeight: 800 }}>7</div>
-                <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#fff' }}>CONCLUSÃO E CHECKOUT</h2>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#fff' }}>CONCLUSÃO E PAGAMENTO</h2>
               </header>
 
-              {showCartModal ? (
-                <div style={{ animation:'slideUp .3s ease' }}>
-                  <div style={{ background:'linear-gradient(135deg,#0D364F 0%,#1a5276 100%)', padding:'24px 32px', color:'#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div>
-                      <h2 style={{ margin:0, fontSize:'1.4rem', fontWeight:800, display: 'flex', alignItems: 'center', gap: 10 }}><FileText size={24}/> Seu Carrinho</h2>
-                      <p style={{ margin:'4px 0 0', fontSize:'0.85rem', opacity:.85 }}>Revise os relatórios e documentos antes do pagamento.</p>
+              {showPaymentScreen ? (
+                <div style={{ animation:'slideUp .3s ease', background: '#fff', minHeight: 400 }}>
+                  <div style={{ background:'linear-gradient(135deg,#0D364F 0%,#1a5276 100%)', padding:'24px 32px', color:'#fff', display:'flex', alignItems:'center', justifyContent:'center', position: 'relative' }}>
+                    <div style={{ textAlign:'center' }}>
+                      <div style={{ fontSize:'0.75rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.12em', color:'rgba(255,255,255,0.6)', marginBottom:4 }}>Valor Total a Pagar</div>
+                      <div style={{ fontSize:'2.4rem', fontWeight:900, color:'#4ade80', lineHeight:1 }}>R$ 389,96</div>
+                      <div style={{ fontSize:'0.85rem', color:'rgba(255,255,255,0.5)', marginTop:6 }}>Relatório de conformidade individual</div>
                     </div>
-                    <button onClick={() => setShowCartModal(false)} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', padding: '8px 16px', borderRadius: 8, cursor: 'pointer', fontWeight: 'bold' }}>✕ Fechar</button>
                   </div>
 
-                  <div style={{ padding:'24px 32px', background: '#fff' }}>
-                    {previewCartItem ? (
-                      <div style={{ animation: 'panelPageIn .3s ease' }}>
-                        <button onClick={() => setPreviewCartItem(null)} style={{ background: 'transparent', border: 'none', color: '#64748b', fontWeight: 800, cursor: 'pointer', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 6 }}>
-                          <ChevronLeft size={16} /> Voltar para o Carrinho
-                        </button>
-                        <h3 style={{ margin: '0 0 16px', color: '#0D364F', fontSize: '1.2rem', fontWeight: 900 }}>Resumo do Relatório</h3>
-                        
-                        <div style={{ background: '#f8fafc', padding: '20px', borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 24 }}>
-                           <h4 style={{ margin: '0 0 12px', color: '#334155', fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase' }}>Dados da Entidade</h4>
-                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                             <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569' }}><strong style={{ color: '#0D364F' }}>Razão Social:</strong> {previewCartItem.entidade.razao_social || 'Não informado'}</p>
-                             <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569' }}><strong style={{ color: '#0D364F' }}>CNPJ:</strong> {previewCartItem.entidade.cnpj}</p>
-                             <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569' }}><strong style={{ color: '#0D364F' }}>Email:</strong> {previewCartItem.entidade.email_osc || 'Não informado'}</p>
-                             <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569' }}><strong style={{ color: '#0D364F' }}>Telefone:</strong> {previewCartItem.entidade.telefone || 'Não informado'}</p>
-                             <p style={{ margin: 0, fontSize: '0.85rem', color: '#475569', gridColumn: '1 / -1' }}><strong style={{ color: '#0D364F' }}>Endereço:</strong> {previewCartItem.entidade.logradouro}, {previewCartItem.entidade.numero_endereco} - {previewCartItem.entidade.bairro}, {previewCartItem.entidade.municipio}/{previewCartItem.entidade.estado}</p>
-                           </div>
-                           
-                           <h4 style={{ margin: '24px 0 12px', color: '#334155', fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase', borderTop: '1px solid #e2e8f0', paddingTop: 16 }}>Análise de Preenchimento</h4>
-                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                             <div style={{ background: 'rgba(22,163,74,0.1)', color: '#16a34a', padding: '6px 12px', borderRadius: 8, fontSize: '0.8rem', fontWeight: 800, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                               <CheckCircle2 size={14} /> {Object.keys(previewCartItem.docs).length} respostas salvas
-                             </div>
-                           </div>
+                  <div style={{ padding:'32px', display:'flex', flexDirection:'column', gap:24 }}>
+                    <div style={{ display:'grid', gridTemplateColumns:'auto 1fr', gap:32, alignItems:'start', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:20, padding:32 }}>
+                      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:12 }}>
+                        <div style={{ padding: 12, background: '#fff', borderRadius: 16, border: '2px solid #e2e8f0', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                          <img src="/pix_qrcode.png" alt="QR Code PIX Bradesco" style={{ width:180, height:180, borderRadius:8, objectFit:'cover' }} />
                         </div>
+                        <div style={{ fontSize:'0.65rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'.1em', color:'#64748b' }}>Escaneie com seu banco</div>
+                      </div>
 
-                        <div style={{ display: 'flex', gap: 12 }}>
-                          <button onClick={() => {
-                            setEntidadeData(previewCartItem.entidade);
-                            setData(previewCartItem.docs);
-                            setStep(1);
-                            setShowCartModal(false);
-                            setPreviewCartItem(null);
-                          }} style={{ flex: 1, background: 'var(--site-gold)', color: '#fff', border: 'none', padding: '14px', borderRadius: 10, fontSize: '0.95rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'opacity 0.2s' }}>
-                            <Edit2 size={18} /> Editar Respostas deste Relatório
+                      <div style={{ display:'flex', flexDirection:'column', gap:16 }}>
+                        <div style={{ fontSize:'0.9rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'.12em', color:'#0D364F' }}>Dados para Pagamento PIX</div>
+                        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:16, padding:'16px 20px', background: 'rgba(13,54,79,0.03)', border:'1px solid #0D364F', borderRadius:16 }}>
+                          <div>
+                            <div style={{ fontSize:'0.65rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.1em', color: '#0D364F' }}>Chave PIX (CNPJ)</div>
+                            <div style={{ fontSize:'1rem', fontWeight: 800, color:'#1e293b', marginTop:3, fontFamily: 'monospace', letterSpacing: '.03em' }}>14.796.065/0001-08</div>
+                          </div>
+                          <button
+                            onClick={() => copyToClipboard('14.796.065/0001-08', 'pix')}
+                            style={{ background: copiedField === 'pix' ? '#16a34a' : '#0D364F', color: '#fff', border:'none', borderRadius:10, padding:'10px 18px', fontSize:'0.8rem', fontWeight:800, cursor: 'pointer', display:'flex', alignItems:'center', gap:8, transition:'all .2s' }}
+                          >
+                            {copiedField === 'pix' ? <><CheckCircle2 size={14}/> Copiado!</> : <><Copy size={14}/> Copiar</>}
                           </button>
                         </div>
                       </div>
-                    ) : (
-                      <>
-                        {cart.map((item, index) => (
-                          <div key={item.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12, marginBottom: 12 }}>
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: '0.95rem', fontWeight: 800, color: '#0D364F' }}>Relatório de Conformidade ({index + 1})</div>
-                              <div style={{ fontSize: '0.8rem', color: '#64748b', marginTop: 4 }}>Entidade: {item.entidade.razao_social || item.entidade.cnpj}</div>
-                              <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: 2 }}>{new Date(item.createdAt).toLocaleString('pt-BR')}</div>
-                            </div>
-                            <div style={{ textAlign: 'right', marginLeft: 16 }}>
-                              <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a' }}>R$ 389,96</div>
-                              <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                                <button onClick={() => setPreviewCartItem(item)} style={{ background: '#e2e8f0', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: '#475569', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}><Eye size={12}/> Preview</button>
-                                <button onClick={() => handleRemoverDoCarrinho(item.id)} style={{ background: '#fee2e2', border: 'none', padding: '6px 12px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 700, color: '#dc2626', cursor: 'pointer' }}>Remover</button>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-
-                    <div style={{ marginTop: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '2px dashed #e2e8f0', paddingTop: 20 }}>
-                      <button onClick={handleAdicionarNovo} style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#f1f5f9', border: '1px solid #cbd5e1', color: '#334155', padding: '10px 16px', borderRadius: 10, fontWeight: 700, cursor: 'pointer' }}>
-                        <Plus size={16}/> Criar Novo Documento
-                      </button>
-                      <div style={{ textAlign: 'right' }}>
-                        <div style={{ fontSize: '0.8rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Valor Total</div>
-                        <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#0D364F' }}>R$ {(cart.length * 389.96).toFixed(2).replace('.', ',')}</div>
-                      </div>
                     </div>
 
-                    <button onClick={() => { setShowCartModal(false); setShowCheckoutModal(true); }} style={{ width: '100%', marginTop: 24, background: '#16a34a', color: '#fff', border: 'none', padding: '16px', borderRadius: 12, fontSize: '1.05rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-                      <CheckCircle2 size={20}/> Finalizar Compra ({cart.length} itens)
-                    </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ) : showCheckoutModal ? (
-                <div style={{ animation:'slideUp .3s ease', background: '#fff', minHeight: 400 }}>
-                  {/* Header */}
-                  <div style={{ background:'linear-gradient(135deg,#0D364F 0%,#1a5276 100%)', padding:'20px 28px', color:'#fff', display:'flex', alignItems:'center', gap: 16, position: 'relative' }}>
-                    <button onClick={() => { setShowCheckoutModal(false); setShowCartModal(true); }} style={{ background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontWeight: 700, fontSize: '0.8rem', display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
-                      <ChevronLeft size={14}/> Voltar
-                    </button>
-                    <div style={{ flex:1, textAlign:'center' }}>
-                      <div style={{ fontSize:'0.7rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.1em', color:'rgba(255,255,255,0.6)', marginBottom:2 }}>Valor Total a Pagar</div>
-                      <div style={{ fontSize:'2rem', fontWeight:900, color:'#4ade80', lineHeight:1 }}>R$ {(cart.length * 389.96).toFixed(2).replace('.', ',')}</div>
-                      <div style={{ fontSize:'0.75rem', color:'rgba(255,255,255,0.5)', marginTop:4 }}>{cart.length} relatório{cart.length > 1 ? 's' : ''} de conformidade</div>
-                    </div>
-                    <div style={{ width:40 }} />
-                  </div>
-
-                  <div style={{ padding:'24px 28px', display:'flex', flexDirection:'column', gap:20 }}>
-
-                    {/* PIX — QR Code + Chave */}
-                    <div style={{ display:'grid', gridTemplateColumns:'auto 1fr', gap:20, alignItems:'start', background:'#f8fafc', border:'1px solid #e2e8f0', borderRadius:16, padding:20 }}>
-                      {/* QR Code */}
-                      <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:8 }}>
-                        <img src="/pix_qrcode.png" alt="QR Code PIX Bradesco" style={{ width:150, height:150, borderRadius:12, border:'2px solid #e2e8f0', objectFit:'cover' }} />
-                        <div style={{ fontSize:'0.65rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.05em', color:'#9ca3af' }}>Escaneie com seu banco</div>
+                    <div style={{ background:'rgba(59,130,246,0.04)', border:'1px solid rgba(59,130,246,0.12)', borderRadius:16, padding:'20px 24px' }}>
+                      <div style={{ fontSize:'0.9rem', color:'#1e40af', fontWeight:800, marginBottom:10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Info size={18}/> Como realizar o pagamento:
                       </div>
-
-                      {/* PIX details */}
-                      <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
-                        <div style={{ fontSize:'0.75rem', fontWeight:800, textTransform:'uppercase', letterSpacing:'.08em', color:'#0D364F' }}>Dados PIX</div>
-
-                        {[
-                          { label: 'Chave PIX (CNPJ)', value: '14.796.065/0001-08', key: 'pix', highlight: true },
-                        ].map(({ label, value, key, highlight }, i) => (
-                          <div key={key} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:8, padding:'8px 10px', background: highlight ? 'rgba(13,54,79,0.05)' : '#fff', border:`1px solid ${highlight ? '#0D364F' : '#e5e7eb'}`, borderRadius:8 }}>
-                            <div>
-                              <div style={{ fontSize:'0.58rem', fontWeight:700, textTransform:'uppercase', letterSpacing:'.08em', color: highlight ? '#0D364F' : '#9ca3af' }}>{label}</div>
-                              <div style={{ fontSize:'0.82rem', fontWeight: highlight ? 800 : 600, color:'#1f2937', marginTop:1, fontFamily: highlight ? 'monospace' : 'inherit', letterSpacing: highlight ? '.05em' : 'normal' }}>{value}</div>
-                            </div>
-                            <button
-                              onClick={() => copyToClipboard(value, key)}
-                              style={{ background: copiedField === key ? '#16a34a' : (highlight ? '#0D364F' : '#f1f5f9'), color: copiedField === key ? '#fff' : (highlight ? '#fff' : '#475569'), border:'none', borderRadius:6, padding:'5px 10px', fontSize:'0.7rem', fontWeight:700, cursor:'pointer', display:'flex', alignItems:'center', gap:4, transition:'all .2s', flexShrink:0 }}
-                            >
-                              {copiedField === key ? <><CheckCircle2 size={11}/> Copiado!</> : <><Copy size={11}/> Copiar</>}
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Instruções */}
-                    <div style={{ background:'rgba(59,130,246,0.05)', border:'1px solid rgba(59,130,246,0.15)', borderRadius:12, padding:'12px 16px' }}>
-                      <div style={{ fontSize:'0.78rem', color:'#1d4ed8', fontWeight:700, marginBottom:6 }}>Como realizar o pagamento:</div>
-                      <ol style={{ margin:0, paddingLeft:18, fontSize:'0.75rem', color:'#3b82f6', lineHeight:1.8 }}>
+                      <ol style={{ margin:0, paddingLeft:24, fontSize:'0.85rem', color:'#3b82f6', lineHeight:2, fontWeight: 500 }}>
                         <li>Abra o aplicativo do seu banco</li>
                         <li>Acesse a área PIX → <strong>Pagar</strong></li>
-                        <li>Escaneie o QR Code ou copie a <strong>Chave PIX (CNPJ)</strong></li>
-                        <li>Confirme o valor de <strong>R$ {(cart.length * 389.96).toFixed(2).replace('.', ',')}</strong></li>
-                        <li>Salve o comprovante e anexe abaixo</li>
+                        <li>Escaneie o QR Code ou cole a <strong>Chave PIX (CNPJ)</strong></li>
+                        <li>Confirme o valor exato de <strong>R$ 389,96</strong></li>
+                        <li>Após o pagamento, anexe o comprovante abaixo para validação</li>
                       </ol>
                     </div>
 
-                    {/* Upload comprovante */}
-                    <div>
-                      <div style={{ fontSize:'0.78rem', fontWeight:800, color:'#0D364F', marginBottom:10, display:'flex', alignItems:'center', gap:6 }}>
-                        <FileUp size={15}/> Anexar Comprovante de Pagamento <span style={{ color:'#dc2626' }}>*</span>
+                    <div style={{ marginTop: 8 }}>
+                      <div style={{ fontSize:'0.9rem', fontWeight:800, color:'#0D364F', marginBottom:12, display:'flex', alignItems:'center', gap:8 }}>
+                        <FileUp size={20}/> Anexar Comprovante de Pagamento <span style={{ color:'#dc2626' }}>*</span>
                       </div>
                       <input
                         type="file"
@@ -992,55 +874,62 @@ export default function ProcessoPage() {
                       <label
                         htmlFor="comprovante-upload"
                         style={{
-                          display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:8,
+                          display:'flex', alignItems:'center', justifyContent:'center', flexDirection:'column', gap:12,
                           border: comprovanteFile ? '2px solid #16a34a' : '2px dashed #cbd5e1',
-                          borderRadius:12, padding:'20px 16px', cursor:'pointer',
-                          background: comprovanteFile ? 'rgba(22,163,74,0.04)' : '#fafafa',
+                          borderRadius:20, padding:'32px 24px', cursor:'pointer',
+                          background: comprovanteFile ? 'rgba(22,163,74,0.04)' : '#f8fafc',
                           transition:'all .2s'
                         }}
                       >
                         {comprovanteFile ? (
                           <>
-                            <CheckCircle2 size={28} style={{ color:'#16a34a' }}/>
-                            <div style={{ fontSize:'0.85rem', fontWeight:800, color:'#16a34a' }}>Comprovante anexado!</div>
-                            <div style={{ fontSize:'0.72rem', color:'#6b7280', maxWidth:200, textAlign:'center', wordBreak:'break-all' }}>{comprovanteFile.name}</div>
-                            <div style={{ fontSize:'0.68rem', color:'#9ca3af' }}>Clique para substituir</div>
+                            <div style={{ background: '#16a34a', color: '#fff', borderRadius: '50%', width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <CheckCircle2 size={32} />
+                            </div>
+                            <div style={{ fontSize:'1.1rem', fontWeight:800, color:'#16a34a' }}>Comprovante anexado!</div>
+                            <div style={{ fontSize:'0.8rem', color:'#64748b', maxWidth:300, textAlign:'center', wordBreak:'break-all' }}>{comprovanteFile.name}</div>
+                            <div style={{ fontSize:'0.75rem', color:'#94a3b8', textTransform: 'uppercase', fontWeight: 700, marginTop: 4 }}>Clique para substituir</div>
                           </>
                         ) : (
                           <>
-                            <FileUp size={28} style={{ color:'#94a3b8' }}/>
-                            <div style={{ fontSize:'0.85rem', fontWeight:700, color:'#334155' }}>Selecionar arquivo</div>
-                            <div style={{ fontSize:'0.72rem', color:'#9ca3af' }}>PDF, PNG ou JPG do comprovante</div>
+                            <div style={{ background: '#e2e8f0', color: '#64748b', borderRadius: '50%', width: 56, height: 56, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <FileUp size={28} />
+                            </div>
+                            <div style={{ fontSize:'1rem', fontWeight:800, color:'#334155' }}>Selecionar Comprovante</div>
+                            <div style={{ fontSize:'0.8rem', color:'#94a3b8' }}>PDF, PNG ou JPG do comprovante</div>
                           </>
                         )}
                       </label>
                     </div>
 
-                    {/* Aviso */}
-                    <div style={{ padding:'12px 14px', background:'rgba(245,158,11,.08)', border:'1px solid rgba(245,158,11,.2)', borderRadius:10 }}>
-                      <div style={{ fontSize:'0.73rem', color:'#92400e', lineHeight:1.6 }}>
-                        <strong>⚠️ Atenção:</strong> A análise dos documentos será iniciada somente após confirmação do pagamento pelo administrador. Guarde o comprovante.
+                    <div style={{ padding:'20px', background:'rgba(245,158,11,.06)', border:'1px solid rgba(245,158,11,.15)', borderRadius:16, display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                      <AlertCircle size={20} style={{ color: '#92400e', marginTop: 2, flexShrink: 0 }} />
+                      <div style={{ fontSize:'0.82rem', color:'#92400e', lineHeight:1.8 }}>
+                        <strong>Atenção:</strong> A análise dos documentos será iniciada somente após a confirmação do pagamento pelo administrador. Guarde seu comprovante.
                       </div>
                     </div>
 
-                    {/* Submit button */}
-                    <button
-                      onClick={handleSubmitCheckout}
-                      disabled={enviando || !comprovanteFile}
-                      style={{
-                        width:'100%', padding:'16px', borderRadius:12, border:'none',
-                        background: (enviando || !comprovanteFile) ? '#cbd5e1' : 'linear-gradient(135deg,#16a34a,#15803d)',
-                        color:'#fff', fontSize:'1rem', fontWeight:800, cursor: (enviando || !comprovanteFile) ? 'not-allowed' : 'pointer',
-                        display:'flex', alignItems:'center', justifyContent:'center', gap:10,
-                        boxShadow: (!enviando && comprovanteFile) ? '0 6px 20px rgba(22,163,74,0.35)' : 'none',
-                        transition:'all .2s'
-                      }}
-                    >
-                      {enviando
-                        ? <><Loader2 size={18} className="spin-anim"/> Enviando...</>
-                        : <><CheckCircle2 size={18}/> Enviar Comprovante e Finalizar</>
-                      }
-                    </button>
+                    <div style={{ display: 'flex', gap: 16 }}>
+                      <button onClick={() => setShowPaymentScreen(false)} style={{ padding:'16px 24px', borderRadius:16, border:'1px solid var(--site-border)', background: '#fff', color: 'var(--site-text-secondary)', fontWeight: 700, cursor: 'pointer' }}>Voltar</button>
+                      <button
+                        onClick={handleSubmitCheckout}
+                        disabled={enviando || !comprovanteFile}
+                        style={{
+                          flex: 1, padding:'20px', borderRadius:16, border:'none',
+                          background: (enviando || !comprovanteFile) ? '#e2e8f0' : 'linear-gradient(135deg,#16a34a,#15803d)',
+                          color: (enviando || !comprovanteFile) ? '#94a3b8' : '#fff', 
+                          fontSize:'1.15rem', fontWeight:900, cursor: (enviando || !comprovanteFile) ? 'not-allowed' : 'pointer',
+                          display:'flex', alignItems:'center', justifyContent:'center', gap:12,
+                          boxShadow: (!enviando && comprovanteFile) ? '0 12px 36px rgba(22,163,74,0.3)' : 'none',
+                          transition:'all .2s'
+                        }}
+                      >
+                        {enviando
+                          ? <><Loader2 size={24} className="spin-anim"/> Enviando...</>
+                          : <><ShieldCheck size={24}/> Enviar para Validação Final</>
+                        }
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -1075,9 +964,9 @@ export default function ProcessoPage() {
                     <div style={{ display: 'flex', gap: 12, width: '100%', maxWidth: 300 }}>
                       <button onClick={handleConsultarPagamentoEEnviar} disabled={enviando} className="btn btn-gold" style={{ flex: 1, padding: '16px', borderRadius: 'var(--site-radius-full)', fontWeight: 800 }}>
                         {enviando ? (
-                          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Clock size={18} className="spin-anim" /> {mensagemEnviando || 'Processando...'}</span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}><Clock size={18} className="spin-anim" /> Processando...</span>
                         ) : (
-                          <><Plus size={18} /> Adicionar ao Carrinho</>
+                          <><ShieldCheck size={18} /> Realizar Pagamento</>
                         )}
                       </button>
                     </div>
@@ -1088,7 +977,7 @@ export default function ProcessoPage() {
           )}
 
           {/* NAVIGATION (BOTTOM) */}
-          {!(showCartModal || showCheckoutModal) && (
+          {!showPaymentScreen && (
             <div className="processo-nav-btns" style={{ display: 'flex', justifyContent: step === 1 ? 'flex-end' : 'space-between', alignItems: 'center', marginTop: 8 }}>
               {step > 1 && (
                 <button onClick={handleBack} className="btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', fontSize: '0.9rem', background: 'var(--site-surface-warm)', color: 'var(--site-text-primary)', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', fontWeight: 700 }}>
@@ -1148,47 +1037,7 @@ export default function ProcessoPage() {
       )}
 
 
-      {/* FLOATING CART BUTTON */}
-      {cart.length > 0 && !(showCartModal || showCheckoutModal) && !showCnpjStep && typeof document !== 'undefined' && createPortal(
-        <button
-          onClick={() => {
-            setStep(7);
-            setShowCartModal(true);
-            document.getElementById('painel-top')?.scrollIntoView({ behavior: 'smooth' });
-          }}
-          style={{
-            position: 'fixed',
-            top: '50%',
-            right: 30,
-            transform: 'translateY(-50%) scale(1)',
-            background: 'var(--site-gold)',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '50px',
-            padding: '14px 24px',
-            fontSize: '1.05rem',
-            fontWeight: 800,
-            cursor: 'pointer',
-            boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12,
-            zIndex: 99999,
-            transition: 'transform 0.2s',
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(-50%) scale(1)'}
-        >
-          <div style={{ position: 'relative' }}>
-            <ShoppingCart size={24} />
-            <span style={{ position: 'absolute', top: -10, right: -12, background: '#dc2626', color: '#fff', fontSize: '0.75rem', fontWeight: 900, width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '50%', border: '2px solid var(--site-gold)' }}>
-              {cart.length}
-            </span>
-          </div>
-          <span>Ver Carrinho</span>
-        </button>,
-        document.body
-      )}
+
     </>
   );
 }

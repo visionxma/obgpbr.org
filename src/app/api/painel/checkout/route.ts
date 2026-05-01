@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     }
 
     const mainOscId = cart[0].entidade.cnpj ? `OBGP-${cart[0].entidade.cnpj.replace(/\D/g, '').slice(-8)}` : `GUEST-${Date.now()}`;
-    const valorTotal = cart.length * 350.00;
+    const valorTotal = 389.96;
 
     const { error: pagError } = await supabaseAdmin
       .from('certificacao_pagamentos')
