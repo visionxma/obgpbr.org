@@ -223,9 +223,12 @@ export default function BlogAdmin() {
           <Loader2 size={28} style={{ animation: 'spin 1s linear infinite' }} />
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 60, color: 'var(--admin-text-tertiary)' }}>
-          <FolderOpen size={36} style={{ opacity: 0.5, marginBottom: 12 }} />
-          <p>Nenhum post cadastrado ainda.</p>
+        <div className="glass-card">
+          <div className="admin-empty-state">
+            <div className="admin-empty-state-icon"><FolderOpen size={32} /></div>
+            <div className="admin-empty-state-text" style={{ fontSize: '1.2rem', marginTop: 12 }}>{items.length === 0 ? 'Nenhum post adicionado' : 'Nenhum resultado para a busca'}</div>
+            <div className="admin-empty-state-hint">{items.length === 0 ? 'Adicione o primeiro post para popular a página de blog.' : 'Tente buscar com outros termos.'}</div>
+          </div>
         </div>
       ) : (
         <div style={{ display: 'grid', gap: 16 }}>

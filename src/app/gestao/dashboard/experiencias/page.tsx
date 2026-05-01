@@ -193,9 +193,12 @@ export default function ExperienciasAdmin() {
           <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
         </div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: 60, color: 'var(--admin-text-tertiary)' }}>
-          <FolderOpen size={36} style={{ opacity: 0.5, marginBottom: 12 }} />
-          <p>Nenhuma experiência cadastrada ainda.</p>
+        <div className="glass-card">
+          <div className="admin-empty-state">
+            <div className="admin-empty-state-icon"><FolderOpen size={32} /></div>
+            <div className="admin-empty-state-text" style={{ fontSize: '1.2rem', marginTop: 12 }}>{items.length === 0 ? 'Nenhuma experiência adicionada' : 'Nenhum resultado para a busca'}</div>
+            <div className="admin-empty-state-hint">{items.length === 0 ? 'Adicione a primeira experiência para popular o portfólio.' : 'Tente buscar com outros termos.'}</div>
+          </div>
         </div>
       ) : (
         <div style={{ display: 'grid', gap: 16 }}>
