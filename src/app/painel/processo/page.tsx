@@ -755,7 +755,7 @@ export default function ProcessoPage() {
           </div>
         </div>
       ) : (
-        <div id="painel-top" style={{ maxWidth: 1150, margin: '0 auto', paddingBottom: 60 }}>
+        <div id="painel-top" style={{ maxWidth: 1350, margin: '0 auto', paddingBottom: 60 }}>
           {/* ── HEADER BAR — Premium Glassmorphic ── */}
           <div className="processo-header-bar" style={{
             display: 'flex',
