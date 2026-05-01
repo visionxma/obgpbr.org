@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react';
 import PublicLayout from '../components/PublicLayout';
 import { supabase } from '@/lib/supabase';
-import { MapPin, Calendar, Loader2, Sparkles, Rocket, Award, Layers } from 'lucide-react';
+import { MapPin, Calendar, Loader2, Sparkles, Rocket, Award, Layers, ChevronRight, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
 
 interface Experience {
   id: string;
@@ -273,71 +274,94 @@ export default function ExperienciasPage() {
       {(loading || items.length > 0) && (
         <section className="glass-section-white section-padding">
           <div className="container">
-            <div className="section-header">
-              <span className="section-label">Portfólio</span>
-              <h2>
-                Projetos em{' '}
-                <span className="font-cursive" style={{ color: 'var(--site-gold-dark)' }}>destaque</span>
-              </h2>
-              <div className="section-line" />
-            </div>
-
             {loading ? (
-              <div style={{ textAlign: 'center', padding: '60px 0' }}>
-                <Loader2 size={32} style={{ animation: 'spin 1s linear infinite', color: 'var(--site-primary)' }} />
-                <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
+              <div style={{ textAlign: 'center', padding: '100px 0' }}>
+                <Loader2 size={40} style={{ animation: 'spin 1s linear infinite', color: 'var(--site-primary)' }} />
               </div>
             ) : (
-              <div className="grid-3">
-                {items.map((it, i) => (
-                  <article key={it.id} className={`glass-panel stagger-${Math.min(i + 1, 8)}`}
-                    style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                    {it.image_url ? (
-                      <div style={{ height: 200, overflow: 'hidden' }}>
-                        <img src={it.image_url} alt={it.title} className="img-cover" style={{ height: '100%' }} />
-                      </div>
-                    ) : (
-                      <div style={{
-                        height: 200,
-                        background: 'linear-gradient(135deg, var(--site-surface-blue) 0%, var(--site-surface-gold) 100%)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      }}>
-                        <Sparkles size={32} color="var(--site-gold-dark)" style={{ opacity: 0.3 }} />
-                      </div>
-                    )}
-                    <div style={{ padding: '24px 24px 28px', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                      <h3 className="h3-card" style={{ marginBottom: 10 }}>{it.title}</h3>
-                      {it.description && (
-                        <p style={{
-                          color: 'var(--site-text-secondary)',
-                          lineHeight: 'var(--leading-relaxed)',
-                          fontSize: 'var(--text-sm)',
-                          marginBottom: 16, flex: 1,
-                        }}>
-                          {it.description}
-                        </p>
-                      )}
-                      {(it.location || it.date) && (
-                        <div style={{
-                          display: 'flex', gap: 16, flexWrap: 'wrap',
-                          fontSize: 'var(--text-xs)', color: 'var(--site-text-tertiary)',
-                          borderTop: '1px solid var(--site-border)', paddingTop: 14, marginTop: 'auto',
-                        }}>
-                          {it.location && (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                              <MapPin size={13} /> {it.location}
-                            </span>
-                          )}
-                          {it.date && (
-                            <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                              <Calendar size={13} /> {it.date}
-                            </span>
-                          )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 64 }}>
+                {/* Destaque */}
+                {items[0] && (
+                  <article className="glass-panel" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                    overflow: 'hidden',
+                    borderRadius: 24,
+                    border: '1px solid var(--site-border)',
+                  }}>
+                    <div style={{ minHeight: 320, overflow: 'hidden', position: 'relative' }}>
+                      {items[0].image_url ? (
+                        <img src={items[0].image_url} alt={items[0].title} className="img-cover" style={{ height: '100%' }} />
+                      ) : (
+                        <div style={{ height: '100%', background: 'linear-gradient(135deg, var(--site-primary) 0%, var(--site-gold) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Rocket size={48} color="#fff" style={{ opacity: 0.3 }} />
                         </div>
                       )}
+                      <div style={{ position: 'absolute', top: 20, left: 20, background: 'var(--site-gold)', color: 'var(--site-primary)', padding: '6px 16px', borderRadius: 'var(--site-radius-full)', fontSize: '0.75rem', fontWeight: 800, letterSpacing: '0.05em' }}>
+                        PROJETO EM DESTAQUE
+                      </div>
+                    </div>
+                    <div style={{ padding: '48px' }}>
+                      <div style={{ color: 'var(--site-gold-dark)', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: 12, letterSpacing: '0.1em' }}>
+                        {items[0].location || 'Nacional'} • {items[0].date || '2026'}
+                      </div>
+                      <h2 style={{ fontSize: 'clamp(1.5rem, 3vw, 2.2rem)', marginBottom: 20, lineHeight: 1.2 }}>{items[0].title}</h2>
+                      <p style={{ color: 'var(--site-text-secondary)', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: 32 }}>{items[0].description}</p>
+                      <Link href={`/experiencias/${items[0].id}`} className="btn btn-primary" style={{ display: 'inline-flex', padding: '12px 24px' }}>
+                        Ver detalhes do caso <ArrowRight size={16} style={{ marginLeft: 8 }} />
+                      </Link>
                     </div>
                   </article>
-                ))}
+                )}
+
+                {/* Grid de outros projetos */}
+                {items.length > 1 && (
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
+                      <h3 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 700 }}>Outros Projetos</h3>
+                      <div style={{ flex: 1, height: 1, background: 'var(--site-border)' }} />
+                    </div>
+                    <div className="grid-3">
+                      {items.slice(1).map((it, i) => (
+                        <Link key={it.id} href={`/experiencias/${it.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                          <article className={`glass-panel stagger-${Math.min(i + 1, 8)}`}
+                            style={{ 
+                              overflow: 'hidden', display: 'flex', flexDirection: 'column', height: '100%',
+                              transition: 'all 0.3s ease', cursor: 'pointer'
+                            }}
+                            onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.borderColor = 'var(--site-gold)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.borderColor = 'var(--site-border)'; }}
+                          >
+                            <div style={{ height: 200, overflow: 'hidden', position: 'relative' }}>
+                              {it.image_url ? (
+                                <img src={it.image_url} alt={it.title} className="img-cover" style={{ height: '100%', transition: 'transform 0.5s ease' }} />
+                              ) : (
+                                <div style={{ height: '100%', background: 'var(--site-surface-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <Sparkles size={32} color="var(--site-gold)" style={{ opacity: 0.5 }} />
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                              <div style={{ fontSize: '0.7rem', color: 'var(--site-gold-dark)', fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>
+                                {it.location}
+                              </div>
+                              <h3 style={{ fontSize: '1.1rem', marginBottom: 12, lineHeight: 1.4 }}>{it.title}</h3>
+                              <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.9rem', marginBottom: 20, flex: 1, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                                {it.description}
+                              </p>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto', paddingTop: 16, borderTop: '1px solid var(--site-border)' }}>
+                                <span style={{ fontSize: '0.75rem', color: 'var(--site-text-tertiary)', fontWeight: 600 }}>{it.date}</span>
+                                <span style={{ color: 'var(--site-primary)', display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.8rem', fontWeight: 700 }}>
+                                  Detalhes <ChevronRight size={14} />
+                                </span>
+                              </div>
+                            </div>
+                          </article>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

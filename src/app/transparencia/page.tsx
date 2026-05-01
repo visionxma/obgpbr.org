@@ -215,6 +215,41 @@ export default function Transparencia() {
         </div>
       </section>
 
+      {/* ── BARRA DE RESUMO INTELIGENTE ── */}
+      <section style={{ background: '#fff', borderBottom: '1px solid var(--site-border)', padding: '20px 0' }}>
+        <div className="container">
+          <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--site-surface-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--site-primary)' }}>
+                <FileText size={20} />
+              </div>
+              <div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--site-primary)', lineHeight: 1 }}>{records.length}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--site-text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Registros</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(22,163,74,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a' }}>
+                <Award size={20} />
+              </div>
+              <div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#16a34a', lineHeight: 1 }}>{oscs.length}</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--site-text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>OSCs Ativas</div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--site-surface-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--site-gold-dark)' }}>
+                <CheckCircle2 size={20} />
+              </div>
+              <div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--site-gold-dark)', lineHeight: 1 }}>100%</div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--site-text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Conformidade</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ═══ CONTEÚDO ═══ */}
       <section className="section-padding">
         <div className="container">
@@ -290,13 +325,13 @@ export default function Transparencia() {
                                 </span>
                               )}
                             </div>
-                            <h3 className="h4-label" style={{ marginBottom: 10, display: '-webkit-box', WebkitLineClamp: open ? 999 : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            <h3 className="h4-label" style={{ marginBottom: 12, fontSize: '1.1rem', lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: open ? 999 : 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', color: 'var(--site-primary)' }}>
                               {r.objeto || 'Sem descrição'}
                             </h3>
                             {r.proponente && (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-sm)', color: 'var(--site-text-secondary)' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', color: 'var(--site-text-secondary)', background: 'var(--site-surface-blue)', padding: '6px 12px', borderRadius: 8 }}>
                                 <Building2 size={14} style={{ color: 'var(--site-primary)' }} />
-                                <span style={{ fontWeight: 500 }}>{r.proponente}</span>
+                                <span style={{ fontWeight: 600 }}>{r.proponente}</span>
                               </div>
                             )}
                           </div>
@@ -424,12 +459,12 @@ export default function Transparencia() {
                                 <Calendar size={11} /> {new Date(osc.updated_at).toLocaleDateString('pt-BR')}
                               </span>
                             </div>
-                            <h3 className="h4-label" style={{ marginBottom: 10 }}>
+                            <h3 style={{ marginBottom: 12, fontSize: '1.15rem', color: 'var(--site-primary)', fontWeight: 800 }}>
                               {osc.razao_social || 'Organização sem nome'}
                             </h3>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--text-sm)', color: 'var(--site-text-secondary)' }}>
-                              <MapPin size={14} style={{ color: 'var(--site-primary)', flexShrink: 0 }} />
-                              <span>{[osc.municipio, osc.estado].filter(Boolean).join('/') || '—'}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.9rem', color: 'var(--site-text-secondary)' }}>
+                              <MapPin size={15} style={{ color: 'var(--site-gold-dark)', flexShrink: 0 }} />
+                              <span style={{ fontWeight: 500 }}>{[osc.municipio, osc.estado].filter(Boolean).join('/') || '—'}</span>
                             </div>
                           </div>
 
