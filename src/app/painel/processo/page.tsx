@@ -288,13 +288,13 @@ export default function ProcessoPage() {
   const [cart, setCart] = useState<any[]>([]);
   const [showPaymentScreen, setShowPaymentScreen] = useState(false);
   const [comprovanteFile, setComprovanteFile] = useState<File | null>(null);
-  const [files, setFiles] = useState<{ [docId: string]: string }>({});
+  const [files, setFiles] = useState<{ [docId: string]: File }>({});
   const [saving, setSaving] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [showScrollHint, setShowScrollHint] = useState(false);
 
-  const handleAttachFile = (id: string, fileUrl: string) => {
-    setFiles(prev => ({ ...prev, [id]: fileUrl }));
+  const handleAttachFile = (id: string, file: File) => {
+    setFiles(prev => ({ ...prev, [id]: file }));
     handleUpdate(id, 'status', 'em_analise');
   };
 
