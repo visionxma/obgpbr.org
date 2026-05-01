@@ -1063,42 +1063,43 @@ export default function ProcessoPage() {
 
 
 
-      {/* INDICADOR DE SCROLL (Lateral Esquerda) - FORÇADO E ULTRA VISÍVEL */}
+      {/* INDICADOR DE SCROLL (Lateral Esquerda) - ELEGANTE E REFINADO */}
       {showScrollHint && (
         <div 
           onClick={() => window.scrollTo({ top: window.scrollY + 600, behavior: 'smooth' })}
           style={{
             position: 'fixed',
-            left: 20,
-            top: '50%',
+            left: 24,
+            top: '35%', // Subindo a posição conforme solicitado
             transform: 'translateY(-50%)',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            gap: 15,
+            gap: 20,
             zIndex: 99999,
             cursor: 'pointer',
-            padding: '20px 10px',
-            background: 'rgba(220, 38, 38, 0.1)',
+            padding: '24px 12px',
+            background: 'rgba(13, 54, 79, 0.05)',
             borderRadius: 'var(--site-radius-full)',
-            border: '1px solid rgba(220, 38, 38, 0.3)',
-            backdropFilter: 'blur(4px)',
-            animation: 'fadeInLeft .6s ease-out'
+            border: '1px solid rgba(197, 171, 118, 0.2)',
+            backdropFilter: 'blur(8px)',
+            animation: 'fadeInLeft .8s ease-out'
           }}
         >
           <div style={{ 
             writingMode: 'vertical-rl', 
             textTransform: 'uppercase', 
-            fontSize: '0.9rem', 
-            fontWeight: 900, 
-            color: '#dc2626',
-            letterSpacing: '0.25em',
-            textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+            fontSize: '0.75rem', 
+            fontWeight: 800, 
+            color: 'var(--site-primary)',
+            letterSpacing: '0.3em',
+            opacity: 0.8,
+            fontFamily: 'var(--font-heading)'
           }}>
-            DESÇA PARA ANEXAR O COMPROVANTE
+            Desça para concluir o processo
           </div>
-          <div style={{ animation: 'bounceVertical 1.2s infinite', color: '#dc2626' }}>
-            <ChevronDown size={72} strokeWidth={5} />
+          <div style={{ animation: 'bounceVertical 2s infinite', color: 'var(--site-gold)' }}>
+            <ChevronDown size={40} strokeWidth={2} />
           </div>
         </div>
       )}
