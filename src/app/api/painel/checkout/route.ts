@@ -1,7 +1,50 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
-const ID_TO_SECTION_MAP: Record<string, { section: string, id: string }> = {
+type CheckoutEntity = Record<string, unknown> & {
+  cnpj?: string;
+  razao_social?: string;
+};
+
+type CheckoutItem = {
+  entidade?: CheckoutEntity;
+  docs?: Record<string, unknown>;
+};
+
+type DocSection = 'habilitacao_juridica' | 'regularidade_fiscal' | 'qualificacao_economica' | 'qualificacao_tecnica' | 'outros_registros';
+type MappedDocs = Record<DocSection, Record<string, unknown>>;
+
+const PERFIL_FIELDS = [
+  'razao_social', 'cnpj', 'natureza_juridica', 'responsavel',
+  'telefone', 'email_osc', 'logradouro', 'numero_endereco',
+  'bairro', 'municipio', 'estado', 'cep', 'data_abertura_cnpj',
+] as const;
+
+function buildPerfilUpsert(oscId: string, dados: Record<string, unknown> | null | undefined, userId?: string) {
+  const out: Record<string, unknown> = {
+    osc_id: oscId,
+    status_selo: 'em_analise',
+  };
+
+  if (userId) out.user_id = userId;
+  if (!dados) return out;
+
+  for (const key of PERFIL_FIELDS) {
+    const value = dados[key];
+    if (value !== undefined && value !== null && value !== '') out[key] = value;
+  }
+
+  return out;
+}
+
+function getFallbackOscId(entidade: Record<string, unknown> | null | undefined) {
+  const cnpj = typeof entidade?.cnpj === 'string' ? entidade.cnpj : '';
+  return cnpj ? `OBGP-${cnpj.replace(/\D/g, '').slice(-8)}` : `GUEST-${Date.now()}`;
+}
+
+const ID_TO_SECTION_MAP: Record<string, { section: DocSection, id: string }> = {
   'cartao_cnpj': { section: 'habilitacao_juridica', id: '2.1' },
   'qsa_cnpj': { section: 'habilitacao_juridica', id: '2.2' },
   'cadastro_contribuinte': { section: 'habilitacao_juridica', id: '2.3' },
@@ -53,10 +96,25 @@ const ID_TO_SECTION_MAP: Record<string, { section: string, id: string }> = {
 
 export async function POST(req: NextRequest) {
   try {
-    const supabaseAdmin = createClient(
+    const supabaseAdmin = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
       process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder_key'
     );
+
+    const cookieStore = await cookies();
+    const supabaseAuth = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder_key',
+      { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
+    );
+    const { data: { user } } = await supabaseAuth.auth.getUser();
+    const { data: perfilLogado } = user
+      ? await supabaseAdmin
+          .from('osc_perfis')
+          .select('osc_id')
+          .eq('user_id', user.id)
+          .maybeSingle()
+      : { data: null };
 
     const formData = await req.formData();
     const cartStr = formData.get('cart') as string;
@@ -66,7 +124,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Carrinho ou comprovante faltando' }, { status: 400 });
     }
 
-    const cart = JSON.parse(cartStr);
+    const cart = JSON.parse(cartStr) as CheckoutItem[];
     if (!Array.isArray(cart) || cart.length === 0) {
       return NextResponse.json({ error: 'Carrinho vazio' }, { status: 400 });
     }
@@ -94,7 +152,7 @@ export async function POST(req: NextRequest) {
       comprovanteUrl = publicUrlData.publicUrl;
     }
 
-    const mainOscId = cart[0].entidade.cnpj ? `OBGP-${cart[0].entidade.cnpj.replace(/\D/g, '').slice(-8)}` : `GUEST-${Date.now()}`;
+    const mainOscId = perfilLogado?.osc_id ?? getFallbackOscId(cart[0]?.entidade);
     const valorTotal = 389.96;
 
     const { error: pagError } = await supabaseAdmin
@@ -114,9 +172,9 @@ export async function POST(req: NextRequest) {
     }
 
     for (const item of cart) {
-      const oscId = item.entidade.cnpj ? `OBGP-${item.entidade.cnpj.replace(/\D/g, '').slice(-8)}` : `GUEST-${Date.now()}`;
+      const oscId = perfilLogado?.osc_id ?? getFallbackOscId(item.entidade);
       
-      const docMapped: any = {
+      const docMapped: MappedDocs = {
         habilitacao_juridica: {},
         regularidade_fiscal: {},
         qualificacao_economica: {},
@@ -124,7 +182,7 @@ export async function POST(req: NextRequest) {
         outros_registros: {},
       };
 
-      for (const [key, val] of Object.entries(item.docs)) {
+      for (const [key, val] of Object.entries(item.docs ?? {})) {
         const mapping = ID_TO_SECTION_MAP[key];
         if (mapping) {
           docMapped[mapping.section][mapping.id] = val;
@@ -140,24 +198,54 @@ export async function POST(req: NextRequest) {
           osc_id: oscId,
           numero: num,
           status: 'em_analise',
-          dados_entidade: item.entidade,
+          dados_entidade: item.entidade ?? {},
           habilitacao_juridica: docMapped.habilitacao_juridica,
           regularidade_fiscal: docMapped.regularidade_fiscal,
           qualificacao_economica: docMapped.qualificacao_economica,
           qualificacao_tecnica: docMapped.qualificacao_tecnica,
           outros_registros: docMapped.outros_registros,
           observacao_admin: `[GERADO VIA CHECKOUT] Pagamento PIX enviado. Comprovante: ${comprovanteUrl.substring(0, 100)}...`
-        });
+        })
+        .select('id, numero')
+        .single();
         
       if (relError) {
         console.error('Erro ao inserir relatório:', relError);
+        throw relError;
+      }
+
+      const perfilPayload = buildPerfilUpsert(oscId, item.entidade, user?.id);
+      const { error: perfilError } = await supabaseAdmin
+        .from('osc_perfis')
+        .upsert(perfilPayload, { onConflict: 'osc_id' });
+
+      if (perfilError) {
+        console.error('Erro ao publicar perfil da OSC no admin:', perfilError);
+        throw perfilError;
+      }
+
+      const razaoSocial = item.entidade?.razao_social || oscId;
+      const cnpj = item.entidade?.cnpj || 'CNPJ não informado';
+      const { error: notifError } = await supabaseAdmin
+        .from('notificacoes')
+        .insert({
+          destinatario: 'admin',
+          tipo: 'novo_relatorio',
+          titulo: 'Novo relatório enviado',
+          mensagem: `OSC ${razaoSocial} (${cnpj}) submeteu relatório`,
+          osc_id: oscId,
+        });
+
+      if (notifError) {
+        console.error('Erro ao notificar admin sobre novo relatório:', notifError);
+        throw notifError;
       }
     }
 
     return NextResponse.json({ success: true, message: 'Checkout realizado com sucesso!' });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Checkout API erro:', error);
-    return NextResponse.json({ error: error.message || 'Erro interno no checkout' }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Erro interno no checkout';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

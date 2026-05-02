@@ -105,6 +105,9 @@ export async function GET(
   const assinaturas: Assinatura[]   = (assRes.data   ?? []) as Assinatura[];
   const perfil                      = perfRes.data;
   const dados: Record<string,string> = rel.dados_entidade ?? {};
+  const certNumero = rel.certificado_numero ?? perfil?.certificado_numero ?? null;
+  const certEmitidoAt = rel.certificado_emitido_at ?? perfil?.certificado_emitido_at ?? null;
+  const certificadoEmitido = rel.status === 'aprovado' && !!certNumero;
 
   // Conformity summary
   const nonHeaders = itens.filter(i => !i.is_header);
@@ -208,7 +211,7 @@ export async function GET(
     <br/><br/>
     Portanto recomenda-se para certificação independente através do "SELO OSC GESTÃO DE PARCERIAS".
     <br/><br/>
-    A autenticidade do documento pode ser conferida através do website: https://obgpbr.org/selo-osc, código de verificação e controle: ${perfil?.certificado_numero || 'RCN.º-ANO.MES.DIA/OBGP'}.
+    A autenticidade do documento pode ser conferida através do website: https://obgpbr.org/selo-osc, código de verificação e controle: ${certNumero || 'RCN.º-ANO.MES.DIA/OBGP'}.
     <br/><br/>
     Paço do Lumiar/MA, ${new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}.
   </div>
@@ -229,7 +232,7 @@ export async function GET(
     </div>
   </div>
 
-  ${(perfil?.certificacao_liberada || perfil?.certificado_numero) ? `
+  ${certificadoEmitido ? `
   <!-- Selo de Assinatura Digital OBGP -->
   <div style="margin-top: 24px; padding: 16px; border: 2px solid #C5AB76; border-radius: 12px; background: rgba(197,171,118,0.03); display: flex; align-items: center; gap: 20px;">
     <div style="width: 50px; height: 50px; border-radius: 50%; background: #C5AB76; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 24px; font-weight: 900;">✓</div>
@@ -241,17 +244,18 @@ export async function GET(
     </div>
     <div style="text-align: right">
        <div style="font-size: 9px; font-weight: 700; color: #9ca3af; text-transform: uppercase;">ID de Validação</div>
-       <div style="font-family: monospace; font-size: 13px; font-weight: 800; color: #0D364F;">${perfil.certificado_numero || 'PENDENTE'}</div>
+       <div style="font-family: monospace; font-size: 13px; font-weight: 800; color: #0D364F;">${certNumero}</div>
+       ${certEmitidoAt ? `<div style="font-size: 9px; color: #6b7280; margin-top: 2px;">Emitido em ${fmtDate(certEmitidoAt)}</div>` : ''}
     </div>
   </div>
   ` : ''}
 
   <!-- Verification -->
-  ${(perfil?.certificacao_liberada || perfil?.certificado_numero) ? `
+  ${certificadoEmitido ? `
   <div class="verification" style="margin-top:20px">
-    Código de verificação: <span>${perfil.certificado_numero || 'AGUARDANDO LIBERAÇÃO'}</span><br/>
+    Código de verificação: <span>${certNumero}</span><br/>
     <span style="font-size:10px;color:#6b7280">
-      Verifique em: <a href="https://obgpbr.org/verificar?codigo=${perfil.certificado_numero}" style="color:#0D364F">https://obgpbr.org/verificar</a>
+      Verifique em: <a href="https://obgpbr.org/verificar?codigo=${certNumero}" style="color:#0D364F">https://obgpbr.org/verificar</a>
     </span>
   </div>` : ''}
 

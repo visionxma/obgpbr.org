@@ -103,6 +103,8 @@ interface Relatorio {
   observacao_admin: string | null;
   submitted_at: string | null;
   reviewed_at: string | null;
+  certificado_numero?: string | null;
+  certificado_emitido_at?: string | null;
   created_at: string;
   arquivo_docx_path?: string | null;
 }
@@ -258,6 +260,7 @@ export default function OscDetailPage() {
   const [docs, setDocs] = useState<Documento[]>([]);
   const [prestacoes, setPrestacoes] = useState<Prestacao[]>([]);
   const [formularios, setFormularios] = useState<Formulario[]>([]);
+  const [relatorios, setRelatorios] = useState<Relatorio[]>([]);
   const [relatorio, setRelatorio] = useState<Relatorio | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -305,6 +308,17 @@ export default function OscDetailPage() {
   const [signing, setSigning] = useState(false);
   const [signMsg, setSignMsg] = useState('');
 
+  const selectRelatorio = async (r: Relatorio) => {
+    setRelatorio(r);
+    setRelStatus(r.status);
+    setRelObs(r.observacao_admin ?? '');
+    const { data: assinRes } = await supabase
+      .from('relatorio_assinaturas')
+      .select('id, role, nome_assinante, credencial, signed_at, valida')
+      .eq('relatorio_id', r.id);
+    setAssinaturas((assinRes ?? []) as Assinatura[]);
+  };
+
   useEffect(() => {
     const load = async () => {
       const { data: p, error } = await supabase
@@ -330,7 +344,7 @@ export default function OscDetailPage() {
         supabase.from('osc_documentos').select('*').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }),
         supabase.from('osc_prestacao_contas').select('id, titulo, periodo, valor_total, arquivo_url, status, created_at').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }),
         supabase.from('osc_formularios').select('id, titulo, tipo, status, updated_at').eq('osc_id', pf.osc_id),
-        supabase.from('relatorios_conformidade').select('*').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
+        supabase.from('relatorios_conformidade').select('*').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }),
         supabase.from('certificacao_pagamentos').select('id, status, valor, metodo_pagamento, paid_at, created_at, arquivo_comprovante_path, arquivo_comprovante_nome, arquivo_comprovante_at').eq('osc_id', pf.osc_id).order('created_at', { ascending: false }).limit(1).maybeSingle(),
       ]);
 
@@ -338,16 +352,9 @@ export default function OscDetailPage() {
       setPrestacoes((prestRes.data ?? []) as Prestacao[]);
       setFormularios((formRes.data ?? []) as Formulario[]);
       if (relRes.data) {
-        const r = relRes.data as Relatorio;
-        setRelatorio(r);
-        setRelStatus(r.status);
-        setRelObs(r.observacao_admin ?? '');
-        // Load signatures for this relatorio
-        const { data: assinRes } = await supabase
-          .from('relatorio_assinaturas')
-          .select('id, role, nome_assinante, credencial, signed_at, valida')
-          .eq('relatorio_id', r.id);
-        setAssinaturas((assinRes ?? []) as Assinatura[]);
+        const rows = (relRes.data ?? []) as Relatorio[];
+        setRelatorios(rows);
+        if (rows[0]) await selectRelatorio(rows[0]);
       }
       if (pagRes.data) {
         const pag = pagRes.data as Pagamento;
@@ -414,10 +421,10 @@ export default function OscDetailPage() {
     const { error } = await supabase.rpc('assinar_relatorio', {
       p_relatorio_id: relatorio.id,
       p_role: signRole,
-      p_nome: currentUserEmail ?? signRole,
+      p_nome_assinante: currentUserEmail ?? signRole,
       p_credencial: currentUserEmail ?? '',
-      p_hash: docHash,
-      p_ip: null,
+      p_documento_hash: docHash,
+      p_ip_address: null,
     });
 
     if (error) {
@@ -427,12 +434,16 @@ export default function OscDetailPage() {
       // Refresh signatures and relatorio status
       const [assinRes, relRes2] = await Promise.all([
         supabase.from('relatorio_assinaturas').select('id, role, nome_assinante, credencial, signed_at, valida').eq('relatorio_id', relatorio.id),
-        supabase.from('relatorios_conformidade').select('status, observacao_admin, reviewed_at').eq('id', relatorio.id).single(),
+        supabase.from('relatorios_conformidade').select('*').eq('id', relatorio.id).single(),
       ]);
       setAssinaturas((assinRes.data ?? []) as Assinatura[]);
       if (relRes2.data) {
-        setRelatorio(prev => prev ? { ...prev, ...relRes2.data } : prev);
-        setRelStatus(relRes2.data.status);
+        const updated = relRes2.data as Relatorio;
+        setRelatorio(updated);
+        setRelatorios(prev => prev.map(r => r.id === updated.id ? updated : r));
+        setRelStatus(updated.status);
+        if (updated.certificado_numero) setCertNumero(updated.certificado_numero);
+        if (updated.certificado_emitido_at) setCertEmitidaAt(updated.certificado_emitido_at);
       }
       setTimeout(() => setSignMsg(''), 4000);
     }
@@ -497,14 +508,23 @@ export default function OscDetailPage() {
       return;
     }
     setSavingRel(true); setRelMsg('');
-    const { error } = await supabase.from('relatorios_conformidade').update({
+    const { data: updatedRel, error } = await supabase.from('relatorios_conformidade').update({
       status: relStatus,
       observacao_admin: relObs.trim() || null,
       reviewed_at: new Date().toISOString(),
-    }).eq('id', relatorio.id);
+    }).eq('id', relatorio.id).select('*').single();
     setSavingRel(false);
     if (error) { setRelMsg('error:Erro ao salvar decisão.'); return; }
-    setRelatorio(prev => prev ? { ...prev, status: relStatus as Relatorio['status'], observacao_admin: relObs.trim() || null } : prev);
+    const nextRel = (updatedRel as Relatorio) ?? { ...relatorio, status: relStatus as Relatorio['status'], observacao_admin: relObs.trim() || null };
+    setRelatorio(nextRel);
+    setRelatorios(prev => prev.map(r => r.id === nextRel.id ? nextRel : r));
+    if (nextRel.status === 'aprovado') {
+      setPerfil(prev => prev ? { ...prev, status_selo: 'aprovado' } : prev);
+      if (nextRel.certificado_numero) setCertNumero(nextRel.certificado_numero);
+      if (nextRel.certificado_emitido_at) setCertEmitidaAt(nextRel.certificado_emitido_at);
+    } else if (nextRel.status === 'reprovado') {
+      setPerfil(prev => prev ? { ...prev, status_selo: 'rejeitado', observacao_selo: relObs.trim() || null } : prev);
+    }
     setRelMsg('ok:Decisão registrada com sucesso!');
     setTimeout(() => setRelMsg(''), 3000);
   };
@@ -1280,6 +1300,44 @@ export default function OscDetailPage() {
       })()}
 
       {/* ══ Relatório de Conformidade ══ */}
+      {relatorios.length > 0 && (
+        <div className="glass-card" style={{ marginTop: 24 }}>
+          <div className="glass-card-header">
+            <span className="glass-card-title">
+              <span className="glass-card-title-icon"><ClipboardList size={15} /></span>
+              Histórico de Relatórios
+            </span>
+          </div>
+          <div className="glass-card-body" style={{ display: 'grid', gap: 10 }}>
+            {relatorios.map(r => {
+              const active = relatorio?.id === r.id;
+              const badgeClass = r.status === 'aprovado' ? 'aprovado' : r.status === 'reprovado' ? 'rejeitado' : r.status === 'em_analise' ? 'enviado' : 'pendente';
+              return (
+                <button key={r.id} type="button" onClick={() => { void selectRelatorio(r); }}
+                  style={{
+                    width: '100%', textAlign: 'left', border: active ? '1px solid var(--admin-primary)' : '1px solid var(--admin-border)',
+                    background: active ? 'rgba(13,54,79,.06)' : 'var(--admin-card)', borderRadius: 10, padding: '12px 14px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, cursor: 'pointer'
+                  }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <strong style={{ color: 'var(--admin-text-primary)', fontSize: '0.9rem' }}>{r.numero ?? r.id.slice(-8)}</strong>
+                      <span className={`adm-badge ${badgeClass}`} style={{ fontSize: '0.65rem' }}>{r.status}</span>
+                    </div>
+                    <div style={{ marginTop: 4, fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>
+                      Enviado: {r.submitted_at ? new Date(r.submitted_at).toLocaleDateString('pt-BR') : 'não enviado'}
+                      {r.reviewed_at ? ` • Revisado: ${new Date(r.reviewed_at).toLocaleDateString('pt-BR')}` : ''}
+                      {r.certificado_numero ? ` • Selo: ${r.certificado_numero}` : ''}
+                    </div>
+                  </div>
+                  <ExternalLink size={14} style={{ color: active ? 'var(--admin-primary)' : 'var(--admin-text-tertiary)' }} />
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {relatorio && (() => {
         const REL_STATUS_LABELS: Record<string, string> = {
           em_preenchimento: 'Em Preenchimento', em_analise: 'Em Análise',
@@ -1310,7 +1368,10 @@ export default function OscDetailPage() {
                   </span>
                 </span>
               </span>
-              <span style={{ fontSize: '0.78rem', color: 'var(--admin-text-tertiary)', fontFamily: 'monospace' }}>
+              <span style={{ fontSize: '0.78rem', color: 'var(--admin-text-tertiary)', fontFamily: 'monospace', textAlign: 'right' }}>
+                {relatorio.certificado_numero && (
+                  <span style={{ display: 'block', color: '#15803d', fontWeight: 800 }}>{relatorio.certificado_numero}</span>
+                )}
                 {relatorio.numero ?? '—'}
               </span>
             </div>

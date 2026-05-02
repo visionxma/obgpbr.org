@@ -1,17 +1,20 @@
 'use client';
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Search, CheckCircle, XCircle, AlertCircle, ExternalLink, ShieldCheck } from 'lucide-react';
+import { Search, CheckCircle, XCircle, AlertCircle, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 interface ResultadoCertificado {
+  osc_id?: string | null;
   razao_social: string | null;
   cnpj: string | null;
   certificado_numero: string | null;
   certificado_emitido_at: string | null;
   status_selo: string;
+  relatorio_id?: string | null;
+  relatorio_numero?: string | null;
 }
 
 function fmtDate(iso: string | null) {
@@ -31,7 +34,7 @@ function VerificarContent() {
   const [loading, setLoading] = useState(false);
   const [resultado, setResultado] = useState<ResultadoCertificado | null | undefined>(undefined);
 
-  const buscar = async (q = query) => {
+  const buscar = useCallback(async (q: string) => {
     const raw = q.trim();
     if (!raw) return;
     setLoading(true);
@@ -41,29 +44,90 @@ function VerificarContent() {
     const isCnpj = cnpjClean.length === 14;
     const isCodigo = /^RC\d+\d{8}OBGP$/i.test(raw.trim());
 
-    let query_supabase = supabase
-      .from('osc_perfis')
-      .select('razao_social, cnpj, certificado_numero, certificado_emitido_at, status_selo')
-      .eq('status_selo', 'aprovado');
-
     if (isCodigo) {
-      query_supabase = query_supabase.eq('certificado_numero', raw.trim().toUpperCase());
-    } else if (isCnpj) {
-      query_supabase = query_supabase.eq('cnpj', cnpjClean);
-    } else {
-      query_supabase = query_supabase.ilike('razao_social', `%${raw}%`);
+      const codigo = raw.trim().toUpperCase();
+      const { data: rel } = await supabase
+        .from('relatorios_conformidade')
+        .select('*')
+        .eq('certificado_numero', codigo)
+        .eq('status', 'aprovado')
+        .limit(1)
+        .maybeSingle();
+
+      if (rel) {
+        const { data: perfil } = await supabase
+          .from('osc_perfis')
+          .select('osc_id, razao_social, cnpj, status_selo')
+          .eq('osc_id', rel.osc_id)
+          .limit(1)
+          .maybeSingle();
+
+        setResultado({
+          osc_id: rel.osc_id,
+          razao_social: perfil?.razao_social ?? rel.dados_entidade?.razao_social ?? null,
+          cnpj: perfil?.cnpj ?? rel.dados_entidade?.cnpj ?? null,
+          status_selo: 'aprovado',
+          certificado_numero: rel.certificado_numero,
+          certificado_emitido_at: rel.certificado_emitido_at,
+          relatorio_id: rel.id,
+          relatorio_numero: rel.numero,
+        });
+        setLoading(false);
+        return;
+      }
     }
 
+    let query_supabase = supabase
+      .from('osc_perfis')
+      .select('osc_id, razao_social, cnpj, certificado_numero, certificado_emitido_at, status_selo')
+      .eq('status_selo', 'aprovado');
+
+    query_supabase = isCodigo
+      ? query_supabase.eq('certificado_numero', raw.trim().toUpperCase())
+      : isCnpj
+        ? query_supabase.eq('cnpj', cnpjClean)
+        : query_supabase.ilike('razao_social', `%${raw}%`);
+
     const { data } = await query_supabase.limit(1).maybeSingle();
-    setResultado(data ?? null);
+    if (!data) {
+      setResultado(null);
+      setLoading(false);
+      return;
+    }
+
+    const { data: relMaisRecente } = await supabase
+      .from('relatorios_conformidade')
+      .select('*')
+      .eq('osc_id', data.osc_id)
+      .eq('status', 'aprovado')
+      .order('certificado_emitido_at', { ascending: false, nullsFirst: false })
+      .order('reviewed_at', { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle();
+
+    setResultado({
+      ...data,
+      certificado_numero: relMaisRecente?.certificado_numero ?? data.certificado_numero,
+      certificado_emitido_at: relMaisRecente?.certificado_emitido_at ?? data.certificado_emitido_at,
+      relatorio_id: relMaisRecente?.id ?? null,
+      relatorio_numero: relMaisRecente?.numero ?? null,
+    });
     setLoading(false);
-  };
+  }, []);
 
   // Auto-busca se vier código/cnpj na URL
   useEffect(() => {
     const c = searchParams.get('codigo') ?? searchParams.get('cnpj');
-    if (c) { setQuery(c); buscar(c); }
-  }, []);
+    if (!c) return;
+    let active = true;
+    void Promise.resolve().then(() => {
+      if (active) {
+        setQuery(c);
+        void buscar(c);
+      }
+    });
+    return () => { active = false; };
+  }, [buscar, searchParams]);
 
   const certified = resultado?.status_selo === 'aprovado' && resultado?.certificado_numero;
 
@@ -107,7 +171,7 @@ function VerificarContent() {
               type="text"
               value={query}
               onChange={e => setQuery(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && buscar()}
+              onKeyDown={e => e.key === 'Enter' && buscar(query)}
               placeholder="CNPJ, Razão Social ou Código do Certificado (ex: RC18042026OBGP)"
               style={{ flex: 1, padding: '13px 16px', border: '1.5px solid var(--site-border)', borderRadius: 10, fontSize: '0.95rem', outline: 'none', color: 'var(--site-text-primary)', background: '#fafafa' }}
               onFocus={e => (e.currentTarget.style.borderColor = 'var(--site-primary)')}
@@ -115,7 +179,7 @@ function VerificarContent() {
               autoFocus
             />
             <button
-              onClick={() => buscar()}
+              onClick={() => buscar(query)}
               disabled={loading || !query.trim()}
               style={{ padding: '13px 22px', background: 'var(--site-primary)', color: '#fff', border: 'none', borderRadius: 10, cursor: loading ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', gap: 7, fontWeight: 700, fontSize: '0.9rem', opacity: (!query.trim() || loading) ? 0.6 : 1 }}
             >

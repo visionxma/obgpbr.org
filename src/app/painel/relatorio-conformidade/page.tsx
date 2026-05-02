@@ -8,6 +8,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../PainelContext';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { maskCNPJ, maskTelefone, maskCEP } from '@/lib/brasil-masks';
 
 /* ── Types ─────────────────────────────────────────────────────────── */
@@ -26,7 +27,8 @@ interface Relatorio {
   id: string; osc_id: string; numero: string | null;
   status: 'em_preenchimento' | 'em_analise' | 'aprovado' | 'reprovado';
   dados_entidade: Record<string, string>;
-  observacao_admin: string | null; submitted_at: string | null; created_at: string;
+  observacao_admin: string | null; submitted_at: string | null; reviewed_at?: string | null; created_at: string;
+  certificado_numero?: string | null; certificado_emitido_at?: string | null;
 }
 
 /* ── Helpers ───────────────────────────────────────────────────────── */
@@ -94,18 +96,21 @@ function DateInput({ value, onChange, style }: {
     const [y, m, d] = iso.split('-');
     return (d && m && y) ? `${d}/${m}/${y}` : '';
   }
-  const [display, setDisplay] = useState(toDisplay(value));
-  useEffect(() => { setDisplay(toDisplay(value)); }, [value]);
+  const [draft, setDraft] = useState<string | null>(null);
+  const display = draft ?? toDisplay(value);
 
   function handle(e: React.ChangeEvent<HTMLInputElement>) {
     const digits = e.target.value.replace(/\D/g, '').slice(0, 8);
     let fmt = digits;
     if (digits.length > 2) fmt = digits.slice(0,2) + '/' + digits.slice(2);
     if (digits.length > 4) fmt = digits.slice(0,2) + '/' + digits.slice(2,4) + '/' + digits.slice(4);
-    setDisplay(fmt);
+    setDraft(fmt);
     if (digits.length === 8) {
       const iso = `${digits.slice(4)}-${digits.slice(2,4)}-${digits.slice(0,2)}`;
-      if (!isNaN(new Date(iso).getTime())) onChange(iso);
+      if (!isNaN(new Date(iso).getTime())) {
+        onChange(iso);
+        setDraft(null);
+      }
     } else if (digits.length === 0) {
       onChange(null);
     }
@@ -113,6 +118,7 @@ function DateInput({ value, onChange, style }: {
   return (
     <input type="text" inputMode="numeric" maxLength={10}
       value={display} onChange={handle} placeholder="dd/mm/aaaa"
+      onBlur={() => setDraft(null)}
       style={style}
     />
   );
@@ -129,7 +135,7 @@ const TD: React.CSSProperties = { padding:'9px 12px', verticalAlign:'middle' };
 function Toast({ msg, onClose }: { msg: string; onClose: () => void }) {
   const ok = msg.startsWith('ok:');
   const txt = msg.replace(/^(ok:|error:)/,'');
-  useEffect(() => { const t = setTimeout(onClose, 3500); return () => clearTimeout(t); }, [msg]);
+  useEffect(() => { const t = setTimeout(onClose, 3500); return () => clearTimeout(t); }, [msg, onClose]);
   return (
     <div style={{
       position:'fixed', bottom:24, right:24, zIndex:999,
@@ -201,10 +207,14 @@ function Badge({ s }: { s: string }) {
 /* ── Main component ─────────────────────────────────────────────────── */
 function RelatorioContent() {
   const { user, perfil } = usePainel();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const requestedRelatorioId = searchParams.get('relatorio') ?? searchParams.get('id');
+  const shouldCreateNew = searchParams.get('novo') === '1';
 
   const [loading, setLoading]       = useState(true);
   const [gated, setGated]           = useState(false);
-  const [forceGating, setForceGating] = useState(false);
+  const [forceGating] = useState(false);
   const [relatorio, setRelatorio]   = useState<Relatorio | null>(null);
   const [itens, setItens]           = useState<RelatorioItem[]>([]);
   const [dados, setDados]           = useState<Record<string,string>>({});
@@ -226,15 +236,25 @@ function RelatorioContent() {
   const uploadItemId   = useRef<string | null>(null);
   const dadosDebounce  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const itemDebounce   = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const newReportRequestHandled = useRef(false);
 
   const relatorioId = useRef<string | null>(null);
-  const readonly = relatorio?.status === 'em_analise' || relatorio?.status === 'aprovado';
+  const readonly = relatorio?.status === 'em_analise' || relatorio?.status === 'aprovado' || relatorio?.status === 'reprovado';
 
 
   /* ── Load ── */
   useEffect(() => {
     if (!user || !perfil) return;
+    let active = true;
+    if (!shouldCreateNew) newReportRequestHandled.current = false;
+
     (async () => {
+      await Promise.resolve();
+      if (!active) return;
+      if (shouldCreateNew && newReportRequestHandled.current) return;
+      setLoading(true);
+      setDadosSalvos(false);
+
       let isGated = false;
       if (forceGating) {
         const { data: pf } = await supabase
@@ -250,14 +270,7 @@ function RelatorioContent() {
       if (isGated) { setLoading(false); return; }
 
       let rel: Relatorio | null = null;
-      const { data: ex } = await supabase
-        .from('relatorios_conformidade').select('*')
-        .eq('osc_id', perfil.osc_id)
-        .order('created_at', { ascending: false }).limit(1).maybeSingle();
-
-      if (ex) {
-        rel = ex as Relatorio;
-      } else {
+      const createDraftRelatorio = async () => {
         const d   = new Date();
         const num = `${Math.floor(Math.random()*900+100)}-${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}/OBGP`;
         const { data: cr } = await supabase
@@ -266,8 +279,33 @@ function RelatorioContent() {
             dados_entidade:{}, habilitacao_juridica:[], regularidade_fiscal:[],
             qualificacao_economica:[], qualificacao_tecnica:[] })
           .select().single();
-        rel = cr as Relatorio;
+        return cr as Relatorio | null;
+      };
+
+      if (shouldCreateNew) {
+        newReportRequestHandled.current = true;
+        rel = await createDraftRelatorio();
+        if (rel) router.replace(`/painel/relatorio-conformidade?relatorio=${rel.id}`, { scroll: false });
+      } else if (requestedRelatorioId) {
+        const { data: ex } = await supabase
+          .from('relatorios_conformidade').select('*')
+          .eq('osc_id', perfil.osc_id)
+          .eq('id', requestedRelatorioId)
+          .maybeSingle();
+        rel = ex as Relatorio | null;
+        if (!rel) {
+          setToast('error:Relatório não encontrado para esta OSC.');
+          setLoading(false);
+          return;
+        }
+      } else {
+        const { data: ex } = await supabase
+          .from('relatorios_conformidade').select('*')
+          .eq('osc_id', perfil.osc_id)
+          .order('created_at', { ascending: false }).limit(1).maybeSingle();
+        rel = ex ? ex as Relatorio : await createDraftRelatorio();
       }
+      if (!active) return;
       if (!rel) { setLoading(false); return; }
       setRelatorio(rel);
       relatorioId.current = rel.id;
@@ -356,7 +394,8 @@ function RelatorioContent() {
       if (Object.values(base).some(v => v)) setDadosSalvos(true);
       setLoading(false);
     })();
-  }, [user, perfil, forceGating]);
+    return () => { active = false; };
+  }, [user, perfil, forceGating, requestedRelatorioId, shouldCreateNew, router]);
 
   /* ── Auto-save dados com debounce ── */
   const saveDados = useCallback(async (dadosAtual: Record<string,string>) => {
@@ -478,12 +517,16 @@ function RelatorioContent() {
       return;
     }
     setSubmitting(true);
+    const submittedAt = new Date().toISOString();
     const { error } = await supabase.from('relatorios_conformidade')
-      .update({ status:'em_analise', submitted_at: new Date().toISOString() }).eq('id', relatorio.id);
+      .update({ status:'em_analise', submitted_at: submittedAt }).eq('id', relatorio.id);
     if (error) {
       setToast('error:Erro ao enviar. Tente novamente.');
     } else {
-      setRelatorio(p => p ? { ...p, status:'em_analise' } : p);
+      await supabase.from('osc_perfis')
+        .update({ status_selo: 'em_analise', updated_at: submittedAt })
+        .eq('osc_id', relatorio.osc_id);
+      setRelatorio(p => p ? { ...p, status:'em_analise', submitted_at: submittedAt } : p);
       setToast('ok:Relatório enviado para análise com sucesso!');
     }
     setSubmitting(false);
@@ -534,8 +577,18 @@ function RelatorioContent() {
           <h1 className="panel-page-title" style={{ marginBottom:4 }}>Relatório de Conformidade</h1>
           <p className="panel-page-subtitle" style={{ margin:0 }}>Preencha todas as seções e envie para análise da OBGP</p>
         </div>
-        <div style={{ fontSize:'0.7rem', color:'#9ca3af', fontFamily:'monospace', alignSelf:'center' }}>
-          {relatorio.numero}
+        <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap', justifyContent:'flex-end' }}>
+          <Link href="/painel/processos"
+            style={{ fontSize:'0.76rem', fontWeight:700, color:'var(--site-primary,#0D364F)', textDecoration:'none', padding:'8px 10px', border:'1px solid #e5e7eb', borderRadius:9 }}>
+            Meus Processos
+          </Link>
+          <button onClick={() => router.push('/painel/relatorio-conformidade?novo=1')}
+            style={{ border:'none', background:'var(--site-primary,#0D364F)', color:'#fff', borderRadius:9, padding:'8px 12px', fontSize:'0.76rem', fontWeight:800, cursor:'pointer', display:'inline-flex', alignItems:'center', gap:6 }}>
+            <Plus size={13}/> Novo Relatório
+          </button>
+          <div style={{ fontSize:'0.7rem', color:'#9ca3af', fontFamily:'monospace' }}>
+            {relatorio.numero}
+          </div>
         </div>
       </div>
 
@@ -562,7 +615,9 @@ function RelatorioContent() {
       {relatorio.status === 'aprovado' && (
         <div style={{ background:'rgba(22,163,74,.06)', border:'1px solid rgba(22,163,74,.2)', borderRadius:12, padding:'12px 16px', display:'flex', alignItems:'center', gap:10 }}>
           <CheckCircle size={15} style={{ color:'#16a34a', flexShrink:0 }}/>
-          <span style={{ fontSize:'0.82rem', color:'#15803d', fontWeight:700 }}>Relatório APROVADO. Selo OSC emitido.</span>
+          <span style={{ fontSize:'0.82rem', color:'#15803d', fontWeight:700 }}>
+            Relatório APROVADO. Selo OSC emitido{relatorio.certificado_numero ? `: ${relatorio.certificado_numero}` : '.'}
+          </span>
         </div>
       )}
       {relatorio.status === 'reprovado' && (

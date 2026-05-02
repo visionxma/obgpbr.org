@@ -1,0 +1,23 @@
+{
+  "servers": {
+    "serena": {
+      "type": "stdio",
+      "command": "C:\\Users\\tekad\\.local\\bin\\serena.exe",
+      "args": [
+        "start-mcp-server",
+        "--context=ide",
+        "--project",
+        "${workspaceFolder}"
+      ]
+    },
+    "repomix": {
+      "type": "stdio",
+      "command": "C:\\Program Files\\nodejs\\npx.cmd",
+      "args": [
+        "-y",
+        "repomix",
+        "--mcp"
+      ]
+    }
+  }
+}
