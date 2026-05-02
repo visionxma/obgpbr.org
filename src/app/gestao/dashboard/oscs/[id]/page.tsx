@@ -264,7 +264,7 @@ export default function OscDetailPage() {
   const [relatorio, setRelatorio] = useState<Relatorio | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
-  const [activeTab, setActiveTab] = useState/*<'visao_geral'|'relatorios'|'documentos'|'certificacao'>*/('visao_geral');
+  const [activeTab, setActiveTab] = useState<'visao_geral'|'relatorios'|'documentos'|'certificacao'>('visao_geral');
 
   // Edit OSC data
   const [editMode, setEditMode] = useState(false);
@@ -717,7 +717,7 @@ export default function OscDetailPage() {
           const TIcon = tab.icon;
           const active = activeTab === tab.id;
           return (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+            <button key={tab.id} onClick={() => setActiveTab(tab.id as 'visao_geral'|'relatorios'|'documentos'|'certificacao')}
               style={{
                 display: 'flex', alignItems: 'center', gap: 7, padding: '10px 20px',
                 border: 'none', borderBottom: active ? '2px solid var(--admin-primary)' : '2px solid transparent',
