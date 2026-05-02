@@ -44,6 +44,12 @@ function getFallbackOscId(entidade: Record<string, unknown> | null | undefined) 
   return cnpj ? `OBGP-${cnpj.replace(/\D/g, '').slice(-8)}` : `GUEST-${Date.now()}`;
 }
 
+function getSupabasePublicKey() {
+  return process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    || process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+    || 'placeholder_key';
+}
+
 const ID_TO_SECTION_MAP: Record<string, { section: DocSection, id: string }> = {
   'cartao_cnpj': { section: 'habilitacao_juridica', id: '2.1' },
   'qsa_cnpj': { section: 'habilitacao_juridica', id: '2.2' },
@@ -96,22 +102,24 @@ const ID_TO_SECTION_MAP: Record<string, { section: DocSection, id: string }> = {
 
 export async function POST(req: NextRequest) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+    const supabasePublicKey = getSupabasePublicKey();
     const supabaseAdmin = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-      process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder_key'
+      supabaseUrl,
+      process.env.SUPABASE_SERVICE_ROLE_KEY || supabasePublicKey
     );
 
     const cookieStore = await cookies();
     const supabaseAuth = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder_key',
+      supabaseUrl,
+      supabasePublicKey,
       { cookies: { getAll: () => cookieStore.getAll(), setAll: () => {} } }
     );
     const { data: { user } } = await supabaseAuth.auth.getUser();
     const { data: perfilLogado } = user
       ? await supabaseAdmin
           .from('osc_perfis')
-          .select('osc_id')
+          .select('osc_id, user_id')
           .eq('user_id', user.id)
           .maybeSingle()
       : { data: null };
@@ -156,26 +164,42 @@ export async function POST(req: NextRequest) {
 
     const mainOscId = perfilLogado?.osc_id ?? getFallbackOscId(cart[0]?.entidade);
     const valorTotal = 389.96;
+    const { data: perfilPorOsc } = !user
+      ? await supabaseAdmin
+          .from('osc_perfis')
+          .select('user_id')
+          .eq('osc_id', mainOscId)
+          .maybeSingle()
+      : { data: null };
+    const pagamentoUserId = user?.id ?? perfilLogado?.user_id ?? perfilPorOsc?.user_id ?? null;
 
     // ── Inserir Registro de Pagamento ──
-    const { error: pagError } = await supabaseAdmin
-      .from('certificacao_pagamentos')
-      .insert({
-        osc_id: mainOscId,
-        valor: valorTotal,
-        status: 'aguardando_pagamento',
-        metodo_pagamento: 'pix',
-        arquivo_comprovante_path: comprovantePath,
-        arquivo_comprovante_nome: file.name,
-        arquivo_comprovante_at: new Date().toISOString()
-      });
+    if (pagamentoUserId) {
+      const { error: pagError } = await supabaseAdmin
+        .from('certificacao_pagamentos')
+        .insert({
+          user_id: pagamentoUserId,
+          osc_id: mainOscId,
+          valor: valorTotal,
+          status: 'aguardando_pagamento',
+          metodo_pagamento: 'pix',
+          arquivo_comprovante_path: comprovantePath,
+          arquivo_comprovante_nome: file.name,
+          arquivo_comprovante_at: new Date().toISOString()
+        });
 
-    if (pagError) {
-      console.error('Erro ao inserir pagamento:', pagError);
-      return NextResponse.json({ 
-        error: `Erro ao registrar pagamento: ${pagError.message}`,
-        details: pagError 
-      }, { status: 500 });
+      if (pagError) {
+        console.error('Erro ao inserir pagamento:', pagError);
+        return NextResponse.json({ 
+          error: `Erro ao registrar pagamento: ${pagError.message}`,
+          details: pagError 
+        }, { status: 500 });
+      }
+    } else {
+      console.warn(
+        '[checkout] Envio público sem user_id: comprovante será vinculado ao relatório e à notificação.',
+        { osc_id: mainOscId, comprovantePath }
+      );
     }
 
     for (const item of cart) {
@@ -200,7 +224,7 @@ export async function POST(req: NextRequest) {
       const num = `${Math.floor(Math.random()*900+100)}-${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}/OBGP`;
 
       // 1. Inserir Relatório de Conformidade
-      const relPayload: any = {
+      const relPayload: Record<string, unknown> = {
         osc_id: oscId,
         numero: num,
         status: 'em_analise',
@@ -232,18 +256,26 @@ export async function POST(req: NextRequest) {
         }, { status: 500 });
       }
 
-      // 2. Atualizar ou Criar Perfil da OSC
-      const perfilPayload = buildPerfilUpsert(oscId, item.entidade, user?.id);
-      const { error: perfilError } = await supabaseAdmin
+      // 2. Atualizar ou criar perfil quando houver usuário ou perfil já existente.
+      const { data: perfilExistente } = await supabaseAdmin
         .from('osc_perfis')
-        .upsert(perfilPayload, { onConflict: 'osc_id' });
+        .select('id')
+        .eq('osc_id', oscId)
+        .maybeSingle();
 
-      if (perfilError) {
-        console.error('Erro ao publicar perfil da OSC:', perfilError);
-        return NextResponse.json({ 
-          error: `Erro ao publicar perfil: ${perfilError.message}`,
-          details: perfilError 
-        }, { status: 500 });
+      if (user?.id || perfilExistente) {
+        const perfilPayload = buildPerfilUpsert(oscId, item.entidade, user?.id);
+        const { error: perfilError } = await supabaseAdmin
+          .from('osc_perfis')
+          .upsert(perfilPayload, { onConflict: 'osc_id' });
+
+        if (perfilError) {
+          console.error('Erro ao publicar perfil da OSC:', perfilError);
+          return NextResponse.json({ 
+            error: `Erro ao publicar perfil: ${perfilError.message}`,
+            details: perfilError 
+          }, { status: 500 });
+        }
       }
 
       // 3. Notificar Admin
@@ -258,7 +290,10 @@ export async function POST(req: NextRequest) {
           metadata: {
             relatorio_id: relData?.id,
             osc_id: oscId,
-            valor: valorTotal
+            valor: valorTotal,
+            comprovante_path: comprovantePath,
+            comprovante_nome: file.name,
+            pagamento_registrado: Boolean(pagamentoUserId)
           }
         });
 
