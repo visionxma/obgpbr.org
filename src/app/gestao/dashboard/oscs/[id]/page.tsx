@@ -264,6 +264,7 @@ export default function OscDetailPage() {
   const [relatorio, setRelatorio] = useState<Relatorio | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [activeTab, setActiveTab] = useState/*<'visao_geral'|'relatorios'|'documentos'|'certificacao'>*/('visao_geral');
 
   // Edit OSC data
   const [editMode, setEditMode] = useState(false);
@@ -705,160 +706,41 @@ export default function OscDetailPage() {
         </div>
       </div>
 
-      {/* ── Certification payment card ── */}
-      {(pagamento || certLiberada || certNumero) && (
-        <div className="glass-card" style={{ marginBottom: 24 }}>
-          <div className="glass-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="glass-card-title">
-              <span className="glass-card-title-icon"><Award size={15} /></span>
-              Certificação — Selo OSC Gestão de Parcerias
-            </span>
-            {certNumero && (
-              <span style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: 'var(--admin-text-tertiary)' }}>{certNumero}</span>
-            )}
-          </div>
-          <div className="glass-card-body">
-            <MsgBanner msg={confirmMsg} />
+      {/* ══ Tab Navigation ══ */}
+      <div style={{ display: 'flex', borderBottom: '2px solid var(--admin-border)', marginBottom: 28, overflowX: 'auto' }}>
+        {[
+          { id: 'visao_geral',  label: 'Visão Geral',             icon: Home },
+          { id: 'relatorios',   label: 'Relatório Oficial',        icon: ShieldCheck },
+          { id: 'documentos',   label: 'Documentos / Prestações',  icon: FileText },
+          { id: 'certificacao', label: 'Selo e Certificação',      icon: Award },
+        ].map(tab => {
+          const TIcon = tab.icon;
+          const active = activeTab === tab.id;
+          return (
+            <button key={tab.id} onClick={() => setActiveTab(tab.id)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 7, padding: '10px 20px',
+                border: 'none', borderBottom: active ? '2px solid var(--admin-primary)' : '2px solid transparent',
+                marginBottom: -2, background: 'none',
+                color: active ? 'var(--admin-primary)' : 'var(--admin-text-secondary)',
+                fontWeight: active ? 700 : 500, fontSize: '0.85rem', cursor: 'pointer',
+                transition: 'color .15s', whiteSpace: 'nowrap',
+              }}>
+              <TIcon size={14} />
+              {tab.label}
+            </button>
+          );
+        })}
+      </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px 28px', alignItems: 'start' }}>
-
-              {/* Payment status */}
-              {pagamento && (
-                <div>
-                  <div style={labelStyle}>Pagamento</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
-                    <span className={`adm-badge ${pagamento.status === 'pago' ? 'aprovado' : pagamento.status === 'cancelado' ? 'rejeitado' : 'enviado'}`} style={{ fontSize: '0.72rem' }}>
-                      <CreditCard size={11} />
-                      {pagamento.status === 'pago' ? 'Pago' : pagamento.status === 'aguardando_pagamento' ? 'Aguardando validação' : pagamento.status === 'cancelado' ? 'Cancelado' : 'Pendente'}
-                    </span>
-                    <span style={{ fontSize: '0.82rem', color: 'var(--admin-text-secondary)', fontWeight: 600 }}>
-                      {fmtCurrency(pagamento.valor)}
-                    </span>
-                  </div>
-                  {pagamento.paid_at && (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)', marginTop: 4 }}>Pago em {fmtDate(pagamento.paid_at)}</div>
-                  )}
-                  {pagamento.metodo_pagamento && (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Via {pagamento.metodo_pagamento}</div>
-                  )}
-                </div>
-              )}
-
-              {/* Liberada toggle */}
-              <div>
-                <div style={labelStyle}>Acesso ao Relatório</div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
-                  <button
-                    onClick={handleToggleLiberar}
-                    disabled={togglingLiberar}
-                    style={{
-                      padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700,
-                      background: certLiberada ? 'rgba(22,163,74,.12)' : 'rgba(220,38,38,.08)',
-                      color: certLiberada ? '#15803d' : '#dc2626',
-                    }}
-                  >
-                    {togglingLiberar ? '...' : certLiberada ? '✓ Liberado' : '✗ Bloqueado'}
-                  </button>
-                  <span style={{ fontSize: '0.72rem', color: 'var(--admin-text-tertiary)' }}>
-                    {certLiberada ? 'OSC pode preencher o relatório' : 'Clique para liberar manualmente'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Certificate info */}
-              {certNumero && (
-                <div>
-                  <div style={labelStyle}>Certificado Emitido</div>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, fontFamily: 'monospace', color: 'var(--admin-primary)', marginTop: 4 }}>{certNumero}</div>
-                  {certEmitidaAt && (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)', marginTop: 2 }}>em {fmtDate(certEmitidaAt)}</div>
-                  )}
-                  <a href={`/verificar?codigo=${certNumero}`} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', color: 'var(--admin-primary)', fontWeight: 600, textDecoration: 'none', marginTop: 6 }}>
-                    <ExternalLink size={11} /> Verificar publicamente
-                  </a>
-                </div>
-              )}
-            </div>
-
-            {/* ── Comprovante PIX ── */}
-            {pagamento?.arquivo_comprovante_path && (
-              <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--admin-border)' }}>
-                <div style={labelStyle}>Comprovante PIX enviado pela OSC</div>
-                <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'var(--admin-surface)', border: '1px solid var(--admin-border)', borderRadius: 10 }}>
-                  {/* Ícone tipo arquivo */}
-                  <div style={{ width: 42, height: 42, borderRadius: 10, background: 'var(--admin-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <FileText size={18} style={{ color: 'var(--admin-primary)' }} />
-                  </div>
-
-                  {/* Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--admin-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {pagamento.arquivo_comprovante_nome ?? 'comprovante'}
-                    </div>
-                    {pagamento.arquivo_comprovante_at && (
-                      <div style={{ fontSize: '0.72rem', color: 'var(--admin-text-tertiary)', marginTop: 2 }}>
-                        Enviado em {new Date(pagamento.arquivo_comprovante_at).toLocaleString('pt-BR')}
-                      </div>
-                    )}
-                    <div style={{ fontSize: '0.72rem', marginTop: 3 }}>
-                      <span className={`adm-badge ${pagamento.status === 'pago' ? 'aprovado' : 'enviado'}`} style={{ fontSize: '0.65rem' }}>
-                        {pagamento.status === 'pago' ? 'Pagamento validado' : 'Aguardando validação'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Botões de ação */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                    {comprovanteUrl && (
-                      <a
-                        href={comprovanteUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="admin-btn admin-btn-secondary"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 8, fontSize: '0.78rem', textDecoration: 'none' }}
-                      >
-                        <ExternalLink size={13} /> Visualizar
-                      </a>
-                    )}
-                    {pagamento.status !== 'pago' && !certLiberada && (
-                      <button
-                        onClick={handleConfirmarPagamento}
-                        disabled={confirming}
-                        className="adm-btn-approve"
-                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 16px', fontSize: '0.82rem', fontWeight: 700, borderRadius: 8 }}
-                      >
-                        <CheckCircle size={14} />
-                        {confirming ? 'Confirmando...' : 'Confirmar Pagamento'}
-                      </button>
-                    )}
-                    {pagamento.status === 'pago' && (
-                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.78rem', fontWeight: 700, color: '#15803d' }}>
-                        <CheckCircle size={14} /> Pagamento confirmado
-                      </span>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Aviso quando não há comprovante ainda */}
-            {pagamento && !pagamento.arquivo_comprovante_path && pagamento.status !== 'pago' && (
-              <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--admin-border)', display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.78rem', color: 'var(--admin-text-tertiary)', fontStyle: 'italic' }}>
-                <AlertCircle size={14} style={{ flexShrink: 0 }} />
-                OSC ainda não enviou o comprovante PIX pelo painel.
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Motor de Diagnóstico do Selo OSC (Dashboard UI) */}
+      {/* ══ TAB: Visão Geral ══ */}
+      {activeTab === 'visao_geral' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, animation: 'fadeIn .2s' }}>
+          {/* Diagnóstico */}
       <DiagSeloCard relatorio={relatorio} />
 
-      {/* Two-column: profile info + status management */}
-      <div className="content-grid cols-2" style={{ marginBottom: 28, alignItems: 'start' }}>
-
+          {/* Profile + Formulários */}
+          <div className="content-grid cols-2" style={{ alignItems: 'start' }}>
         {/* ── Profile info card ── */}
         <div className="glass-card">
           <div className="glass-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -998,193 +880,6 @@ export default function OscDetailPage() {
         </div>
 
         {/* ── Status management ── */}
-        <div className="glass-card">
-          <div className="glass-card-header">
-            <span className="glass-card-title">
-              <span className="glass-card-title-icon"><CheckCircle size={15} /></span>
-              Gestão do Selo OSC
-            </span>
-          </div>
-          <div className="glass-card-body">
-            <MsgBanner msg={statusMsg} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label className="admin-form-label">Status do Processo</label>
-                <select className="admin-input" value={newStatus} onChange={e => setNewStatus(e.target.value)}>
-                  <option value="pendente">Pendente</option>
-                  <option value="em_analise">Em Análise</option>
-                  <option value="aprovado">Aprovado</option>
-                  <option value="rejeitado">Rejeitado</option>
-                </select>
-              </div>
-              <div>
-                <label className="admin-form-label">
-                  Observação {newStatus === 'rejeitado' && <span style={{ color: 'var(--admin-danger)' }}>*</span>}
-                </label>
-                <textarea
-                  className="admin-input" rows={3}
-                  placeholder={newStatus === 'rejeitado' ? 'Informe o motivo da reprovação...' : 'Observação para o usuário (opcional)...'}
-                  value={observacao} onChange={e => setObservacao(e.target.value)}
-                  style={{ resize: 'vertical' }}
-                />
-              </div>
-              <div className="adm-action-row">
-                <button className="adm-btn-approve" onClick={() => { setNewStatus('aprovado'); setObservacao(''); }}>
-                  <CheckCircle size={14} /> Aprovar
-                </button>
-                <button className="adm-btn-review" onClick={() => setNewStatus('em_analise')}>
-                  <Clock size={14} /> Em Análise
-                </button>
-                <button className="adm-btn-reject" onClick={() => setNewStatus('rejeitado')}>
-                  <XCircle size={14} /> Reprovar
-                </button>
-              </div>
-              <button
-                className="admin-btn admin-btn-primary"
-                style={{ display: 'flex', alignItems: 'center', gap: 7, borderRadius: 10, justifyContent: 'center' }}
-                onClick={handleSaveStatus} disabled={savingStatus}
-              >
-                {savingStatus ? '...' : <><Save size={14} /> Salvar Decisão</>}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── Documents section ── */}
-      <div className="glass-card" style={{ marginBottom: 24 }}>
-        <div className="glass-card-header">
-          <span className="glass-card-title">
-            <span className="glass-card-title-icon"><FileText size={15} /></span>
-            Documentos Enviados
-            <span style={{ marginLeft: 8, fontSize: '0.75rem', fontWeight: 600, color: 'var(--admin-text-tertiary)' }}>({docs.length})</span>
-          </span>
-        </div>
-        <div>
-          {docs.length === 0 ? (
-            <div className="admin-empty-state" style={{ padding: '40px 0' }}>
-              <div className="admin-empty-state-icon"><FileText size={24} /></div>
-              <div className="admin-empty-state-text">Nenhum documento enviado</div>
-            </div>
-          ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table className="admin-table">
-                <thead>
-                  <tr>
-                    <th>Nome</th><th>Tipo</th><th>Tamanho</th><th>Status</th><th>Data</th><th>Observação</th><th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {docs.map(doc => (
-                    <tr key={doc.id}>
-                      <td><div className="cell-primary">{doc.nome}</div></td>
-                      <td style={{ color: 'var(--admin-text-secondary)', fontSize: '0.8rem' }}>{TIPO_LABELS[doc.tipo] ?? doc.tipo}</td>
-                      <td style={{ color: 'var(--admin-text-tertiary)', fontSize: '0.8rem' }}>{fmtBytes(doc.tamanho_bytes)}</td>
-                      <td><span className={`adm-badge ${doc.status}`}>{DOC_STATUS_LABELS[doc.status] ?? doc.status}</span></td>
-                      <td style={{ color: 'var(--admin-text-tertiary)', fontSize: '0.8rem' }}>{fmtDate(doc.created_at)}</td>
-                      <td style={{ minWidth: 180 }}>
-                        <input type="text" className="admin-input" style={{ padding: '6px 10px', fontSize: '0.78rem' }}
-                          placeholder="Observação..."
-                          value={docObs[doc.id] ?? (doc.observacao ?? '')}
-                          onChange={e => setDocObs(prev => ({ ...prev, [doc.id]: e.target.value }))} />
-                      </td>
-                      <td>
-                        <div className="cell-action">
-                          {doc.arquivo_url && (
-                            <a href={doc.arquivo_url} target="_blank" rel="noopener noreferrer"
-                              className="admin-btn-icon admin-btn"
-                              style={{ border: '1px solid var(--admin-border)', borderRadius: 8 }} title="Visualizar">
-                              <ExternalLink size={14} />
-                            </a>
-                          )}
-                          <button className="adm-btn-approve" style={{ padding: '5px 10px', fontSize: '0.75rem' }}
-                            onClick={() => handleDocAction(doc.id, 'aprovado')}
-                            disabled={docSaving === doc.id || doc.status === 'aprovado'}>
-                            {docSaving === doc.id ? '...' : <CheckCircle size={12} />}
-                          </button>
-                          <button className="adm-btn-reject" style={{ padding: '5px 10px', fontSize: '0.75rem' }}
-                            onClick={() => handleDocAction(doc.id, 'rejeitado')}
-                            disabled={docSaving === doc.id || doc.status === 'rejeitado'}>
-                            {docSaving === doc.id ? '...' : <XCircle size={12} />}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* ── Bottom grid: prestações + formulários ── */}
-      <div className="content-grid cols-equal" style={{ alignItems: 'start' }}>
-
-        {/* Prestações */}
-        <div className="glass-card">
-          <div className="glass-card-header">
-            <span className="glass-card-title">
-              <span className="glass-card-title-icon"><BookOpen size={15} /></span>
-              Prestações de Contas
-              <span style={{ marginLeft: 8, fontSize: '0.75rem', fontWeight: 600, color: 'var(--admin-text-tertiary)' }}>({prestacoes.length})</span>
-            </span>
-          </div>
-          <div>
-            {prestacoes.length === 0 ? (
-              <div className="admin-empty-state" style={{ padding: '36px 0' }}>
-                <div className="admin-empty-state-icon"><BookOpen size={20} /></div>
-                <div className="admin-empty-state-text" style={{ fontSize: '0.82rem' }}>Nenhuma prestação registrada</div>
-              </div>
-            ) : (
-              <div style={{ overflowX: 'auto' }}>
-                <table className="admin-table">
-                  <thead>
-                    <tr><th>Título</th><th>Período</th><th>Valor</th><th>Status</th><th>Data</th><th>Ações</th></tr>
-                  </thead>
-                  <tbody>
-                    {prestacoes.map(p => (
-                      <tr key={p.id}>
-                        <td><div className="cell-primary">{p.titulo}</div></td>
-                        <td style={{ color: 'var(--admin-text-secondary)', fontSize: '0.8rem' }}>{p.periodo ?? '—'}</td>
-                        <td style={{ color: 'var(--admin-text-secondary)', fontSize: '0.8rem' }}>{fmtCurrency(p.valor_total)}</td>
-                        <td><span className={`adm-badge ${p.status === 'aprovada' ? 'aprovado' : p.status === 'rejeitada' ? 'rejeitado' : p.status === 'em_analise' ? 'enviado' : 'pendente'}`}>{PRST_STATUS_LABELS[p.status] ?? p.status}</span></td>
-                        <td style={{ color: 'var(--admin-text-tertiary)', fontSize: '0.8rem' }}>{fmtDate(p.created_at)}</td>
-                        <td>
-                          <div className="cell-action">
-                            {p.arquivo_url && (
-                              <a href={p.arquivo_url} target="_blank" rel="noopener noreferrer"
-                                className="admin-btn-icon admin-btn"
-                                style={{ border: '1px solid var(--admin-border)', borderRadius: 8 }} title="Ver arquivo">
-                                <ExternalLink size={13} />
-                              </a>
-                            )}
-                            <button className="adm-btn-review" style={{ padding: '5px 10px', fontSize: '0.75rem' }}
-                              onClick={() => handlePrestacaoAction(p.id, 'em_analise')}
-                              disabled={prstSaving === p.id || p.status === 'em_analise'} title="Em Análise">
-                              <Clock size={12} />
-                            </button>
-                            <button className="adm-btn-approve" style={{ padding: '5px 10px', fontSize: '0.75rem' }}
-                              onClick={() => handlePrestacaoAction(p.id, 'aprovada')}
-                              disabled={prstSaving === p.id || p.status === 'aprovada'} title="Aprovar">
-                              {prstSaving === p.id ? '...' : <CheckCircle size={12} />}
-                            </button>
-                            <button className="adm-btn-reject" style={{ padding: '5px 10px', fontSize: '0.75rem' }}
-                              onClick={() => handlePrestacaoAction(p.id, 'rejeitada')}
-                              disabled={prstSaving === p.id || p.status === 'rejeitada'} title="Rejeitar">
-                              {prstSaving === p.id ? '...' : <XCircle size={12} />}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        </div>
-
         {/* Formulários */}
         <div className="glass-card">
           <div className="glass-card-header">
@@ -1218,8 +913,13 @@ export default function OscDetailPage() {
             )}
           </div>
         </div>
-      </div>
+          </div>
+        </div>
+      )}
 
+      {/* ══ TAB: Relatório Oficial ══ */}
+      {activeTab === 'relatorios' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, animation: 'fadeIn .2s' }}>
       {/* ══ Two-step approval signatures ══ */}
       {relatorio && (relatorio.status === 'em_analise' || relatorio.status === 'aprovado') && (() => {
         const ROLE_LABELS: Record<string, string> = { admin_rt: 'Responsável Técnico (RT)', contador: 'Contador / Auditor', superadmin: 'Superadmin' };
@@ -1305,7 +1005,6 @@ export default function OscDetailPage() {
           </div>
         );
       })()}
-
       {/* ══ Relatório de Conformidade ══ */}
       {relatorios.length > 0 && (
         <div className="glass-card" style={{ marginTop: 24 }}>
@@ -1503,8 +1202,362 @@ export default function OscDetailPage() {
           </div>
         );
       })()}
+        </div>
+      )}
 
-      <style>{`@keyframes spin{100%{transform:rotate(360deg)}}`}</style>
+      {/* ══ TAB: Documentos / Prestações ══ */}
+      {activeTab === 'documentos' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, animation: 'fadeIn .2s' }}>
+      {/* ── Documents section ── */}
+      <div className="glass-card" style={{ marginBottom: 24 }}>
+        <div className="glass-card-header">
+          <span className="glass-card-title">
+            <span className="glass-card-title-icon"><FileText size={15} /></span>
+            Documentos Enviados
+            <span style={{ marginLeft: 8, fontSize: '0.75rem', fontWeight: 600, color: 'var(--admin-text-tertiary)' }}>({docs.length})</span>
+          </span>
+        </div>
+        <div>
+          {docs.length === 0 ? (
+            <div className="admin-empty-state" style={{ padding: '40px 0' }}>
+              <div className="admin-empty-state-icon"><FileText size={24} /></div>
+              <div className="admin-empty-state-text">Nenhum documento enviado</div>
+            </div>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Nome</th><th>Tipo</th><th>Tamanho</th><th>Status</th><th>Data</th><th>Observação</th><th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {docs.map(doc => (
+                    <tr key={doc.id}>
+                      <td><div className="cell-primary">{doc.nome}</div></td>
+                      <td style={{ color: 'var(--admin-text-secondary)', fontSize: '0.8rem' }}>{TIPO_LABELS[doc.tipo] ?? doc.tipo}</td>
+                      <td style={{ color: 'var(--admin-text-tertiary)', fontSize: '0.8rem' }}>{fmtBytes(doc.tamanho_bytes)}</td>
+                      <td><span className={`adm-badge ${doc.status}`}>{DOC_STATUS_LABELS[doc.status] ?? doc.status}</span></td>
+                      <td style={{ color: 'var(--admin-text-tertiary)', fontSize: '0.8rem' }}>{fmtDate(doc.created_at)}</td>
+                      <td style={{ minWidth: 180 }}>
+                        <input type="text" className="admin-input" style={{ padding: '6px 10px', fontSize: '0.78rem' }}
+                          placeholder="Observação..."
+                          value={docObs[doc.id] ?? (doc.observacao ?? '')}
+                          onChange={e => setDocObs(prev => ({ ...prev, [doc.id]: e.target.value }))} />
+                      </td>
+                      <td>
+                        <div className="cell-action">
+                          {doc.arquivo_url && (
+                            <a href={doc.arquivo_url} target="_blank" rel="noopener noreferrer"
+                              className="admin-btn-icon admin-btn"
+                              style={{ border: '1px solid var(--admin-border)', borderRadius: 8 }} title="Visualizar">
+                              <ExternalLink size={14} />
+                            </a>
+                          )}
+                          <button className="adm-btn-approve" style={{ padding: '5px 10px', fontSize: '0.75rem' }}
+                            onClick={() => handleDocAction(doc.id, 'aprovado')}
+                            disabled={docSaving === doc.id || doc.status === 'aprovado'}>
+                            {docSaving === doc.id ? '...' : <CheckCircle size={12} />}
+                          </button>
+                          <button className="adm-btn-reject" style={{ padding: '5px 10px', fontSize: '0.75rem' }}
+                            onClick={() => handleDocAction(doc.id, 'rejeitado')}
+                            disabled={docSaving === doc.id || doc.status === 'rejeitado'}>
+                            {docSaving === doc.id ? '...' : <XCircle size={12} />}
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </div>
+          <div className="glass-card">
+            <div className="glass-card-header">
+              <span className="glass-card-title">
+                <span className="glass-card-title-icon"><BookOpen size={15} /></span>
+                Prestações de Contas
+                <span style={{ marginLeft: 8, fontSize: '0.75rem', fontWeight: 600, color: 'var(--admin-text-tertiary)' }}>({prestacoes.length})</span>
+              </span>
+            </div>
+          {/* Prestações */}
+          <div className="glass-card">
+            <div className="glass-card-header">
+              <span className="glass-card-title">
+                <span className="glass-card-title-icon"><BookOpen size={15} /></span>
+                Prestações de Contas
+                <span style={{ marginLeft: 8, fontSize: '0.75rem', fontWeight: 600, color: 'var(--admin-text-tertiary)' }}>({prestacoes.length})</span>
+              </span>
+            </div>
+            <div>
+              {prestacoes.length === 0 ? (
+                <div className="admin-empty-state" style={{ padding: '36px 0' }}>
+                  <div className="admin-empty-state-icon"><BookOpen size={20} /></div>
+                  <div className="admin-empty-state-text" style={{ fontSize: '0.82rem' }}>Nenhuma prestação registrada</div>
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table className="admin-table">
+                    <thead>
+                      <tr><th>Título</th><th>Período</th><th>Valor</th><th>Status</th><th>Data</th><th>Ações</th></tr>
+                    </thead>
+                    <tbody>
+                      {prestacoes.map(p => (
+                        <tr key={p.id}>
+                          <td><div className="cell-primary">{p.titulo}</div></td>
+                          <td style={{ color: 'var(--admin-text-secondary)', fontSize: '0.8rem' }}>{p.periodo ?? '—'}</td>
+                          <td style={{ color: 'var(--admin-text-secondary)', fontSize: '0.8rem' }}>{fmtCurrency(p.valor_total)}</td>
+                          <td><span className={`adm-badge ${p.status === 'aprovada' ? 'aprovado' : p.status === 'rejeitada' ? 'rejeitado' : p.status === 'em_analise' ? 'enviado' : 'pendente'}`}>{PRST_STATUS_LABELS[p.status] ?? p.status}</span></td>
+                          <td style={{ color: 'var(--admin-text-tertiary)', fontSize: '0.8rem' }}>{fmtDate(p.created_at)}</td>
+                          <td>
+                            <div className="cell-action">
+                              {p.arquivo_url && (
+                                <a href={p.arquivo_url} target="_blank" rel="noopener noreferrer"
+                                  className="admin-btn-icon admin-btn"
+                                  style={{ border: '1px solid var(--admin-border)', borderRadius: 8 }} title="Ver arquivo">
+                                  <ExternalLink size={13} />
+                                </a>
+                              )}
+                              <button className="adm-btn-review" style={{ padding: '5px 10px', fontSize: '0.75rem' }}
+                                onClick={() => handlePrestacaoAction(p.id, 'em_analise')}
+                                disabled={prstSaving === p.id || p.status === 'em_analise'} title="Em Análise">
+                                <Clock size={12} />
+                              </button>
+                              <button className="adm-btn-approve" style={{ padding: '5px 10px', fontSize: '0.75rem' }}
+                                onClick={() => handlePrestacaoAction(p.id, 'aprovada')}
+                                disabled={prstSaving === p.id || p.status === 'aprovada'} title="Aprovar">
+                                {prstSaving === p.id ? '...' : <CheckCircle size={12} />}
+                              </button>
+                              <button className="adm-btn-reject" style={{ padding: '5px 10px', fontSize: '0.75rem' }}
+                                onClick={() => handlePrestacaoAction(p.id, 'rejeitada')}
+                                disabled={prstSaving === p.id || p.status === 'rejeitada'} title="Rejeitar">
+                                {prstSaving === p.id ? '...' : <XCircle size={12} />}
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══ TAB: Selo e Certificação ══ */}
+      {activeTab === 'certificacao' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24, animation: 'fadeIn .2s' }}>
+      {/* ── Certification payment card ── */}
+      {(pagamento || certLiberada || certNumero) && (
+        <div className="glass-card" style={{ marginBottom: 24 }}>
+          <div className="glass-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="glass-card-title">
+              <span className="glass-card-title-icon"><Award size={15} /></span>
+              Certificação — Selo OSC Gestão de Parcerias
+            </span>
+            {certNumero && (
+              <span style={{ fontFamily: 'monospace', fontSize: '0.78rem', color: 'var(--admin-text-tertiary)' }}>{certNumero}</span>
+            )}
+          </div>
+          <div className="glass-card-body">
+            <MsgBanner msg={confirmMsg} />
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px 28px', alignItems: 'start' }}>
+
+              {/* Payment status */}
+              {pagamento && (
+                <div>
+                  <div style={labelStyle}>Pagamento</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                    <span className={`adm-badge ${pagamento.status === 'pago' ? 'aprovado' : pagamento.status === 'cancelado' ? 'rejeitado' : 'enviado'}`} style={{ fontSize: '0.72rem' }}>
+                      <CreditCard size={11} />
+                      {pagamento.status === 'pago' ? 'Pago' : pagamento.status === 'aguardando_pagamento' ? 'Aguardando validação' : pagamento.status === 'cancelado' ? 'Cancelado' : 'Pendente'}
+                    </span>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--admin-text-secondary)', fontWeight: 600 }}>
+                      {fmtCurrency(pagamento.valor)}
+                    </span>
+                  </div>
+                  {pagamento.paid_at && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)', marginTop: 4 }}>Pago em {fmtDate(pagamento.paid_at)}</div>
+                  )}
+                  {pagamento.metodo_pagamento && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>Via {pagamento.metodo_pagamento}</div>
+                  )}
+                </div>
+              )}
+
+              {/* Liberada toggle */}
+              <div>
+                <div style={labelStyle}>Acesso ao Relatório</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6 }}>
+                  <button
+                    onClick={handleToggleLiberar}
+                    disabled={togglingLiberar}
+                    style={{
+                      padding: '6px 14px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: '0.78rem', fontWeight: 700,
+                      background: certLiberada ? 'rgba(22,163,74,.12)' : 'rgba(220,38,38,.08)',
+                      color: certLiberada ? '#15803d' : '#dc2626',
+                    }}
+                  >
+                    {togglingLiberar ? '...' : certLiberada ? '✓ Liberado' : '✗ Bloqueado'}
+                  </button>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--admin-text-tertiary)' }}>
+                    {certLiberada ? 'OSC pode preencher o relatório' : 'Clique para liberar manualmente'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Certificate info */}
+              {certNumero && (
+                <div>
+                  <div style={labelStyle}>Certificado Emitido</div>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, fontFamily: 'monospace', color: 'var(--admin-primary)', marginTop: 4 }}>{certNumero}</div>
+                  {certEmitidaAt && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)', marginTop: 2 }}>em {fmtDate(certEmitidaAt)}</div>
+                  )}
+                  <a href={`/verificar?codigo=${certNumero}`} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 4, fontSize: '0.75rem', color: 'var(--admin-primary)', fontWeight: 600, textDecoration: 'none', marginTop: 6 }}>
+                    <ExternalLink size={11} /> Verificar publicamente
+                  </a>
+                </div>
+              )}
+            </div>
+
+            {/* ── Comprovante PIX ── */}
+            {pagamento?.arquivo_comprovante_path && (
+              <div style={{ marginTop: 20, paddingTop: 20, borderTop: '1px solid var(--admin-border)' }}>
+                <div style={labelStyle}>Comprovante PIX enviado pela OSC</div>
+                <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'var(--admin-surface)', border: '1px solid var(--admin-border)', borderRadius: 10 }}>
+                  {/* Ícone tipo arquivo */}
+                  <div style={{ width: 42, height: 42, borderRadius: 10, background: 'var(--admin-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <FileText size={18} style={{ color: 'var(--admin-primary)' }} />
+                  </div>
+
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--admin-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {pagamento.arquivo_comprovante_nome ?? 'comprovante'}
+                    </div>
+                    {pagamento.arquivo_comprovante_at && (
+                      <div style={{ fontSize: '0.72rem', color: 'var(--admin-text-tertiary)', marginTop: 2 }}>
+                        Enviado em {new Date(pagamento.arquivo_comprovante_at).toLocaleString('pt-BR')}
+                      </div>
+                    )}
+                    <div style={{ fontSize: '0.72rem', marginTop: 3 }}>
+                      <span className={`adm-badge ${pagamento.status === 'pago' ? 'aprovado' : 'enviado'}`} style={{ fontSize: '0.65rem' }}>
+                        {pagamento.status === 'pago' ? 'Pagamento validado' : 'Aguardando validação'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Botões de ação */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                    {comprovanteUrl && (
+                      <a
+                        href={comprovanteUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="admin-btn admin-btn-secondary"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 8, fontSize: '0.78rem', textDecoration: 'none' }}
+                      >
+                        <ExternalLink size={13} /> Visualizar
+                      </a>
+                    )}
+                    {pagamento.status !== 'pago' && !certLiberada && (
+                      <button
+                        onClick={handleConfirmarPagamento}
+                        disabled={confirming}
+                        className="adm-btn-approve"
+                        style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '7px 16px', fontSize: '0.82rem', fontWeight: 700, borderRadius: 8 }}
+                      >
+                        <CheckCircle size={14} />
+                        {confirming ? 'Confirmando...' : 'Confirmar Pagamento'}
+                      </button>
+                    )}
+                    {pagamento.status === 'pago' && (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.78rem', fontWeight: 700, color: '#15803d' }}>
+                        <CheckCircle size={14} /> Pagamento confirmado
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Aviso quando não há comprovante ainda */}
+            {pagamento && !pagamento.arquivo_comprovante_path && pagamento.status !== 'pago' && (
+              <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--admin-border)', display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.78rem', color: 'var(--admin-text-tertiary)', fontStyle: 'italic' }}>
+                <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                OSC ainda não enviou o comprovante PIX pelo painel.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+          {/* Status do Selo */}
+          <div className="glass-card">
+            <div className="glass-card-header">
+              <span className="glass-card-title">
+                <span className="glass-card-title-icon"><CheckCircle size={15} /></span>
+                Gestão do Selo OSC
+              </span>
+            </div>
+            <div className="glass-card-body">
+              <MsgBanner msg={statusMsg} />
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div>
+                  <label className="admin-form-label">Status do Processo</label>
+                  <select className="admin-input" value={newStatus} onChange={e => setNewStatus(e.target.value)}>
+                    <option value="pendente">Pendente</option>
+                    <option value="em_analise">Em Análise</option>
+                    <option value="aprovado">Aprovado</option>
+                    <option value="rejeitado">Rejeitado</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="admin-form-label">
+                    Observação {newStatus === 'rejeitado' && <span style={{ color: 'var(--admin-danger)' }}>*</span>}
+                  </label>
+                  <textarea
+                    className="admin-input" rows={3}
+                    placeholder={newStatus === 'rejeitado' ? 'Informe o motivo da reprovação...' : 'Observação para o usuário (opcional)...'}
+                    value={observacao} onChange={e => setObservacao(e.target.value)}
+                    style={{ resize: 'vertical' }}
+                  />
+                </div>
+                <div className="adm-action-row">
+                  <button className="adm-btn-approve" onClick={() => { setNewStatus('aprovado'); setObservacao(''); }}>
+                    <CheckCircle size={14} /> Aprovar
+                  </button>
+                  <button className="adm-btn-review" onClick={() => setNewStatus('em_analise')}>
+                    <Clock size={14} /> Em Análise
+                  </button>
+                  <button className="adm-btn-reject" onClick={() => setNewStatus('rejeitado')}>
+                    <XCircle size={14} /> Reprovar
+                  </button>
+                </div>
+                <button
+                  className="admin-btn admin-btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: 7, borderRadius: 10, justifyContent: 'center' }}
+                  onClick={handleSaveStatus} disabled={savingStatus}
+                >
+                  {savingStatus ? '...' : <><Save size={14} /> Salvar Decisão</>}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes spin { 100% { transform: rotate(360deg) } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px) } to { opacity: 1; transform: translateY(0) } }
+      `}</style>
     </div>
   );
 }
