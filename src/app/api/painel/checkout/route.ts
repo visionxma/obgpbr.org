@@ -132,29 +132,32 @@ export async function POST(req: NextRequest) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     
-    let comprovanteUrl = '';
+    let comprovantePath = '';
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.\-_]/g, '')}`;
+    const storagePath = `comprovantes/${fileName}`;
     
     const { error: uploadError } = await supabaseAdmin
       .storage
-      .from('comprovantes')
-      .upload(fileName, buffer, {
+      .from('osc-docs')
+      .upload(storagePath, buffer, {
         contentType: file.type,
         upsert: false
       });
 
     if (uploadError) {
-      console.warn('Falha no upload do comprovante (bucket pode não existir). Fazendo fallback para Base64.', uploadError);
-      const base64 = buffer.toString('base64');
-      comprovanteUrl = `data:${file.type};base64,${base64}`;
-    } else {
-      const { data: publicUrlData } = supabaseAdmin.storage.from('comprovantes').getPublicUrl(fileName);
-      comprovanteUrl = publicUrlData.publicUrl;
+      console.error('Falha no upload do comprovante:', uploadError);
+      return NextResponse.json({ 
+        error: 'Falha ao salvar comprovante no storage.',
+        details: uploadError 
+      }, { status: 500 });
     }
+
+    comprovantePath = storagePath;
 
     const mainOscId = perfilLogado?.osc_id ?? getFallbackOscId(cart[0]?.entidade);
     const valorTotal = 389.96;
 
+    // ── Inserir Registro de Pagamento ──
     const { error: pagError } = await supabaseAdmin
       .from('certificacao_pagamentos')
       .insert({
@@ -162,13 +165,17 @@ export async function POST(req: NextRequest) {
         valor: valorTotal,
         status: 'aguardando_pagamento',
         metodo_pagamento: 'pix',
-        payment_url: comprovanteUrl,
-      })
-      .select('id')
-      .single();
+        arquivo_comprovante_path: comprovantePath,
+        arquivo_comprovante_nome: file.name,
+        arquivo_comprovante_at: new Date().toISOString()
+      });
 
     if (pagError) {
       console.error('Erro ao inserir pagamento:', pagError);
+      return NextResponse.json({ 
+        error: `Erro ao registrar pagamento: ${pagError.message}`,
+        details: pagError 
+      }, { status: 500 });
     }
 
     for (const item of cart) {
@@ -203,7 +210,7 @@ export async function POST(req: NextRequest) {
         qualificacao_economica: docMapped.qualificacao_economica,
         qualificacao_tecnica: docMapped.qualificacao_tecnica,
         submitted_at: new Date().toISOString(),
-        observacao_admin: `[GERADO VIA CHECKOUT] Pagamento PIX enviado. Comprovante: ${comprovanteUrl.substring(0, 100)}...`
+        observacao_admin: `[GERADO VIA CHECKOUT] Pagamento PIX enviado. Comprovante: ${comprovantePath}`
       };
 
       // Adiciona outros_registros apenas se houver dados, para evitar erro se a coluna não existir no DB
