@@ -6,8 +6,9 @@ import { supabase } from '@/lib/supabase';
 import {
   Search, Users, Eye, CheckCircle, Clock, XCircle, Circle,
   Trash2, Trash, ChevronRight, ChevronDown, FileText,
-  CreditCard, Award, ExternalLink, AlertCircle,
+  CreditCard, Award, ExternalLink, AlertCircle, Download
 } from 'lucide-react';
+import { gerarRelatorioDocx } from '@/lib/docxGenerator';
 
 interface Pagamento {
   id: string; osc_id: string; status: string; valor: number;
@@ -22,7 +23,7 @@ interface OscPerfil {
   id: string; osc_id: string; responsavel: string | null; razao_social: string | null;
   cnpj: string | null; municipio: string | null; estado: string | null;
   status_selo: string; created_at: string; deleted_at: string | null;
-  relatorios: RelatorioResumo[]; pagamento: Pagamento | null;
+  relatorios: RelatorioResumo[]; pagamentos: Pagamento[];
 }
 
 const STATUS_OPTS = [
@@ -135,6 +136,86 @@ function SealControl({ osc, onDone }: { osc: OscPerfil; onDone: () => void }) {
   );
 }
 
+/* ── Inline DOCX Generator ── */
+function DocxButton({ relId, oscId }: { relId: string, oscId: string }) {
+  const [loading, setLoading] = useState(false);
+  const handleGenerate = async () => {
+    setLoading(true);
+    try {
+      const [relRes, itensRes, perfRes] = await Promise.all([
+        supabase.from('relatorios_conformidade').select('*').eq('id', relId).single(),
+        supabase.from('relatorio_itens').select('*').eq('relatorio_id', relId).order('secao').order('ordem'),
+        supabase.from('osc_perfis').select('*').eq('id', oscId).single()
+      ]);
+      const relatorio = relRes.data;
+      const itens = itensRes.data || [];
+      const perfil = perfRes.data;
+      if (!relatorio || !perfil) throw new Error('Dados não encontrados');
+      
+      const de = relatorio.dados_entidade ?? {};
+      const enderecoGeral = [
+        de.logradouro || perfil.logradouro,
+        de.numero_endereco || perfil.numero_endereco,
+        de.bairro || perfil.bairro,
+        de.municipio || perfil.municipio,
+        de.estado || perfil.estado,
+      ].filter(Boolean).join(', ');
+
+      const fmt = (iso: string | null) => iso ? new Date(iso + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+      const STATUS_DOCX: Record<string,string> = { conforme: 'CONFORME', nao_aplicavel: 'N/A', nao_conforme: 'NÃO CONFORME', pendente: 'PENDENTE' };
+      const rowsFromItens = (secao: number) => itens
+        .filter((i: any) => i.secao === secao && !i.is_header)
+        .map((i: any) => ({
+          label: i.descricao, status: STATUS_DOCX[i.status] ?? 'PENDENTE',
+          codigo: i.codigo_controle || '—', emissao: fmt(i.data_emissao),
+          validade: fmt(i.data_validade), analise: i.analise_atual || '—',
+        }));
+      
+      const numeroBase = relatorio.numero || `OBGP${new Date().getFullYear()}${perfil.id.substring(0, 4).toUpperCase()}`;
+      const numeroRelatorio = numeroBase.startsWith('N.º') ? numeroBase : `N.º ${numeroBase}`;
+      const docxData = {
+        cnpj: de.cnpj || perfil.cnpj || 'Não Informado',
+        natureza_juridica: de.natureza_juridica || perfil.natureza_juridica || 'Não Informado',
+        razao_social: de.razao_social || perfil.razao_social || 'Não Informado',
+        nome_fantasia: de.nome_fantasia || perfil.nome_fantasia || 'Não Informado',
+        logradouro: enderecoGeral || 'Não Informado',
+        data_abertura_cnpj: de.data_abertura_cnpj || perfil.data_abertura_cnpj || 'Não Informado',
+        email_osc: de.email_osc || perfil.email_osc || 'Não Informado',
+        telefone: de.telefone || perfil.telefone || 'Não Informado',
+        responsavel: de.responsavel || perfil.responsavel || 'Não Informado',
+        municipio_uf: [de.municipio || perfil.municipio, de.estado || perfil.estado].filter(Boolean).join('/') || 'Não Informado',
+        numero_relatorio: numeroRelatorio,
+        codigo_controle: relatorio.certificado_numero ?? `RC ${numeroRelatorio}`,
+        data_hoje: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
+        habilitacao_juridica: rowsFromItens(2),
+        regularidade_fiscal: rowsFromItens(3),
+        qualificacao_economica: rowsFromItens(4),
+        qualificacao_tecnica: rowsFromItens(5),
+        outros_registros: rowsFromItens(6),
+        status_final: relatorio.status === 'aprovado' ? 'APROVADO' : 'EM ANÁLISE',
+        observacao_admin: relatorio.observacao_admin || 'Nenhuma observação extra.',
+      };
+      const blob = await gerarRelatorioDocx(docxData);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `RELATORIO_CONFORMIDADE_${perfil.osc_id}.docx`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+    } catch (e: any) {
+      alert(`Erro ao gerar DOCX: ${e.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <button onClick={handleGenerate} disabled={loading} title="Gerar DOCX para Análise"
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 7, fontSize: '0.72rem', fontWeight: 700, background: 'var(--admin-secondary)', color: 'var(--admin-primary)', border: '1px solid var(--admin-border)', cursor: loading ? 'wait' : 'pointer' }}>
+      {loading ? '...' : <><Download size={11} /> DOCX</>}
+    </button>
+  );
+}
+
 /* ── Expanded OSC folder row ── */
 function OscExpandedRow({ osc, onRefresh }: { osc: OscPerfil; onRefresh: () => void }) {
   return (
@@ -142,11 +223,19 @@ function OscExpandedRow({ osc, onRefresh }: { osc: OscPerfil; onRefresh: () => v
       <td colSpan={7} style={{ padding: 0, background: 'var(--admin-primary-subtle)' }}>
         <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
 
-          {/* Payment */}
-          {osc.pagamento && (
-            <PaymentRow pag={osc.pagamento} oscId={osc.osc_id} onDone={onRefresh} />
-          )}
-          {!osc.pagamento && (
+          {/* Payments */}
+          {osc.pagamentos.length > 0 ? (
+            <div>
+              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--admin-text-tertiary)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.05em' }}>
+                Pagamentos de Certificação
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {osc.pagamentos.map(pag => (
+                  <PaymentRow key={pag.id} pag={pag} oscId={osc.osc_id} onDone={onRefresh} />
+                ))}
+              </div>
+            </div>
+          ) : (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>
               <AlertCircle size={13} /> Nenhum pagamento registrado ainda.
             </div>
@@ -173,6 +262,7 @@ function OscExpandedRow({ osc, onRefresh }: { osc: OscPerfil; onRefresh: () => v
                         {fmtDate(r.submitted_at)}
                       </span>
                     )}
+                    <DocxButton relId={r.id} oscId={osc.id} />
                     <Link href={`/gestao/dashboard/oscs/${osc.id}?relatorio=${r.id}`}
                       style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 7, fontSize: '0.72rem', fontWeight: 700, background: 'var(--admin-primary)', color: '#fff', textDecoration: 'none' }}>
                       <ExternalLink size={11} /> Abrir
@@ -240,12 +330,12 @@ function OscsContent() {
     for (const r of (relRes.data ?? []) as RelatorioResumo[]) {
       relMap.set(r.osc_id, [...(relMap.get(r.osc_id) ?? []), r]);
     }
-    const pagMap = new Map<string, Pagamento>();
+    const pagMap = new Map<string, Pagamento[]>();
     for (const p of (pagRes.data ?? []) as Pagamento[]) {
-      if (!pagMap.has(p.osc_id)) pagMap.set(p.osc_id, p);
+      pagMap.set(p.osc_id, [...(pagMap.get(p.osc_id) ?? []), p]);
     }
 
-    const enriched = rows.map(o => ({ ...o, relatorios: relMap.get(o.osc_id) ?? [], pagamento: pagMap.get(o.osc_id) ?? null }));
+    const enriched = rows.map(o => ({ ...o, relatorios: relMap.get(o.osc_id) ?? [], pagamentos: pagMap.get(o.osc_id) ?? [] }));
     setAll(enriched.filter(o => !o.deleted_at));
     setTrashCount(rows.filter(o => !!o.deleted_at).length);
     setLoading(false);
@@ -372,7 +462,7 @@ function OscsContent() {
               <tbody>
                 {filtered.map(osc => {
                   const isOpen = expanded.has(osc.id);
-                  const hasPendingPayment = osc.pagamento && osc.pagamento.status !== 'pago';
+                  const hasPendingPayment = osc.pagamentos.some(p => p.status !== 'pago');
                   return [
                     <tr key={osc.id}
                       style={{ cursor: 'pointer', background: isOpen ? 'var(--admin-primary-subtle)' : undefined, opacity: actionLoading && selected.has(osc.id) ? 0.5 : 1 }}
