@@ -594,6 +594,9 @@ export default function OscDetailPage() {
           validade: fmt(i.data_validade),
           analise: i.analise_atual || '—',
         }));
+      const numeroBase = relatorio.numero || `OBGP${new Date().getFullYear()}${perfil.id.substring(0, 4).toUpperCase()}`;
+      const numeroRelatorio = numeroBase.startsWith('N.º') ? numeroBase : `N.º ${numeroBase}`;
+      const codigoControle = relatorio.certificado_numero ?? certNumero ?? `RC ${numeroRelatorio}`;
 
       const docxData = {
         // Chaves alinhadas com ENTITY_LABELS em src/lib/docxGenerator.ts:265-274
@@ -608,8 +611,8 @@ export default function OscDetailPage() {
         responsavel:        de.responsavel        || perfil.responsavel        || 'Não Informado',
         // Metadados
         municipio_uf: [de.municipio || perfil.municipio, de.estado || perfil.estado].filter(Boolean).join('/') || 'Não Informado',
-        numero_relatorio: relatorio.numero || `OBGP${new Date().getFullYear()}${perfil.id.substring(0, 4).toUpperCase()}`,
-        codigo_controle: `RC${new Date().getTime().toString(36).toUpperCase()}`,
+        numero_relatorio: numeroRelatorio,
+        codigo_controle: codigoControle,
         data_hoje: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
         // Checklist — agora vem de relatorio_itens (fonte de verdade)
         habilitacao_juridica:   rowsFromItens(2),
@@ -1413,19 +1416,11 @@ export default function OscDetailPage() {
                   </button>
                   
                   <button className="admin-btn"
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '7px 16px', fontSize: '0.82rem', background: '#dc2626', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
-                    onClick={() => window.open(`/api/relatorio/pdf/${relatorio.id}?print=1`, '_blank')}
-                    title="Imprimir Relatório em PDF com o novo esqueleto padrão"
-                  >
-                    <FileSignature size={13} /> Gerar PDF
-                  </button>
-
-                  <button className="admin-btn"
                     style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '7px 16px', fontSize: '0.82rem', background: '#0D364F', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
                     onClick={handleGenerateAdminDocx}
-                    title="Baixar rascunho DOCX preenchido com dados atuais"
+                    title="Baixar relatório oficial preenchido no modelo DOCX da OBGP"
                   >
-                    <Download size={13} /> Gerar DOCX (Legado)
+                    <FileSignature size={13} /> Gerar Relatório Oficial
                   </button>
 
                   {relatorio.arquivo_docx_path && (

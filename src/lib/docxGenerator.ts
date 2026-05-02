@@ -68,13 +68,7 @@ function stripXmlTags(xml: string): string {
   return xml.replace(/<[^>]+>/g, '');
 }
 
-/**
- * Substitui texto que pode estar separado em múltiplos <w:r>/<w:t> no Word XML.
- * Word frequentemente divide texto em runs separados por causa de revisões/formatação.
- * Ex: "1-DT.MM" pode estar como <w:t>1-</w:t><w:t>DT</w:t><w:t>.</w:t><w:t>MM</w:t>
- */
-function replaceSpanningText(xml: string, target: string, replacement: string): string {
-  // 1. Find all <w:t> elements
+function replaceSpanningPattern(xml: string, pattern: RegExp, replacement: string, label: string): string {
   const wtRegex = /<w:t(?:\s[^>]*)?>([^<]*)<\/w:t>/g;
   const segments: Array<{ xmlStart: number; xmlEnd: number; text: string; fullMatch: string }> = [];
   let m: RegExpExecArray | null;
@@ -82,7 +76,6 @@ function replaceSpanningText(xml: string, target: string, replacement: string): 
     segments.push({ xmlStart: m.index, xmlEnd: m.index + m[0].length, text: m[1], fullMatch: m[0] });
   }
 
-  // 2. Build concatenated text with position map
   let concat = '';
   const posMap: Array<{ segIdx: number; charStart: number; charEnd: number }> = [];
   for (let i = 0; i < segments.length; i++) {
@@ -91,24 +84,21 @@ function replaceSpanningText(xml: string, target: string, replacement: string): 
     posMap.push({ segIdx: i, charStart: start, charEnd: concat.length });
   }
 
-  // 3. Find target in concatenated text
-  const targetIdx = concat.indexOf(target);
-  if (targetIdx === -1) {
-    console.warn(`[docxGenerator] placeholder não encontrado: ${JSON.stringify(target)}`);
+  pattern.lastIndex = 0;
+  const match = pattern.exec(concat);
+  if (!match) {
+    console.warn(`[docxGenerator] placeholder não encontrado: ${label}`);
     return xml;
   }
-  const targetEnd = targetIdx + target.length;
 
-  // 4. Find which segments are involved
+  const targetIdx = match.index;
+  const targetEnd = targetIdx + match[0].length;
   const involved: number[] = [];
   for (let i = 0; i < posMap.length; i++) {
-    if (posMap[i].charEnd > targetIdx && posMap[i].charStart < targetEnd) {
-      involved.push(i);
-    }
+    if (posMap[i].charEnd > targetIdx && posMap[i].charStart < targetEnd) involved.push(i);
   }
   if (involved.length === 0) return xml;
 
-  // 5. Replace from end to start (preserves earlier indices)
   let result = xml;
   for (let ii = involved.length - 1; ii >= 0; ii--) {
     const segIdx = involved[ii];
@@ -117,31 +107,23 @@ function replaceSpanningText(xml: string, target: string, replacement: string): 
 
     let newText: string;
     if (ii === 0 && involved.length === 1) {
-      // Single segment: prefix + replacement + suffix
       const prefixLen = targetIdx - p.charStart;
       const suffixStart = targetEnd - p.charStart;
       newText = seg.text.substring(0, prefixLen) + replacement + seg.text.substring(suffixStart);
     } else if (ii === 0) {
-      // First of multiple: keep prefix, add replacement
       const prefixLen = targetIdx - p.charStart;
       newText = seg.text.substring(0, prefixLen) + replacement;
     } else if (ii === involved.length - 1) {
-      // Last of multiple: keep suffix only
       const suffixStart = targetEnd - p.charStart;
       newText = suffixStart < seg.text.length ? seg.text.substring(suffixStart) : '';
     } else {
-      // Middle: clear entirely
       newText = '';
     }
 
-    // Rebuild <w:t> element preserving attributes
     const tagClose = seg.fullMatch.indexOf('>');
     const openTag = seg.fullMatch.substring(0, tagClose + 1);
     const newElement = `${openTag}${escapeXml(newText)}</w:t>`;
     result = result.substring(0, seg.xmlStart) + newElement + result.substring(seg.xmlEnd);
-
-    // Adjust xmlStart/xmlEnd of earlier segments (already processed backward, so this only
-    // matters if we need them — but since we go backward, we don't)
   }
 
   return result;
@@ -453,11 +435,11 @@ export async function gerarRelatorioDocx(dados: RelatorioData): Promise<Blob> {
   // Placeholders alinhados com o template em public/docs/MODEL_RELATORIO_CONFORMIDADE_RCN_ANOMESDIAOBGP_REV02_24.04.2026.docx.
   // A ordem importa: o código de verificação ("RCN.º-...") contém o placeholder do título ("N.º-...") como substring,
   // por isso substituímos primeiro o RCN... (mais específico) para evitar conflito.
-  xml = replaceSpanningText(xml, 'RCN.º-ANO.MES.DIA/OBGP', d.codigo_controle || '');
-  xml = replaceSpanningText(xml, 'N.º-ANO.MES.DIA/OBGP',   d.numero_relatorio || '');
-  xml = replaceSpanningText(xml, 'XX.XXX.XXX/XXXX-XX',     d.cnpj || '');
-  xml = replaceSpanningText(xml, 'DT de MES de ANO',       d.data_hoje || '');
-  xml = replaceSpanningText(xml, 'LOCAL/UF',               d.municipio_uf || '');
+  xml = replaceSpanningPattern(xml, /RC\s*N\.º\s*-\s*ANO\.MES\.DIA\s*\/\s*OBGP/, d.codigo_controle || '', 'código de verificação');
+  xml = replaceSpanningPattern(xml, /N\.º\s*-\s*ANO\.MES\.DIA\s*\/\s*OBGP/, d.numero_relatorio || '', 'número do relatório');
+  xml = replaceSpanningPattern(xml, /XX\s*\.\s*XXX\s*\.\s*XXX\s*\/\s*XXXX\s*-\s*XX/, d.cnpj || '', 'CNPJ da conclusão');
+  xml = replaceSpanningPattern(xml, /DT\s+de\s+MES\s+de\s+ANO/, d.data_hoje || '', 'data do relatório');
+  xml = replaceSpanningPattern(xml, /LOCAL\s*\/\s*UF/, d.municipio_uf || '', 'local/UF');
 
   // Conformity percentages in conclusion
   function calcConf(rows: ChecklistRow[]): number {
@@ -476,7 +458,7 @@ export async function gerarRelatorioDocx(dados: RelatorioData): Promise<Blob> {
   // The conclusion contains 5 sequential "XX%" that we replace one at a time
   const percentages = [hjConf, rfConf, qeConf, qtConf, orConf];
   for (const pct of percentages) {
-    xml = replaceSpanningText(xml, 'XX%', `${pct}%`);
+    xml = replaceSpanningPattern(xml, /XX\s*%/, `${pct}%`, 'percentual de conformidade');
   }
 
   // ── 7. Save modified XML back and generate blob ──
