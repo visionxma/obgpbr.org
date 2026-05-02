@@ -354,7 +354,11 @@ export default function OscDetailPage() {
       if (relRes.data) {
         const rows = (relRes.data ?? []) as Relatorio[];
         setRelatorios(rows);
-        if (rows[0]) await selectRelatorio(rows[0]);
+        const requestedRelatorioId = new URLSearchParams(window.location.search).get('relatorio');
+        const selectedRelatorio = requestedRelatorioId
+          ? rows.find(r => r.id === requestedRelatorioId) ?? rows[0]
+          : rows[0];
+        if (selectedRelatorio) await selectRelatorio(selectedRelatorio);
       }
       if (pagRes.data) {
         const pag = pagRes.data as Pagamento;

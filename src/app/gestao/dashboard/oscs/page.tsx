@@ -20,6 +20,16 @@ interface OscPerfil {
   status_selo: string;
   created_at: string;
   deleted_at: string | null;
+  relatorios: RelatorioResumo[];
+}
+
+interface RelatorioResumo {
+  id: string;
+  osc_id: string;
+  numero: string | null;
+  status: string;
+  submitted_at: string | null;
+  created_at: string;
 }
 
 const STATUS_OPTS = [
@@ -33,6 +43,20 @@ const STATUS_OPTS = [
 const STATUS_LABEL: Record<string, string> = {
   pendente: 'Pendente', em_analise: 'Em Análise', aprovado: 'Aprovado', rejeitado: 'Rejeitado',
 };
+
+const REL_STATUS_LABEL: Record<string, string> = {
+  em_preenchimento: 'Em Preenchimento',
+  em_analise: 'Em Análise',
+  aprovado: 'Aprovado',
+  reprovado: 'Reprovado',
+};
+
+function relStatusClass(status: string) {
+  if (status === 'aprovado') return 'aprovado';
+  if (status === 'reprovado') return 'rejeitado';
+  if (status === 'em_analise') return 'em_analise';
+  return 'pendente';
+}
 
 function fmtDate(iso: string) {
   const d = new Date(iso);
@@ -69,7 +93,33 @@ function OscsContent() {
       .order('created_at', { ascending: false });
 
     const rows = (data ?? []) as OscPerfil[];
-    setAll(rows.filter(o => !o.deleted_at));
+    const oscIds = rows.map(o => o.osc_id);
+    const relatoriosPorOsc = new Map<string, RelatorioResumo[]>();
+
+    if (oscIds.length > 0) {
+      const { data: relatoriosData, error: relatoriosError } = await supabase
+        .from('relatorios_conformidade')
+        .select('id, osc_id, numero, status, submitted_at, created_at')
+        .in('osc_id', oscIds)
+        .order('created_at', { ascending: false });
+
+      if (relatoriosError) {
+        console.error('Erro ao carregar processos para admin:', relatoriosError);
+      } else {
+        for (const relatorio of (relatoriosData ?? []) as RelatorioResumo[]) {
+          const current = relatoriosPorOsc.get(relatorio.osc_id) ?? [];
+          current.push(relatorio);
+          relatoriosPorOsc.set(relatorio.osc_id, current);
+        }
+      }
+    }
+
+    const rowsWithRelatorios = rows.map(o => ({
+      ...o,
+      relatorios: relatoriosPorOsc.get(o.osc_id) ?? [],
+    }));
+
+    setAll(rowsWithRelatorios.filter(o => !o.deleted_at));
     setTrashCount(rows.filter(o => !!o.deleted_at).length);
     setLoading(false);
   }, []);
@@ -85,7 +135,12 @@ function OscsContent() {
         o.osc_id.toLowerCase().includes(q) ||
         (o.responsavel ?? '').toLowerCase().includes(q) ||
         (o.razao_social ?? '').toLowerCase().includes(q) ||
-        (o.cnpj ?? '').includes(q)
+        (o.cnpj ?? '').includes(q) ||
+        o.relatorios.some(r =>
+          (r.numero ?? '').toLowerCase().includes(q) ||
+          r.id.toLowerCase().includes(q) ||
+          (REL_STATUS_LABEL[r.status] ?? r.status).toLowerCase().includes(q)
+        )
       );
     }
     setFiltered(list);
@@ -100,6 +155,7 @@ function OscsContent() {
     aprovado:     all.filter(o => o.status_selo === 'aprovado').length,
     rejeitado:    all.filter(o => o.status_selo === 'rejeitado').length,
   };
+  const totalProcessos = all.reduce((sum, osc) => sum + osc.relatorios.length, 0);
 
   /* ── Soft delete ── */
   const handleMoveToTrash = async (ids: string[]) => {
@@ -132,9 +188,10 @@ function OscsContent() {
       if (error) throw error;
       await loadData();
       setSelected(new Set());
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Erro ao excluir:', err);
-      setErrorMsg(`Erro ao excluir: ${err?.message ?? 'Falha na exclusão.'}`);
+      const message = err instanceof Error ? err.message : 'Falha na exclusão.';
+      setErrorMsg(`Erro ao excluir: ${message}`);
     } finally { setActionLoading(false); }
   };
 
@@ -183,6 +240,9 @@ function OscsContent() {
             );
           })}
         </div>
+        <span style={{ fontSize: '0.78rem', color: 'var(--admin-text-secondary)', fontWeight: 700 }}>
+          {totalProcessos} {totalProcessos === 1 ? 'processo' : 'processos'}
+        </span>
 
         <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <div className="admin-header-search" style={{ width: 240 }}>
@@ -241,6 +301,7 @@ function OscsContent() {
                   <th>CNPJ</th>
                   <th>Localidade</th>
                   <th>Status</th>
+                  <th>Processos</th>
                   <th>Cadastro</th>
                   <th></th>
                 </tr>
@@ -277,6 +338,49 @@ function OscsContent() {
                       <span className={`adm-badge ${osc.status_selo}`}>
                         {STATUS_LABEL[osc.status_selo] ?? osc.status_selo}
                       </span>
+                    </td>
+                    <td style={{ minWidth: 240 }}>
+                      {osc.relatorios.length > 0 ? (
+                        <div style={{ display: 'grid', gap: 6 }}>
+                          <div style={{ fontSize: '0.72rem', color: 'var(--admin-text-tertiary)', fontWeight: 700 }}>
+                            {osc.relatorios.length} {osc.relatorios.length === 1 ? 'processo enviado' : 'processos enviados'}
+                          </div>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                            {osc.relatorios.slice(0, 3).map(relatorio => (
+                              <Link
+                                key={relatorio.id}
+                                href={`/gestao/dashboard/oscs/${osc.id}?relatorio=${relatorio.id}`}
+                                title={`Abrir processo ${relatorio.numero ?? relatorio.id}`}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 6,
+                                  padding: '4px 7px',
+                                  borderRadius: 7,
+                                  border: '1px solid var(--admin-border)',
+                                  background: 'var(--admin-primary-subtle)',
+                                  color: 'var(--admin-primary)',
+                                  fontSize: '0.72rem',
+                                  fontWeight: 800,
+                                  textDecoration: 'none',
+                                  whiteSpace: 'nowrap',
+                                }}>
+                                {relatorio.numero ?? relatorio.id.slice(-8)}
+                                <span className={`adm-badge ${relStatusClass(relatorio.status)}`} style={{ fontSize: '0.58rem', padding: '2px 5px' }}>
+                                  {REL_STATUS_LABEL[relatorio.status] ?? relatorio.status}
+                                </span>
+                              </Link>
+                            ))}
+                            {osc.relatorios.length > 3 && (
+                              <span style={{ fontSize: '0.72rem', color: 'var(--admin-text-tertiary)', alignSelf: 'center' }}>
+                                +{osc.relatorios.length - 3}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <span style={{ color: 'var(--admin-text-tertiary)', fontSize: '0.8rem' }}>—</span>
+                      )}
                     </td>
                     <td style={{ color: 'var(--admin-text-secondary)', fontSize: '0.82rem' }}>
                       {fmtDate(osc.created_at)}
