@@ -188,64 +188,81 @@ export async function POST(req: NextRequest) {
           docMapped[mapping.section][mapping.id] = val;
         }
       }
-      
+
       const d = new Date();
       const num = `${Math.floor(Math.random()*900+100)}-${String(d.getDate()).padStart(2,'0')}.${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}/OBGP`;
 
-      const { error: relError } = await supabaseAdmin
-        .from('relatorios_conformidade')
-        .insert({
-          osc_id: oscId,
-          numero: num,
-          status: 'em_analise',
-          dados_entidade: item.entidade ?? {},
-          habilitacao_juridica: docMapped.habilitacao_juridica,
-          regularidade_fiscal: docMapped.regularidade_fiscal,
-          qualificacao_economica: docMapped.qualificacao_economica,
-          qualificacao_tecnica: docMapped.qualificacao_tecnica,
-          outros_registros: docMapped.outros_registros,
-          observacao_admin: `[GERADO VIA CHECKOUT] Pagamento PIX enviado. Comprovante: ${comprovanteUrl.substring(0, 100)}...`
-        })
-        .select('id, numero')
-        .single();
-        
-      if (relError) {
-        console.error('Erro ao inserir relatório:', relError);
-        throw relError;
+      // 1. Inserir Relatório de Conformidade
+      const relPayload: any = {
+        osc_id: oscId,
+        numero: num,
+        status: 'em_analise',
+        dados_entidade: item.entidade ?? {},
+        habilitacao_juridica: docMapped.habilitacao_juridica,
+        regularidade_fiscal: docMapped.regularidade_fiscal,
+        qualificacao_economica: docMapped.qualificacao_economica,
+        qualificacao_tecnica: docMapped.qualificacao_tecnica,
+        submitted_at: new Date().toISOString(),
+        observacao_admin: `[GERADO VIA CHECKOUT] Pagamento PIX enviado. Comprovante: ${comprovanteUrl.substring(0, 100)}...`
+      };
+
+      // Adiciona outros_registros apenas se houver dados, para evitar erro se a coluna não existir no DB
+      if (Object.keys(docMapped.outros_registros).length > 0) {
+        relPayload.outros_registros = docMapped.outros_registros;
       }
 
+      const { data: relData, error: relError } = await supabaseAdmin
+        .from('relatorios_conformidade')
+        .insert(relPayload)
+        .select('id')
+        .single();
+
+      if (relError) {
+        console.error('Erro ao inserir relatório:', relError);
+        return NextResponse.json({ 
+          error: `Erro ao inserir relatório: ${relError.message}`,
+          details: relError 
+        }, { status: 500 });
+      }
+
+      // 2. Atualizar ou Criar Perfil da OSC
       const perfilPayload = buildPerfilUpsert(oscId, item.entidade, user?.id);
       const { error: perfilError } = await supabaseAdmin
         .from('osc_perfis')
         .upsert(perfilPayload, { onConflict: 'osc_id' });
 
       if (perfilError) {
-        console.error('Erro ao publicar perfil da OSC no admin:', perfilError);
-        throw perfilError;
+        console.error('Erro ao publicar perfil da OSC:', perfilError);
+        return NextResponse.json({ 
+          error: `Erro ao publicar perfil: ${perfilError.message}`,
+          details: perfilError 
+        }, { status: 500 });
       }
 
-      const razaoSocial = item.entidade?.razao_social || oscId;
-      const cnpj = item.entidade?.cnpj || 'CNPJ não informado';
+      // 3. Notificar Admin
       const { error: notifError } = await supabaseAdmin
         .from('notificacoes')
         .insert({
+          osc_id: oscId,
           destinatario: 'admin',
           tipo: 'novo_relatorio',
-          titulo: 'Novo relatório enviado',
-          mensagem: `OSC ${razaoSocial} (${cnpj}) submeteu relatório`,
-          osc_id: oscId,
+          titulo: 'Novo relatório (via checkout)',
+          mensagem: `A OSC ${item.entidade?.razao_social || oscId} enviou um novo relatório.`,
+          metadata: {
+            relatorio_id: relData?.id,
+            osc_id: oscId,
+            valor: valorTotal
+          }
         });
 
-      if (notifError) {
-        console.error('Erro ao notificar admin sobre novo relatório:', notifError);
-        throw notifError;
-      }
+      if (notifError) console.error('Erro ao notificar admin:', notifError);
     }
 
-    return NextResponse.json({ success: true, message: 'Checkout realizado com sucesso!' });
+    return NextResponse.json({ ok: true });
   } catch (error: unknown) {
-    console.error('Checkout API erro:', error);
+    console.error('Checkout API erro fatal:', error);
     const message = error instanceof Error ? error.message : 'Erro interno no checkout';
-    return NextResponse.json({ error: message }, { status: 500 });
+    const details = error instanceof Error ? error.stack : error;
+    return NextResponse.json({ error: message, details }, { status: 500 });
   }
 }
