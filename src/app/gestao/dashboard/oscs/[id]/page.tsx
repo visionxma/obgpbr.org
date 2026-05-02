@@ -673,36 +673,66 @@ export default function OscDetailPage() {
 
   return (
     <div>
-      {/* Back */}
-      <div style={{ marginBottom: 24 }}>
-        <Link href="/gestao/dashboard/oscs" style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.82rem', fontWeight: 600, color: 'var(--admin-text-secondary)', textDecoration: 'none', transition: 'color .2s' }}
-          onMouseEnter={e => (e.currentTarget.style.color = 'var(--admin-primary)')}
-          onMouseLeave={e => (e.currentTarget.style.color = 'var(--admin-text-secondary)')}
-        >
-          <ArrowLeft size={14} /> Voltar para lista
-        </Link>
-      </div>
+      {/* ══ Hero Header ══ */}
+      <div style={{
+        background: 'linear-gradient(135deg, var(--admin-primary) 0%, #0a2a3d 100%)',
+        borderRadius: 16, padding: '20px 24px', marginBottom: 24,
+        color: '#fff', position: 'relative', overflow: 'hidden',
+      }}>
+        {/* Decorative circle */}
+        <div style={{ position: 'absolute', right: -40, top: -40, width: 180, height: 180, borderRadius: '50%', background: 'rgba(197,171,118,.08)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', right: 60, bottom: -60, width: 130, height: 130, borderRadius: '50%', background: 'rgba(197,171,118,.05)', pointerEvents: 'none' }} />
 
-      {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 16, marginBottom: 28, flexWrap: 'wrap' }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <span style={{ fontFamily: 'monospace', fontSize: '0.85rem', fontWeight: 800, background: 'var(--admin-primary-subtle)', color: 'var(--admin-primary)', padding: '4px 12px', borderRadius: 8 }}>
-              {perfil.osc_id}
-            </span>
-            <span className={`adm-badge ${perfil.status_selo}`} style={{ fontSize: '0.72rem' }}>
-              {perfil.status_selo === 'aprovado' && <CheckCircle size={11} />}
-              {perfil.status_selo === 'em_analise' && <Clock size={11} />}
-              {perfil.status_selo === 'rejeitado' && <XCircle size={11} />}
-              {({ pendente: 'Pendente', em_analise: 'Em Análise', aprovado: 'Aprovado', rejeitado: 'Rejeitado' })[perfil.status_selo]}
-            </span>
+        {/* Top row: back + status */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+          <Link href="/gestao/dashboard/oscs"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: '0.78rem', fontWeight: 600, color: 'rgba(255,255,255,.7)', textDecoration: 'none', transition: 'color .15s' }}
+            onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,.7)')}
+          >
+            <ArrowLeft size={14} /> Voltar para lista
+          </Link>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: 5,
+            padding: '4px 12px', borderRadius: 20, fontSize: '0.72rem', fontWeight: 700,
+            background: perfil.status_selo === 'aprovado' ? 'rgba(22,163,74,.25)' : perfil.status_selo === 'rejeitado' ? 'rgba(220,38,38,.25)' : 'rgba(245,158,11,.2)',
+            color: perfil.status_selo === 'aprovado' ? '#86efac' : perfil.status_selo === 'rejeitado' ? '#fca5a5' : '#fcd34d',
+            border: `1px solid ${perfil.status_selo === 'aprovado' ? 'rgba(22,163,74,.4)' : perfil.status_selo === 'rejeitado' ? 'rgba(220,38,38,.4)' : 'rgba(245,158,11,.35)'}`,
+          }}>
+            {perfil.status_selo === 'aprovado' && <CheckCircle size={11} />}
+            {perfil.status_selo === 'em_analise' && <Clock size={11} />}
+            {perfil.status_selo === 'rejeitado' && <XCircle size={11} />}
+            {({ pendente: 'Pendente', em_analise: 'Em Análise', aprovado: 'Aprovado', rejeitado: 'Rejeitado' })[perfil.status_selo]}
+          </span>
+        </div>
+
+        {/* OSC Name + ID */}
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 14, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: '1.6rem', fontWeight: 800, fontFamily: 'Outfit, sans-serif', letterSpacing: '-.02em', lineHeight: 1.15 }}>
+              {perfil.responsavel ?? perfil.razao_social ?? perfil.osc_id}
+            </div>
+            {perfil.razao_social && (
+              <div style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,.65)', marginTop: 3 }}>{perfil.razao_social}</div>
+            )}
           </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 800, fontFamily: 'Outfit, sans-serif', color: 'var(--admin-text-primary)', letterSpacing: '-.02em' }}>
-            {perfil.responsavel ?? perfil.razao_social ?? perfil.osc_id}
-          </div>
-          {perfil.razao_social && perfil.responsavel && (
-            <div style={{ fontSize: '0.875rem', color: 'var(--admin-text-secondary)', marginTop: 3 }}>{perfil.razao_social}</div>
-          )}
+          <span style={{ fontFamily: 'monospace', fontSize: '0.75rem', fontWeight: 700, background: 'rgba(255,255,255,.1)', color: 'rgba(255,255,255,.8)', padding: '3px 10px', borderRadius: 6, marginBottom: 4 }}>
+            {perfil.osc_id}
+          </span>
+        </div>
+
+        {/* Quick stats chips */}
+        <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
+          {[
+            { label: `${docs.length} doc${docs.length !== 1 ? 's' : ''}`, icon: FileText },
+            { label: `${relatorios.length} relatório${relatorios.length !== 1 ? 's' : ''}`, icon: ClipboardList },
+            { label: pagamento ? (pagamento.status === 'pago' ? 'Pago' : 'Pagamento pendente') : 'Sem pagamento', icon: CreditCard },
+            { label: `Desde ${fmtDate(perfil.created_at)}`, icon: Clock },
+          ].map(({ label, icon: Icon }) => (
+            <span key={label} style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.72rem', fontWeight: 600, color: 'rgba(255,255,255,.75)', background: 'rgba(255,255,255,.08)', padding: '4px 10px', borderRadius: 20 }}>
+              <Icon size={11} /> {label}
+            </span>
+          ))}
         </div>
       </div>
 

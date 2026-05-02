@@ -420,19 +420,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
         {/* Page Content */}
         <main key={currentPath} className="admin-page-content admin-page-transition">
-          {/* Page Title Row (dynamic per page via children) */}
-          <div className="admin-page-title-row">
-            <div>
-              <h1 className="admin-page-title">
-                <Suspense fallback="..."><BreadcrumbTitle /></Suspense>
-              </h1>
-              <p className="admin-page-subtitle">
-                {currentTime && (
-                  <span style={{ textTransform: 'capitalize' }}>{currentTime}</span>
-                )}
-              </p>
+          {/* Page Title Row — hidden on OSC detail pages (they render their own rich header) */}
+          {!currentPath.match(/^\/gestao\/dashboard\/oscs\/(?!lixeira)[^/]+/) && (
+            <div className="admin-page-title-row">
+              <div>
+                <h1 className="admin-page-title">
+                  <Suspense fallback="..."><BreadcrumbTitle /></Suspense>
+                </h1>
+                <p className="admin-page-subtitle">
+                  {currentTime && (
+                    <span style={{ textTransform: 'capitalize' }}>{currentTime}</span>
+                  )}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
           {children}
         </main>
