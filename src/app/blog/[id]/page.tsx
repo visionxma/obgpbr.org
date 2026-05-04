@@ -152,15 +152,27 @@ export default function BlogPostPage() {
         <section style={{ position: 'relative', marginTop: -60, paddingBottom: 120 }}>
           <div className="container" style={{ maxWidth: 900 }}>
             
-            {/* Imagem de Destaque com efeito Glassmorphism nas bordas */}
+            {/* Imagem de Destaque formatada como Banner Editorial */}
             {post.image_url && (
               <div style={{ 
                 borderRadius: 24, overflow: 'hidden', 
-                boxShadow: '0 30px 60px rgba(0,0,0,0.12)',
+                boxShadow: '0 20px 50px rgba(30,58,138,0.15)',
                 marginBottom: 64, background: '#fff',
-                border: '8px solid #fff'
+                border: '6px solid #fff',
+                height: 'clamp(300px, 45vh, 480px)',
+                position: 'relative'
               }}>
-                <img src={post.image_url} alt={post.title} style={{ width: '100%', height: 'auto', display: 'block' }} />
+                <img 
+                  src={post.image_url} 
+                  alt={post.title || 'Imagem de destaque'} 
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: 'cover', 
+                    objectPosition: 'center',
+                    display: 'block' 
+                  }} 
+                />
               </div>
             )}
 
