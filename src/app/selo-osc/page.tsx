@@ -200,46 +200,6 @@ export default function SeloOscPage() {
             <div className="section-line" />
           </div>
 
-          {/* Toolbar */}
-          <div style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 12,
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '14px 20px',
-            background: 'var(--site-surface-warm)',
-            border: '1px solid var(--site-border)',
-            borderRadius: 'var(--site-radius-md)',
-            marginBottom: 24,
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-              <div style={{
-                width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-                background: 'rgba(197,171,118,0.12)', color: 'var(--site-gold-dark)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
-                <FileText size={20} />
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--site-text-primary)', lineHeight: 1.3 }}>
-                  Regulamento Selo OSC Gestão de Parcerias
-                </div>
-                <div style={{ fontSize: '0.78rem', color: 'var(--site-text-secondary)', marginTop: 2 }}>
-                  Revisão 00 · 25/04/2026 · 2 páginas
-                </div>
-              </div>
-            </div>
-            <a
-              href="/docs/REGULAMENTO_SELO_OSC_GP_OBGP_REV00_25.04.2026.pdf"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-gold"
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', fontSize: '0.85rem', fontWeight: 700, borderRadius: 'var(--site-radius-full)' }}
-            >
-              <Download size={16} /> Baixar PDF
-            </a>
-          </div>
 
           {/* Document Body via Client Component */}
           <RegulamentoExpandable />
