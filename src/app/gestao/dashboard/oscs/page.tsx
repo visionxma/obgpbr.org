@@ -554,19 +554,18 @@ function OscsContent() {
                       </td>
                       <td style={{ color: 'var(--admin-text-secondary)', fontSize: '0.82rem' }}>{fmtDate(osc.created_at)}</td>
                       <td onClick={e => e.stopPropagation()}>
-                        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '290px' }}>
                           <button onClick={() => setReviewOscId(osc.id)}
-                            style={{ padding: '6px 14px', border: 'none', borderRadius: 8, background: 'var(--admin-primary)', color: '#fff', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-                            <CheckCircle size={12} /> Avaliar
+                            style={{ flex: 1, height: '38px', border: 'none', borderRadius: '8px', background: 'var(--admin-primary)', color: '#fff', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                            <CheckCircle size={14} /> Avaliar
                           </button>
                           <Link href={`/gestao/dashboard/oscs/${osc.id}`}
-                            className="admin-btn admin-btn-secondary"
-                            style={{ padding: '6px 12px', fontSize: '0.75rem', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                            <Eye size={12} /> Perfil
+                            style={{ flex: 1, height: '38px', borderRadius: '8px', background: 'var(--admin-surface)', border: '1px solid var(--admin-border)', color: 'var(--admin-text-primary)', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                            <Eye size={14} /> Perfil
                           </Link>
                           <button onClick={() => handleMoveToTrash([osc.id])} disabled={actionLoading} title="Mover para lixeira"
-                            style={{ padding: '6px 8px', border: 'none', borderRadius: 8, background: 'rgba(220,38,38,0.08)', color: '#dc2626', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                            <Trash2 size={13} />
+                            style={{ flex: 1, height: '38px', border: 'none', borderRadius: '8px', background: 'rgba(220,38,38,0.08)', color: '#dc2626', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                            <Trash2 size={14} /> Excluir
                           </button>
                         </div>
                       </td>
