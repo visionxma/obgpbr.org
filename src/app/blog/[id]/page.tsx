@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import PublicLayout from '../../components/PublicLayout';
 import { supabase } from '@/lib/supabase';
 import { Loader2, ArrowLeft, Link as LinkIcon, AlertCircle } from 'lucide-react';
@@ -34,6 +34,7 @@ function formatG1Date(dateStr: string | null) {
 
 export default function BlogPostPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params?.id as string;
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
@@ -84,13 +85,14 @@ export default function BlogPostPage() {
         <div style={{ maxWidth: 840, margin: '0 auto', padding: '40px 20px 0' }}>
           
           {/* Breadcrumb / Back Link */}
-          <Link href="/blog" style={{
+          <button onClick={() => router.back()} style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
             color: '#0669ce', fontSize: '0.875rem', fontWeight: 700,
-            textDecoration: 'none', marginBottom: 24, textTransform: 'uppercase'
+            textDecoration: 'none', marginBottom: 24, textTransform: 'uppercase',
+            background: 'none', border: 'none', cursor: 'pointer', padding: 0
           }} className="g1-back-link">
             <ArrowLeft size={16} /> Voltar
-          </Link>
+          </button>
 
           {/* Categoria */}
           {post.category && (
@@ -191,14 +193,14 @@ export default function BlogPostPage() {
 
           {/* Rodapé / Voltar */}
           <div style={{ marginTop: 40, borderTop: '1px solid #ddd', paddingTop: 24, paddingBottom: 40, display: 'flex', justifyContent: 'center' }}>
-            <Link href="/blog" style={{
+            <button onClick={() => router.back()} style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               color: '#c00', fontSize: '1rem', fontWeight: 700,
               textDecoration: 'none', padding: '12px 24px', border: '1px solid #c00',
-              borderRadius: 4, transition: 'all 0.2s'
+              borderRadius: 4, transition: 'all 0.2s', background: 'transparent', cursor: 'pointer'
             }} className="g1-return-btn">
               <ArrowLeft size={18} /> Voltar para Notícias
-            </Link>
+            </button>
           </div>
         </div>
       </article>
