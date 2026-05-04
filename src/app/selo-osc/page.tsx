@@ -1,5 +1,5 @@
 import PublicLayout from '../components/PublicLayout';
-import { ShieldCheck, Scale, TrendingUp, FileCheck, Users, Award, ArrowRight, BookOpen, FileText, Download, Mail, Phone, MapPin } from 'lucide-react';
+import { ShieldCheck, Scale, TrendingUp, FileCheck, Users, Award, ArrowRight, BookOpen, FileText, Download, Mail, Phone, MapPin, ChevronDown } from 'lucide-react';
 
 export const metadata = { title: 'Selo OSC Gestão de Parcerias | OBGP' };
 
@@ -44,10 +44,33 @@ export default function SeloOscPage() {
             />
           </div>
         </div>
+
+        {/* Scroll Down Indicator */}
+        <div style={{
+          position: 'absolute',
+          bottom: 30,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 10,
+        }}>
+          <a href="#diagnostico" style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 6,
+            opacity: 0.8,
+            animation: 'float 2.5s ease-in-out infinite',
+          }}>
+            <span style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.15em', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>
+              Deslize
+            </span>
+            <ChevronDown size={28} style={{ color: 'var(--site-gold)' }} />
+          </a>
+        </div>
       </section>
 
       {/* ═══ DIAGNÓSTICO MP/MA ═══ */}
-      <section className="section-padding">
+      <section className="section-padding" id="diagnostico">
         <div className="container">
           <div style={{ maxWidth: 760, marginBottom: 48 }}>
             <span className="section-label" style={{ display: 'block', marginBottom: 12 }}>Diagnóstico</span>
