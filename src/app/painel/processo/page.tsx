@@ -113,10 +113,21 @@ const QUALIFICACAO_FINANCEIRA: DocItem[] = [
 ];
 
 const QUALIFICACAO_TECNICA: DocItem[] = [
-  { id: 'instr_colaboracao', label: '5.1.1. Instrumento Jurídico (Termo de Colaboração)',  required: false },
-  { id: 'instr_fomento',     label: '5.1.2. Instrumento Jurídico (Termo de Fomento)',      required: false },
-  { id: 'instr_cooperacao',  label: '5.1.3. Instrumento Jurídico (Acordo de Cooperação)', required: false },
-  { id: 'instr_outro',       label: '5.1.4. Instrumento Jurídico (Outro tipo de contrato).', required: false },
+  { id: 'instr_colaboracao', label: '5.1.1. Instrumento Jurídico', required: false },
+  { id: 'instr_fomento',     label: '5.1.2. Instrumento Jurídico', required: false },
+  { id: 'instr_cooperacao',  label: '5.1.3. Instrumento Jurídico', required: false },
+  { id: 'instr_outro',       label: '5.1.4. Instrumento Jurídico', required: false },
+];
+
+const TIPO_INSTRUMENTO_OPTIONS = [
+  'Termo de Colaboração',
+  'Termo de Fomento',
+  'Acordo de Cooperação',
+  'Contrato de Prestação de Serviços',
+  'Convênio',
+  'Contrato de Gestão',
+  'Parceria Público-Privada',
+  'Outro Instrumento Jurídico',
 ];
 
 const OUTROS_REGISTROS: DocItem[] = [
@@ -199,6 +210,14 @@ function DocFileField({ itemId, file, onAttach, onRemove }: { itemId: string; fi
 }
 
 function DocumentSection({ number, title, items, data, handleUpdate, showErrors, files, onAttachFile, onRemoveFile, showDescricao }: { number: string; title: string; items: DocItem[]; data: RelatorioData; handleUpdate: (id: string, field: string, val: string) => void; showErrors: boolean; files: Record<string, File>; onAttachFile: (id: string, file: File) => void; onRemoveFile: (id: string) => void; showDescricao?: boolean }) {
+  const [manualIds, setManualIds] = useState<Set<string>>(new Set());
+
+  const isManualMode = (id: string, descricao: string | undefined) =>
+    manualIds.has(id) || (!!descricao && !TIPO_INSTRUMENTO_OPTIONS.includes(descricao));
+
+  const toggleManual = (id: string, on: boolean) =>
+    setManualIds(prev => { const s = new Set(prev); on ? s.add(id) : s.delete(id); return s; });
+
   return (
     <section style={{ marginBottom: 32, border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-xl)', overflow: 'hidden', background: '#fff' }}>
       <header style={{ background: 'var(--site-primary)', color: '#fff', padding: '16px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -223,8 +242,36 @@ function DocumentSection({ number, title, items, data, handleUpdate, showErrors,
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
                 {showDescricao && (
                   <div style={{ gridColumn: '1 / -1' }}>
-                    <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--site-text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Descrição / Nome do Documento</label>
-                    <input type="text" placeholder="Ex: Termo de Colaboração do Ministério dos Direitos Humanos..." value={doc.descricao || ''} onChange={(e) => handleUpdate(item.id, 'descricao', e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid var(--site-border)', fontSize: '0.85rem', fontWeight: 600 }} />
+                    <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--site-text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Tipo de Instrumento <span style={{ fontWeight: 400, textTransform: 'none', color: '#aaa' }}>(opcional)</span></label>
+                    {isManualMode(item.id, doc.descricao) ? (
+                      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <input
+                          type="text"
+                          placeholder="Digite o nome do instrumento..."
+                          value={doc.descricao || ''}
+                          onChange={(e) => handleUpdate(item.id, 'descricao', e.target.value)}
+                          style={{ flex: 1, padding: '10px', borderRadius: 8, border: '1px solid var(--site-border)', fontSize: '0.85rem' }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => { toggleManual(item.id, false); handleUpdate(item.id, 'descricao', ''); }}
+                          style={{ padding: '10px 14px', borderRadius: 8, border: '1px solid var(--site-border)', background: '#f5f5f5', fontSize: '0.78rem', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        >← Voltar</button>
+                      </div>
+                    ) : (
+                      <select
+                        value={doc.descricao || ''}
+                        onChange={(e) => {
+                          if (e.target.value === '__manual__') { toggleManual(item.id, true); handleUpdate(item.id, 'descricao', ''); }
+                          else handleUpdate(item.id, 'descricao', e.target.value);
+                        }}
+                        style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid var(--site-border)', fontSize: '0.85rem', background: '#fff', color: 'var(--site-text-primary)' }}
+                      >
+                        <option value="">— Selecionar tipo —</option>
+                        <option value="__manual__">✏️ Digitar manualmente</option>
+                        {TIPO_INSTRUMENTO_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+                      </select>
+                    )}
                   </div>
                 )}
                 <div>
