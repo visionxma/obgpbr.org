@@ -150,7 +150,7 @@ async function generateDocxForRelatorio(relId: string, oscId: string, onStart: (
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `RELATORIO_CONFORMIDADE_${perfil.osc_id}.docx`;
+    link.download = `RELATORIO_${relatorio.numero || relatorio.id.substring(0,8)}_${perfil.osc_id}.docx`;
     link.click();
     window.URL.revokeObjectURL(url);
   } catch (e: any) {
@@ -173,8 +173,8 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
   const [obs, setObs] = useState('');
   const [showReject, setShowReject] = useState(false);
 
-  const rel = osc.relatorios[0]; // Pega o mais recente
-  
+  const [selectedRelId, setSelectedRelId] = useState(osc.relatorios[0]?.id);
+  const rel = osc.relatorios.find(r => r.id === selectedRelId);
   const handleDownload = () => {
     if (!rel) return toast('Nenhum relatório para avaliar.', 'error');
     generateDocxForRelatorio(rel.id, osc.id, () => setLoadingDocx(true), () => setLoadingDocx(false));
@@ -223,8 +223,28 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
               <p>Nenhum relatório submetido para avaliação.</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
               
+              {osc.relatorios.length > 1 && (
+                <div style={{ background: 'var(--site-surface-blue)', padding: 16, borderRadius: 12, border: '1px solid var(--site-border)' }}>
+                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--site-primary)', marginBottom: 8 }}>Múltiplos Processos Encontrados ({osc.relatorios.length})</div>
+                  <select 
+                    value={selectedRelId} 
+                    onChange={e => {
+                      setSelectedRelId(e.target.value);
+                      setShowReject(false); // reset reject form on change
+                    }}
+                    style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--site-border)', background: '#fff', fontSize: '0.9rem', fontFamily: 'inherit', color: 'var(--site-text-primary)', outline: 'none' }}
+                  >
+                    {osc.relatorios.map((r, idx) => (
+                      <option key={r.id} value={r.id}>
+                        Processo {r.numero || r.id.substring(0,8)} • Data: {new Date(r.created_at).toLocaleDateString('pt-BR')} • Status: {r.status.toUpperCase()}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* Box Baixar Documento */}
               <div style={{ background: 'var(--site-surface-warm)', border: '1px solid var(--site-border)', padding: 24, borderRadius: 16, textAlign: 'center' }}>
                 <h3 style={{ fontSize: '1.1rem', marginBottom: 8, color: 'var(--site-text-primary)' }}>1. Análise do Dossiê</h3>
