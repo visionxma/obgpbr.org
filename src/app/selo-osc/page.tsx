@@ -186,6 +186,33 @@ export default function SeloOscPage() {
                 <p style={{ color: 'var(--site-text-secondary)', lineHeight: 1.75, fontSize: '.93rem' }}>{texto}</p>
               </div>
             ))}
+            {/* CTA Card Elegante para preencher o 6º espaço */}
+            <div className="glass-panel stagger-6"
+              style={{
+                padding: '36px 30px', display: 'flex', flexDirection: 'column', gap: 16,
+                background: 'linear-gradient(135deg, var(--site-gold) 0%, #b39b65 100%)',
+                color: 'white', justifyContent: 'center', alignItems: 'center', textAlign: 'center',
+                border: 'none', position: 'relative', overflow: 'hidden'
+              }}>
+              {/* Círculo decorativo de fundo */}
+              <div style={{
+                position: 'absolute', top: -30, right: -30, width: 120, height: 120,
+                background: 'rgba(255,255,255,0.1)', borderRadius: '50%'
+              }} />
+              
+              <Award size={36} style={{ color: 'white', marginBottom: 4 }} />
+              <h3 style={{ fontSize: '1.15rem', color: 'white', margin: 0 }}>Pronto para o próximo nível?</h3>
+              <p style={{ color: 'rgba(255,255,255,0.9)', lineHeight: 1.5, fontSize: '.9rem', margin: 0 }}>
+                Inicie sua jornada de excelência e conquiste o Selo OSC Gestão de Parcerias.
+              </p>
+              <a href="/inicio#contato" className="btn" style={{
+                marginTop: 'auto', padding: '10px 24px', fontSize: '0.85rem', fontWeight: 700,
+                background: 'white', color: 'var(--site-gold-dark)', borderRadius: 'var(--site-radius-full)',
+                display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none'
+              }}>
+                Falar com consultor <ArrowRight size={16} />
+              </a>
+            </div>
           </div>
         </div>
       </section>
