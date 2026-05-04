@@ -1153,102 +1153,19 @@ export default function InicioPage() {
                 padding: "20px",
               }}
             >
-              <div style={{ position: "relative", width: "clamp(320px, 35vw, 480px)", height: "clamp(320px, 35vw, 480px)" }}>
-                {/* Glow de fundo */}
-                <div
+              <div className="animate-float" style={{ display: 'inline-block' }}>
+                <Image
+                  src="/logo.png"
+                  alt="Selo OSC"
+                  width={380}
+                  height={380}
+                  className="interactive-hero-logo"
                   style={{
-                    position: "absolute",
-                    inset: "10%",
-                    background: "radial-gradient(circle, rgba(197,171,118,0.15) 0%, transparent 70%)",
-                    animation: "pulseGlow 4s ease-in-out infinite",
-                    borderRadius: "50%",
+                    objectFit: "contain",
+                    maxWidth: "100%",
+                    height: "auto",
                   }}
                 />
-                <div
-                  aria-hidden
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: "50%",
-                    border: "2px solid rgba(197,171,118,0.15)",
-                    animation: "spin 40s linear infinite",
-                  }}
-                />
-                <div
-                  aria-hidden
-                  style={{
-                    position: "absolute",
-                    inset: "8%",
-                    borderRadius: "50%",
-                    border: "2px dashed rgba(197,171,118,0.25)",
-                    animation: "spin 25s linear infinite reverse",
-                  }}
-                />
-                <div
-                  aria-hidden
-                  style={{
-                    position: "absolute",
-                    inset: "16%",
-                    borderRadius: "50%",
-                    border: "1px solid rgba(255,255,255,0.1)",
-                    boxShadow: "inset 0 0 40px rgba(197,171,118,0.05)",
-                  }}
-                />
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: "22%",
-                    borderRadius: "50%",
-                    background: "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)",
-                    border: "3px solid rgba(197,171,118,0.45)",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: 10,
-                    boxShadow:
-                      "0 0 80px rgba(197,171,118,0.25), inset 0 0 40px rgba(197,171,118,0.15)",
-                    backdropFilter: "blur(16px)",
-                    textAlign: "center",
-                    padding: 20,
-                  }}
-                >
-                  <Image
-                    src="/logo.png"
-                    alt="Selo OSC"
-                    width={130}
-                    height={130}
-                    style={{
-                      objectFit: "contain",
-                      filter: "drop-shadow(0 0 20px rgba(197,171,118,0.6))",
-                      marginBottom: "4px"
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontFamily: "var(--font-heading)",
-                      fontWeight: 900,
-                      fontSize: "clamp(0.8rem, 2vw, 1.1rem)",
-                      color: "var(--site-gold)",
-                      letterSpacing: ".15em",
-                      textTransform: "uppercase",
-                      textShadow: "0 2px 10px rgba(0,0,0,0.5)"
-                    }}
-                  >
-                    Selo OSC
-                  </span>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-heading)",
-                      fontSize: "clamp(0.6rem, 1.5vw, 0.75rem)",
-                      color: "rgba(255,255,255,0.8)",
-                      letterSpacing: ".1em",
-                      textTransform: "uppercase",
-                    }}
-                  >
-                    Gestão de Parcerias
-                  </span>
-                </div>
               </div>
             </div>
           </div>

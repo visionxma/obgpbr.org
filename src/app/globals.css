@@ -692,6 +692,16 @@ p {
   filter: drop-shadow(0 0 18px rgba(197, 171, 118, 0.55));
 }
 
+.interactive-hero-logo {
+  filter: drop-shadow(0 0 30px rgba(197, 171, 118, 0.4));
+  transition: all 0.5s var(--ease-spring);
+  cursor: pointer;
+}
+.interactive-hero-logo:hover {
+  transform: scale(1.08) rotate(1.5deg);
+  filter: drop-shadow(0 0 60px rgba(197, 171, 118, 0.8));
+}
+
 /* ── Ticker ────────────────────────────────────── */
 .ticker-wrap {
   width: 100%;
