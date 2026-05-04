@@ -1,6 +1,7 @@
 import PublicLayout from '../components/PublicLayout';
-import { ShieldCheck, Scale, TrendingUp, FileCheck, Users, Award, ArrowRight, BookOpen, FileText, Download, Mail, Phone, MapPin, ChevronDown } from 'lucide-react';
+import { ShieldCheck, Scale, TrendingUp, FileCheck, Users, Award, ArrowRight, BookOpen, FileText, Download, Mail, Phone, MapPin, ChevronDown, Eye } from 'lucide-react';
 import RegulamentoExpandable from './RegulamentoExpandable';
+import Link from 'next/link';
 
 export const metadata = { title: 'Selo OSC Gestão de Parcerias | OBGP' };
 
@@ -230,6 +231,53 @@ export default function SeloOscPage() {
 
           {/* Document Body via Client Component */}
           <RegulamentoExpandable />
+        </div>
+      </section>
+
+      {/* ═══ TRANSPARÊNCIA ═══ */}
+      <section className="section-padding">
+        <div className="container">
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: 20,
+            background: 'linear-gradient(135deg, var(--site-primary) 0%, #0a2a3d 100%)',
+            borderRadius: 'var(--site-radius-xl)',
+            padding: 'clamp(32px, 5vw, 56px)',
+            position: 'relative', overflow: 'hidden',
+          }}>
+            {/* Detalhe decorativo */}
+            <div style={{ position: 'absolute', top: -40, right: -40, width: 200, height: 200, borderRadius: '50%', background: 'rgba(197,171,118,0.08)' }} aria-hidden="true" />
+            <div style={{ position: 'absolute', bottom: -60, right: 80, width: 140, height: 140, borderRadius: '50%', background: 'rgba(197,171,118,0.05)' }} aria-hidden="true" />
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 14, position: 'relative' }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(197,171,118,0.15)', border: '1px solid rgba(197,171,118,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Eye size={22} style={{ color: 'var(--site-gold)' }} />
+              </div>
+              <div>
+                <div style={{ fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.14em', color: 'var(--site-gold)', marginBottom: 4 }}>
+                  Transparência
+                </div>
+                <h2 style={{ margin: 0, fontSize: 'clamp(1.2rem, 2.5vw, 1.65rem)', fontWeight: 800, color: '#fff', lineHeight: 1.2 }}>
+                  OSCs certificadas são públicas e verificáveis
+                </h2>
+              </div>
+            </div>
+
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.75)', lineHeight: 1.75, fontSize: '0.97rem', maxWidth: 620, position: 'relative' }}>
+              Toda organização que obtém o <strong style={{ color: '#fff' }}>Selo OSC Gestão de Parcerias</strong> tem sua situação de conformidade publicada no Portal de Transparência do OBGP — acessível ao público, ao poder público e a qualquer parceiro institucional. Isso reforça a credibilidade da certificação e o compromisso com a prestação de contas.
+            </p>
+
+            <div style={{ position: 'relative' }}>
+              <Link
+                href="/transparencia"
+                className="btn btn-white"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '14px 28px', fontSize: '0.92rem', fontWeight: 700, borderRadius: 'var(--site-radius-full)', background: 'var(--site-gold)', color: '#fff', textDecoration: 'none', border: 'none' }}
+              >
+                <Eye size={17} />
+                Acessar o Portal de Transparência
+                <ArrowRight size={16} />
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
 
