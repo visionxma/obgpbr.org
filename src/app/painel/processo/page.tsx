@@ -506,6 +506,44 @@ export default function ProcessoPage() {
     setEntidadeData(newData);
   };
 
+  const handleImportFile = async (file: File) => {
+    if (!file) return;
+    const name = file.name.toLowerCase();
+    const isPdf = name.endsWith('.pdf') || file.type === 'application/pdf';
+    const isDocx = name.endsWith('.docx') || file.type.includes('wordprocessingml');
+    if (!isPdf && !isDocx) {
+      setImportError('Formato não suportado. Envie um PDF ou DOCX.');
+      return;
+    }
+    setImportando(true);
+    setImportError('');
+    setImportSuccess(false);
+    try {
+      const fd = new FormData();
+      fd.append('file', file);
+      const res = await fetch('/api/painel/importar-documento', { method: 'POST', body: fd });
+      const json = await res.json();
+      if (!res.ok || json.error) {
+        setImportError(json.error || 'Erro ao processar o documento.');
+        return;
+      }
+      const dados = json.dados as Record<string, string>;
+      setEntidadeData((prev: any) => {
+        const merged: any = { ...prev };
+        for (const [k, v] of Object.entries(dados)) {
+          if (v && v.trim()) merged[k] = v.trim();
+        }
+        return merged;
+      });
+      setImportSuccess(true);
+    } catch (err: any) {
+      setImportError(err.message || 'Erro de conexão ao importar o documento.');
+    } finally {
+      setImportando(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   const saveProgress = async () => {
     setSaving(true);
     try {
@@ -1051,9 +1089,18 @@ export default function ProcessoPage() {
               </header>
 
               <div style={{ padding: '24px 24px 0' }}>
-                <div 
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  style={{ display: 'none' }}
+                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImportFile(f); }}
+                />
+                <div
                   className="import-dropzone"
                   onClick={() => !importando && fileInputRef.current?.click()}
+                  onDragOver={(e) => { e.preventDefault(); }}
+                  onDrop={(e) => { e.preventDefault(); if (!importando) { const f = e.dataTransfer.files?.[0]; if (f) handleImportFile(f); } }}
                   style={{
                     border: '2px dashed var(--site-border)',
                     borderRadius: 'var(--site-radius-lg)',
