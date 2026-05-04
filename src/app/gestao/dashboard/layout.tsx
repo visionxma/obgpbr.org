@@ -22,6 +22,7 @@ import {
   Trash2,
   Bell,
   CheckCheck,
+  ScrollText,
 } from 'lucide-react';
 import './admin.css';
 import AdminSearch from './AdminSearch';
@@ -39,6 +40,7 @@ const navItems = [
   { label: 'Nossas Experiências',path: '/gestao/dashboard/experiencias',        icon: Sparkles,        section: 'Conteúdo' },
   { label: 'Blog',               path: '/gestao/dashboard/blog',                icon: BookOpen,        section: 'Conteúdo' },
   { label: 'Transparência',      path: '/gestao/dashboard/transparencia',       icon: ShieldCheck,     section: 'Conteúdo' },
+  { label: 'Regulamento Selo',   path: '/gestao/dashboard/regulamento',         icon: ScrollText,      section: 'Conteúdo' },
   { label: 'Configurações',      path: '/gestao/dashboard/settings',            icon: Settings,        section: 'Sistema' },
 ];
 
@@ -51,6 +53,7 @@ function getBreadcrumb(path: string) {
     '/gestao/dashboard/experiencias':   'Nossas Experiências',
     '/gestao/dashboard/blog':           'Blog',
     '/gestao/dashboard/transparencia':  'Transparência',
+    '/gestao/dashboard/regulamento':    'Regulamento Selo OSC',
     '/gestao/dashboard/settings':       'Configurações',
   };
   if (path.startsWith('/gestao/dashboard/oscs/')) {
