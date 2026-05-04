@@ -2,7 +2,6 @@ import Image from "next/image";
 import PublicLayout from "../components/PublicLayout";
 import AnimatedCounter from "../components/AnimatedCounter";
 import {
-  Building2,
   ArrowRight,
   HeartHandshake,
   BookOpen,
@@ -861,8 +860,7 @@ export default function InicioPage() {
                   transition: "box-shadow 0.2s, transform 0.2s",
                   boxShadow: "var(--site-shadow-xs)",
                 }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--site-shadow-md)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--site-shadow-xs)"; (e.currentTarget as HTMLElement).style.transform = "none"; }}
+                className="legal-card-link"
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

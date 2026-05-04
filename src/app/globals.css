@@ -342,6 +342,9 @@ p {
   border-color: var(--site-border-hover);
 }
 
+.legal-card-link { transition: box-shadow 0.2s, transform 0.2s; }
+.legal-card-link:hover { box-shadow: var(--site-shadow-md) !important; transform: translateY(-2px); }
+
 .glass-section-white {
   background-color: var(--site-surface-warm);
   background-image: url('/texture.svg');
