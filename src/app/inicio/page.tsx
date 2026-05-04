@@ -1059,7 +1059,7 @@ export default function InicioPage() {
       {/* ══════════════════════════════════════════════
           SELO OSC — SPOTLIGHT
       ══════════════════════════════════════════════ */}
-      <section className="glass-section-blue" style={{ padding: "60px 0" }}>
+      <section className="glass-section-blue no-watermark" style={{ padding: "60px 0" }}>
         <div
           aria-hidden
           style={{
@@ -1150,16 +1150,27 @@ export default function InicioPage() {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                padding: "20px",
               }}
             >
-              <div style={{ position: "relative", width: 280, height: 280 }}>
+              <div style={{ position: "relative", width: "clamp(320px, 35vw, 480px)", height: "clamp(320px, 35vw, 480px)" }}>
+                {/* Glow de fundo */}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: "10%",
+                    background: "radial-gradient(circle, rgba(197,171,118,0.15) 0%, transparent 70%)",
+                    animation: "pulseGlow 4s ease-in-out infinite",
+                    borderRadius: "50%",
+                  }}
+                />
                 <div
                   aria-hidden
                   style={{
                     position: "absolute",
                     inset: 0,
                     borderRadius: "50%",
-                    border: "1px solid rgba(197,171,118,0.12)",
+                    border: "2px solid rgba(197,171,118,0.15)",
                     animation: "spin 40s linear infinite",
                   }}
                 />
@@ -1167,19 +1178,20 @@ export default function InicioPage() {
                   aria-hidden
                   style={{
                     position: "absolute",
-                    inset: "9%",
+                    inset: "8%",
                     borderRadius: "50%",
-                    border: "1px dashed rgba(197,171,118,0.18)",
-                    animation: "spin 22s linear infinite reverse",
+                    border: "2px dashed rgba(197,171,118,0.25)",
+                    animation: "spin 25s linear infinite reverse",
                   }}
                 />
                 <div
                   aria-hidden
                   style={{
                     position: "absolute",
-                    inset: "17%",
+                    inset: "16%",
                     borderRadius: "50%",
-                    border: "1px solid rgba(255,255,255,0.05)",
+                    border: "1px solid rgba(255,255,255,0.1)",
+                    boxShadow: "inset 0 0 40px rgba(197,171,118,0.05)",
                   }}
                 />
                 <div
@@ -1187,38 +1199,40 @@ export default function InicioPage() {
                     position: "absolute",
                     inset: "22%",
                     borderRadius: "50%",
-                    background: "rgba(255,255,255,0.07)",
-                    border: "2px solid rgba(197,171,118,0.32)",
+                    background: "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.02) 100%)",
+                    border: "3px solid rgba(197,171,118,0.45)",
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
                     justifyContent: "center",
-                    gap: 5,
+                    gap: 10,
                     boxShadow:
-                      "0 0 64px rgba(197,171,118,0.14), inset 0 0 32px rgba(197,171,118,0.04)",
-                    backdropFilter: "blur(10px)",
+                      "0 0 80px rgba(197,171,118,0.25), inset 0 0 40px rgba(197,171,118,0.15)",
+                    backdropFilter: "blur(16px)",
                     textAlign: "center",
-                    padding: 12,
+                    padding: 20,
                   }}
                 >
                   <Image
                     src="/logo.png"
                     alt="Selo OSC"
-                    width={80}
-                    height={80}
+                    width={130}
+                    height={130}
                     style={{
                       objectFit: "contain",
-                      filter: "drop-shadow(0 0 12px rgba(197,171,118,0.38))",
+                      filter: "drop-shadow(0 0 20px rgba(197,171,118,0.6))",
+                      marginBottom: "4px"
                     }}
                   />
                   <span
                     style={{
                       fontFamily: "var(--font-heading)",
-                      fontWeight: 800,
-                      fontSize: ".58rem",
+                      fontWeight: 900,
+                      fontSize: "clamp(0.8rem, 2vw, 1.1rem)",
                       color: "var(--site-gold)",
-                      letterSpacing: ".1em",
+                      letterSpacing: ".15em",
                       textTransform: "uppercase",
+                      textShadow: "0 2px 10px rgba(0,0,0,0.5)"
                     }}
                   >
                     Selo OSC
@@ -1226,9 +1240,9 @@ export default function InicioPage() {
                   <span
                     style={{
                       fontFamily: "var(--font-heading)",
-                      fontSize: ".55rem",
-                      color: "rgba(255,255,255,0.4)",
-                      letterSpacing: ".06em",
+                      fontSize: "clamp(0.6rem, 1.5vw, 0.75rem)",
+                      color: "rgba(255,255,255,0.8)",
+                      letterSpacing: ".1em",
                       textTransform: "uppercase",
                     }}
                   >

@@ -380,6 +380,10 @@ p {
   pointer-events: none;
   z-index: 0;
 }
+.glass-section-blue.no-watermark::before {
+  content: none !important;
+  display: none !important;
+}
 .glass-section-blue > .container {
   position: relative;
   z-index: 1;
