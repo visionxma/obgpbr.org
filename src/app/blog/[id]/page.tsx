@@ -84,13 +84,8 @@ export default function BlogPostPage() {
         {/* Container Central estilo Portal de Notícias */}
         <div style={{ maxWidth: 840, margin: '0 auto', padding: '120px 20px 0' }}>
           
-          {/* Breadcrumb / Back Link */}
-          <button onClick={() => router.back()} style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            color: '#0669ce', fontSize: '0.875rem', fontWeight: 700,
-            textDecoration: 'none', marginBottom: 24, textTransform: 'uppercase',
-            background: 'none', border: 'none', cursor: 'pointer', padding: 0
-          }} className="g1-back-link">
+          {/* Breadcrumb / Back Link (Flutuante em telas grandes) */}
+          <button onClick={() => router.back()} className="floating-back-btn">
             <ArrowLeft size={16} /> Voltar
           </button>
 
@@ -206,8 +201,32 @@ export default function BlogPostPage() {
       </article>
 
       <style jsx global>{`
-        .g1-back-link:hover {
-          text-decoration: underline !important;
+        .floating-back-btn {
+          position: fixed;
+          top: 120px;
+          left: 40px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          color: #777;
+          font-size: 0.85rem;
+          font-weight: 700;
+          text-transform: uppercase;
+          background: none;
+          border: none;
+          cursor: pointer;
+          transition: color 0.2s;
+          z-index: 100;
+        }
+        .floating-back-btn:hover {
+          color: #111;
+        }
+
+        @media (max-width: 1100px) {
+          .floating-back-btn {
+            position: static;
+            margin-bottom: 32px;
+          }
         }
 
         .g1-return-btn:hover {
