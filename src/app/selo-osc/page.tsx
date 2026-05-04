@@ -20,17 +20,29 @@ export default function SeloOscPage() {
   return (
     <PublicLayout>
       {/* ═══ HERO ═══ */}
-      <section className="glass-section-blue page-hero">
-        <div className="container">
-          <div className="hero-badge"><Award size={13} /> CERTIFICAÇÃO</div>
-          <h1 className="h1-display" style={{ maxWidth: 640, margin: '0 auto 20px' }}>
-            Selo OSC{' '}
-            <span className="hero-accent-white">Gestão de Parcerias</span>
-          </h1>
-          <p className="hero-subtitle">
-            Mecanismo independente de certificação que atesta a regularidade, conformidade e capacidade institucional das OSCs.
-          </p>
-          <div className="hero-divider" />
+      <section className="glass-section-blue page-hero" style={{ overflow: 'hidden', position: 'relative' }}>
+        <div className="container" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 32, alignItems: 'center' }}>
+          <div style={{ minWidth: 0, textAlign: 'center' }} className="selo-hero-text">
+            <div className="hero-badge"><Award size={13} /> CERTIFICAÇÃO</div>
+            <h1 className="h1-display" style={{ maxWidth: 640, margin: '0 auto 20px' }}>
+              Selo OSC{' '}
+              <span className="hero-accent-white">Gestão de Parcerias</span>
+            </h1>
+            <p className="hero-subtitle">
+              Mecanismo independente de certificação que atesta a regularidade, conformidade e capacidade institucional das OSCs.
+            </p>
+            <div className="hero-divider" />
+          </div>
+          <div className="selo-hero-mascote" aria-hidden="true">
+            <img
+              src="/img/mascote-selo.webp"
+              alt=""
+              width={320}
+              height={320}
+              className="mascote mascote-float"
+              style={{ width: 'clamp(220px, 26vw, 340px)', height: 'auto' }}
+            />
+          </div>
         </div>
       </section>
 
@@ -423,8 +435,17 @@ export default function SeloOscPage() {
       </section>
 
       {/* ═══ CTA ═══ */}
-      <section className="glass-section-blue" style={{ padding: '80px 0', textAlign: 'center' }}>
-        <div className="container">
+      <section className="glass-section-blue" style={{ padding: '80px 0', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+        <div className="container" style={{ position: 'relative' }}>
+          <img
+            src="/img/mascote-selo.webp"
+            alt=""
+            aria-hidden="true"
+            width={180}
+            height={180}
+            className="mascote mascote-float"
+            style={{ width: 'clamp(120px, 16vw, 180px)', height: 'auto', margin: '0 auto 18px' }}
+          />
           <h2 style={{ color: 'white', marginBottom: 16 }}>
             Quer{' '}<span className="hero-accent-white">certificar</span>{' '}sua organização?
           </h2>

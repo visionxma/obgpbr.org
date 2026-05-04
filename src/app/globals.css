@@ -884,3 +884,50 @@ p {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* ── Mascote Selo OSC ───────────────────────────────────────
+   Animações utilitárias para o mascote oficial.
+   Usadas em /selo-osc, painel/processos e modais de sucesso.
+   Respeita prefers-reduced-motion para acessibilidade.
+──────────────────────────────────────────────────────────── */
+.mascote {
+  display: block;
+  user-select: none;
+  pointer-events: none;
+  filter: drop-shadow(0 18px 28px rgba(13, 54, 79, 0.18));
+  will-change: transform;
+}
+.mascote-float {
+  animation: mascoteFloat 5.5s ease-in-out infinite;
+}
+.mascote-pop-in {
+  animation: mascotePopIn .6s cubic-bezier(.34, 1.56, .64, 1) both;
+}
+.mascote-wave {
+  animation: mascoteWave 3.2s ease-in-out infinite;
+  transform-origin: 50% 90%;
+}
+@keyframes mascoteFloat {
+  0%, 100% { transform: translateY(0) rotate(-1.2deg); }
+  50%      { transform: translateY(-10px) rotate(1.2deg); }
+}
+@keyframes mascotePopIn {
+  0%   { transform: scale(.4) rotate(-8deg); opacity: 0; }
+  60%  { transform: scale(1.08) rotate(2deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+@keyframes mascoteWave {
+  0%, 100% { transform: rotate(-2deg); }
+  50%      { transform: rotate(2deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mascote-float, .mascote-wave { animation: none; }
+  .mascote-pop-in { animation-duration: .01ms; }
+}
+
+/* Hero da página /selo-osc — mascote convive com o título à direita.
+   Em mobile, esconde para não competir com a leitura. */
+.selo-hero-mascote { display: flex; justify-content: center; }
+@media (max-width: 880px) {
+  .selo-hero-mascote { display: none; }
+}

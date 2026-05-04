@@ -772,10 +772,19 @@ export default function ProcessoPage() {
                 </button>
               </div>
             ) : (
-              <div style={{ padding: 16, borderRadius: 12, background: 'rgba(22,163,74,0.05)', border: '1px solid rgba(22,163,74,0.1)', textAlign: 'center' }}>
-                <div style={{ color: '#16a34a', fontWeight: 800, fontSize: '1.1rem', marginBottom: 4 }}>CNPJ Validado!</div>
+              <div style={{ padding: '24px 16px 20px', borderRadius: 12, background: 'rgba(22,163,74,0.05)', border: '1px solid rgba(22,163,74,0.18)', textAlign: 'center' }}>
+                <img
+                  src="/img/mascote-selo.webp"
+                  alt=""
+                  aria-hidden="true"
+                  width={140}
+                  height={140}
+                  className="mascote mascote-pop-in"
+                  style={{ width: 140, height: 'auto', margin: '0 auto 12px' }}
+                />
+                <div style={{ color: '#16a34a', fontWeight: 800, fontSize: '1.15rem', marginBottom: 4 }}>CNPJ Validado!</div>
                 <div style={{ color: 'var(--site-text-secondary)', fontSize: '0.85rem' }}>Aguarde um instante enquanto preparamos seu painel...</div>
-                <Loader2 size={24} className="spin-anim" style={{ color: '#16a34a', marginTop: 12 }} />
+                <Loader2 size={20} className="spin-anim" style={{ color: '#16a34a', marginTop: 10 }} />
               </div>
             )}
           </div>
@@ -1433,12 +1442,18 @@ export default function ProcessoPage() {
 
                     {/* Actions / Success State */}
                     {checkoutSuccess ? (
-                      <div style={{ padding: '30px 20px', textAlign: 'center', background: '#fff', borderRadius: 16, border: '1px solid #16a34a', marginTop: 12, animation: 'fadeIn .4s ease' }}>
-                        <div style={{ width: 64, height: 64, background: 'rgba(22,163,74,0.1)', color: '#16a34a', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-                          <CheckCircle2 size={32} />
-                        </div>
+                      <div style={{ padding: '32px 20px 28px', textAlign: 'center', background: '#fff', borderRadius: 16, border: '1px solid #16a34a', marginTop: 12, animation: 'fadeIn .4s ease' }}>
+                        <img
+                          src="/img/mascote-selo.webp"
+                          alt=""
+                          aria-hidden="true"
+                          width={180}
+                          height={180}
+                          className="mascote mascote-pop-in"
+                          style={{ width: 180, height: 'auto', margin: '0 auto 14px' }}
+                        />
                         <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#16a34a', marginBottom: 8 }}>Documentos Enviados!</h2>
-                        <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.95rem', marginBottom: 24 }}>
+                        <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.95rem', marginBottom: 24, maxWidth: 480, margin: '0 auto 24px', lineHeight: 1.65 }}>
                           O pagamento e os documentos estão <strong>em análise</strong>. Você pode acompanhar o status pela aba "Processos".
                         </p>
                         <button onClick={() => { setCheckoutSuccess(false); setShowPaymentScreen(false); handleAdicionarNovo(); router.push('/painel/processos'); }} className="panel-btn panel-btn-primary" style={{ padding: '14px 32px', display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: '1rem', borderRadius: 'var(--site-radius-full)' }}>

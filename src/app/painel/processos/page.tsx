@@ -135,15 +135,23 @@ export default function ProcessosPage() {
           <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.95rem', maxWidth: 400, margin: '0 auto' }}>{loadError}</p>
         </div>
       ) : trackedProcesses.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '80px 40px', background: '#fff', borderRadius: 24, border: '1px solid rgba(13,54,79,0.06)', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
-          <FolderOpen size={48} style={{ color: 'var(--site-gold)', marginBottom: 20, opacity: 0.8 }} />
-          <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--site-primary)', marginBottom: 8 }}>Nenhum processo em andamento</div>
-          <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.95rem', maxWidth: 400, margin: '0 auto 24px' }}>Você ainda não enviou nenhum relatório para análise. Inicie um novo processo para obter sua certificação.</p>
-          <button 
-            onClick={() => router.push('/painel/relatorio-conformidade?novo=1')} 
-            style={{ background: '#fff', color: 'var(--site-primary)', border: '1px solid var(--site-border)', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 'var(--site-radius-full)', fontWeight: 700, cursor: 'pointer', transition: 'all .2s' }}
-            onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--site-primary)'; }}
-            onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--site-border)'; }}
+        <div style={{ textAlign: 'center', padding: '60px 40px 70px', background: '#fff', borderRadius: 24, border: '1px solid rgba(13,54,79,0.06)', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
+          <img
+            src="/img/mascote-selo.webp"
+            alt=""
+            aria-hidden="true"
+            width={200}
+            height={200}
+            className="mascote mascote-float"
+            style={{ width: 'clamp(160px, 22vw, 220px)', height: 'auto', margin: '0 auto 22px' }}
+          />
+          <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--site-primary)', marginBottom: 10 }}>Vamos começar sua certificação?</div>
+          <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.95rem', maxWidth: 460, margin: '0 auto 28px', lineHeight: 1.65 }}>Você ainda não tem processos por aqui. Inicie seu Relatório de Conformidade — é rápido, e eu te acompanho em cada etapa.</p>
+          <button
+            onClick={() => router.push('/painel/relatorio-conformidade?novo=1')}
+            style={{ background: 'var(--site-primary)', color: '#fff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 28px', borderRadius: 'var(--site-radius-full)', fontWeight: 800, cursor: 'pointer', transition: 'all .2s', boxShadow: '0 8px 24px rgba(13,54,79,0.18)' }}
+            onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(13,54,79,0.24)'; }}
+            onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(13,54,79,0.18)'; }}
           >
             Iniciar Relatório <ArrowRight size={16} />
           </button>
