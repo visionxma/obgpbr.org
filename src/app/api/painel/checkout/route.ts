@@ -233,14 +233,10 @@ export async function POST(req: NextRequest) {
         regularidade_fiscal: docMapped.regularidade_fiscal,
         qualificacao_economica: docMapped.qualificacao_economica,
         qualificacao_tecnica: docMapped.qualificacao_tecnica,
+        outros_registros: docMapped.outros_registros,
         submitted_at: new Date().toISOString(),
         observacao_admin: `[GERADO VIA CHECKOUT] Pagamento PIX enviado. Comprovante: ${comprovantePath}`
       };
-
-      // Adiciona outros_registros apenas se houver dados, para evitar erro se a coluna não existir no DB
-      if (Object.keys(docMapped.outros_registros).length > 0) {
-        relPayload.outros_registros = docMapped.outros_registros;
-      }
 
       const { data: relData, error: relError } = await supabaseAdmin
         .from('relatorios_conformidade')
