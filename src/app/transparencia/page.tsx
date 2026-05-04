@@ -36,6 +36,8 @@ interface OscPublica {
   estado: string | null;
   status_selo: string;
   updated_at: string;
+  certificado_numero: string | null;
+  certificado_emitido_at: string | null;
 }
 
 interface FormPublico {
@@ -105,7 +107,7 @@ export default function Transparencia() {
       const [{ data: perfis }, { data: formularios }, { data: pcs }] = await Promise.all([
         supabase
           .from('osc_perfis')
-          .select('id, osc_id, razao_social, cnpj, municipio, estado, status_selo, updated_at')
+          .select('id, osc_id, razao_social, cnpj, municipio, estado, status_selo, updated_at, certificado_numero, certificado_emitido_at')
           .eq('status_selo', 'aprovado')
           .order('updated_at', { ascending: false }),
         supabase
@@ -140,7 +142,7 @@ export default function Transparencia() {
   const filteredOscs = oscs.filter(o => {
     if (!search) return true;
     const q = search.toLowerCase();
-    return [o.razao_social, o.cnpj, o.municipio, o.osc_id].some(f => (f || '').toLowerCase().includes(q));
+    return [o.razao_social, o.cnpj, o.municipio, o.osc_id, o.certificado_numero, o.certificado_emitido_at].some(f => (f || '').toLowerCase().includes(q));
   });
 
   const sel: React.CSSProperties = {
@@ -171,7 +173,7 @@ export default function Transparencia() {
             }} />
             <input
               type="text"
-              placeholder={tab === 'convenios' ? 'Buscar por proponente, parlamentar, objeto...' : 'Buscar por nome, CNPJ ou município...'}
+              placeholder="Buscar por razão social, CNPJ, vigência ou data de certificação..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               style={{
