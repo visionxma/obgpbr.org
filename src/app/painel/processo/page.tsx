@@ -77,46 +77,46 @@ const WIZARD_STEPS = [
 
 const HABILITACAO_JURIDICA: DocItem[] = [
   { id: 'cartao_cnpj',           label: '2.1. Cartão CNPJ',                                  required: true },
-  { id: 'qsa_cnpj',             label: '2.2. QSA Cartão CNPJ',                               required: true },
-  { id: 'cadastro_contribuinte', label: '2.3. Cadastro Contribuinte Municipal/Estadual',       required: true },
+  { id: 'qsa_cnpj',             label: '2.2. QSA Cartão CNPJ',                               required: false },
+  { id: 'cadastro_contribuinte', label: '2.3. Cadastro Contribuinte Municipal/Estadual',       required: false },
   { id: 'alvara_funcionamento',  label: '2.4. Alvará de licença e funcionamento',              required: true },
   { id: 'estatuto_social',       label: '2.5. Estatuto Social',                               required: true },
   { id: 'ata_constituicao',      label: '2.6. Ata Constituição/Fundação',                     required: true },
   { id: 'ata_eleicao_posse',     label: '2.7. Ata Eleição e Posse atual',                     required: true },
-  { id: 'relacao_membros',       label: '2.8. Relação de Membros atual',                      required: true },
+  { id: 'relacao_membros',       label: '2.8. Relação de Membros atual',                      required: false },
   { id: 'comprovante_end_ent',   label: '2.9. Comprovante endereço entidade',                 required: true },
   { id: 'rg_cpf_representante',  label: '2.10. RG/CPF representante legal',                   required: true },
-  { id: 'comprovante_end_rep',   label: '2.11. Comprovante endereço representante legal',     required: true },
+  { id: 'comprovante_end_rep',   label: '2.11. Comprovante endereço representante legal',     required: false },
 ];
 
 const REGULARIDADE_FISCAL: DocItem[] = [
   { id: 'cnd_federal',      label: '3.1. CND Federal',       required: true },
   { id: 'cnd_estadual',     label: '3.2. CND Estadual',      required: true },
-  { id: 'cnda_estadual',    label: '3.3. CNDA Estadual',     required: true },
+  { id: 'cnda_estadual',    label: '3.3. CNDA Estadual',     required: false },
   { id: 'cnd_municipal',    label: '3.4. CND Municipal',     required: true },
   { id: 'cr_fgts',          label: '3.5. CR FGTS',           required: true },
   { id: 'cnd_trabalhista',  label: '3.6. CND Trabalhista',   required: true },
-  { id: 'cnd_caema',        label: '3.7. CND CAEMA',         required: true },
+  { id: 'cnd_caema',        label: '3.7. CND CAEMA',         required: false },
 ];
 
 const QUALIFICACAO_FINANCEIRA: DocItem[] = [
   { id: 'cert_falencia',         label: '4.1. Certidão de Falência e Concordata',                                                    required: true },
   { id: 'reg_contador',          label: '4.2. Registro e regularidade Contador',                                                    required: true },
-  { id: 'termo_abertura',        label: '4.3.1. Termo de abertura',                                                                 required: true },
+  { id: 'termo_abertura',        label: '4.3.1. Termo de abertura',                                                                 required: false },
   { id: 'balanco_patrimonial',   label: '4.3.2. Balanço Patrimonial',                                                               required: true },
   { id: 'dem_superavit',         label: '4.3.3. Demonstração do Superavit e Déficit',                                               required: true },
-  { id: 'dem_mutacoes',          label: '4.3.4. Demonstração das Mutações do Patrimônio Líquido',                                   required: true },
-  { id: 'dem_fluxo_caixa',       label: '4.3.5. Demonstração dos Fluxos de Caixa',                                                 required: true },
+  { id: 'dem_mutacoes',          label: '4.3.4. Demonstração das Mutações do Patrimônio Líquido',                                   required: false },
+  { id: 'dem_fluxo_caixa',       label: '4.3.5. Demonstração dos Fluxos de Caixa',                                                 required: false },
   { id: 'notas_explicativas',    label: '4.3.6. Notas Explicativas dos dois últimos exercícios sociais',                           required: true },
-  { id: 'termo_encerramento',    label: '4.3.7. Termo de encerramento',                                                             required: true },
+  { id: 'termo_encerramento',    label: '4.3.7. Termo de encerramento',                                                             required: false },
   { id: 'ata_prestacao_contas',  label: '4.3. Ata aprovando prestação de contas com parecer do conselho fiscal dos últimos dois exercícios sociais da entidade.', required: true },
 ];
 
 const QUALIFICACAO_TECNICA: DocItem[] = [
-  { id: 'instr_colaboracao', label: '5.1.1. Instrumento Jurídico (Termo de Colaboração)',  required: true },
-  { id: 'instr_fomento',     label: '5.1.2. Instrumento Jurídico (Termo de Fomento)',      required: true },
-  { id: 'instr_cooperacao',  label: '5.1.3. Instrumento Jurídico (Acordo de Cooperação)', required: true },
-  { id: 'instr_outro',       label: '5.1.4. Instrumento Jurídico (Outro tipo de contrato).', required: true },
+  { id: 'instr_colaboracao', label: '5.1.1. Instrumento Jurídico (Termo de Colaboração)',  required: false },
+  { id: 'instr_fomento',     label: '5.1.2. Instrumento Jurídico (Termo de Fomento)',      required: false },
+  { id: 'instr_cooperacao',  label: '5.1.3. Instrumento Jurídico (Acordo de Cooperação)', required: false },
+  { id: 'instr_outro',       label: '5.1.4. Instrumento Jurídico (Outro tipo de contrato).', required: false },
 ];
 
 const OUTROS_REGISTROS: DocItem[] = [
@@ -527,7 +527,7 @@ export default function ProcessoPage() {
         return;
       }
     }
-    
+
     if (step >= 2 && step <= 5) {
       const itemsList = step === 2 ? HABILITACAO_JURIDICA : step === 3 ? REGULARIDADE_FISCAL : step === 4 ? QUALIFICACAO_FINANCEIRA : QUALIFICACAO_TECNICA;
       const firstPending = itemsList.find(item => item.required && (!data[item.id] || data[item.id].status === 'pendente'));
@@ -538,6 +538,20 @@ export default function ProcessoPage() {
       }
     }
     */
+
+    // Etapa 5 — validação cruzada (Art. 33, V, MROSC):
+    // pelo menos UM dos quatro instrumentos deve ser anexado para
+    // comprovação de experiência prévia.
+    if (step === 5) {
+      const algumAnexado = QUALIFICACAO_TECNICA.some(
+        item => files[item.id] || (data[item.id] && data[item.id].status !== 'pendente')
+      );
+      if (!algumAnexado) {
+        setShowValidationErrors(true);
+        document.getElementById('tecnica-cross-validation')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+    }
 
     setShowValidationErrors(false);
     await saveProgress();
@@ -1113,9 +1127,124 @@ export default function ProcessoPage() {
             <DocumentSection number="4" title="QUALIFICAÇÃO ECONÔMICO-FINANCEIRA" items={QUALIFICACAO_FINANCEIRA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} files={files} onAttachFile={handleAttachFile} onRemoveFile={handleRemoveFile} />
           )}
 
-          {step === 5 && (
-            <DocumentSection number="5" title="QUALIFICAÇÃO TÉCNICA" items={QUALIFICACAO_TECNICA} data={data} handleUpdate={handleUpdate} showErrors={showValidationErrors} files={files} onAttachFile={handleAttachFile} onRemoveFile={handleRemoveFile} />
-          )}
+          {step === 5 && (() => {
+            const tecnicaAnexados = QUALIFICACAO_TECNICA.filter(
+              item => files[item.id] || (data[item.id] && data[item.id].status !== 'pendente')
+            ).length;
+            const requisitoAtendido = tecnicaAnexados >= 1;
+            const exibirErro = showValidationErrors && !requisitoAtendido;
+            return (
+              <>
+                <section
+                  id="tecnica-cross-validation"
+                  style={{
+                    marginBottom: 20,
+                    border: exibirErro ? '1px solid #fca5a5' : '1px solid rgba(197,171,118,0.4)',
+                    background: exibirErro ? '#fef2f2' : 'rgba(197,171,118,0.08)',
+                    borderRadius: 'var(--site-radius-xl)',
+                    padding: '20px 24px',
+                    display: 'flex',
+                    gap: 16,
+                    alignItems: 'flex-start',
+                  }}
+                >
+                  <div
+                    style={{
+                      flexShrink: 0,
+                      width: 44,
+                      height: 44,
+                      borderRadius: '50%',
+                      background: exibirErro ? '#fee2e2' : 'rgba(197,171,118,0.18)',
+                      color: exibirErro ? '#dc2626' : 'var(--site-gold)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {exibirErro ? <AlertCircle size={22} /> : <Info size={22} />}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: '0.7rem',
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.08em',
+                        color: exibirErro ? '#991b1b' : 'var(--site-gold-dark, #8a7340)',
+                        marginBottom: 4,
+                      }}
+                    >
+                      Requisito legal — Art. 33, V, MROSC (Lei 13.019/2014)
+                    </div>
+                    <h3
+                      style={{
+                        margin: '0 0 6px',
+                        fontSize: '1rem',
+                        fontWeight: 800,
+                        color: exibirErro ? '#991b1b' : 'var(--site-text-primary)',
+                      }}
+                    >
+                      Comprovação de experiência prévia
+                    </h3>
+                    <p
+                      style={{
+                        margin: '0 0 12px',
+                        fontSize: '0.85rem',
+                        lineHeight: 1.6,
+                        color: exibirErro ? '#7f1d1d' : 'var(--site-text-secondary)',
+                      }}
+                    >
+                      Para esta etapa é exigido o anexo de <strong>pelo menos um</strong> dos
+                      quatro instrumentos jurídicos abaixo (Termo de Colaboração, Termo de Fomento,
+                      Acordo de Cooperação ou Outro tipo de contrato), como prova de experiência
+                      prévia da entidade na execução de objeto de mesma natureza ou de natureza
+                      semelhante. Os demais permanecem opcionais.
+                    </p>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 10,
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          padding: '5px 12px',
+                          borderRadius: 'var(--site-radius-full)',
+                          fontSize: '0.78rem',
+                          fontWeight: 800,
+                          background: requisitoAtendido ? 'rgba(22,163,74,0.12)' : 'rgba(0,0,0,0.06)',
+                          color: requisitoAtendido ? '#16a34a' : 'var(--site-text-secondary)',
+                          border: requisitoAtendido ? '1px solid rgba(22,163,74,0.3)' : '1px solid var(--site-border)',
+                        }}
+                      >
+                        {requisitoAtendido ? <CheckCircle2 size={14} /> : <Clock size={14} />}
+                        {tecnicaAnexados} de {QUALIFICACAO_TECNICA.length} instrumento{tecnicaAnexados === 1 ? '' : 's'} anexado{tecnicaAnexados === 1 ? '' : 's'}
+                      </span>
+                      <span
+                        style={{
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          color: requisitoAtendido ? '#16a34a' : (exibirErro ? '#dc2626' : 'var(--site-text-tertiary)'),
+                        }}
+                      >
+                        {requisitoAtendido
+                          ? '✓ Requisito atendido — pronto para avançar'
+                          : exibirErro
+                            ? '⚠ Anexe ao menos um instrumento para continuar'
+                            : 'Anexe ao menos um para avançar'}
+                      </span>
+                    </div>
+                  </div>
+                </section>
+                <DocumentSection number="5" title="QUALIFICAÇÃO TÉCNICA" items={QUALIFICACAO_TECNICA} data={data} handleUpdate={handleUpdate} showErrors={false} files={files} onAttachFile={handleAttachFile} onRemoveFile={handleRemoveFile} />
+              </>
+            );
+          })()}
 
           {step === 6 && (
             <DocumentSection number="6" title="OUTROS REGISTROS" items={OUTROS_REGISTROS} data={data} handleUpdate={handleUpdate} showErrors={false} files={files} onAttachFile={handleAttachFile} onRemoveFile={handleRemoveFile} />
