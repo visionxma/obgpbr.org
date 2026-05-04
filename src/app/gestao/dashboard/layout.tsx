@@ -9,6 +9,7 @@ import {
   Settings,
   LogOut,
   ChevronRight,
+  ChevronLeft,
   Menu,
   X,
   User,
@@ -121,6 +122,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const [session, setSession] = useState<any>(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
   const [currentTime, setCurrentTime] = useState('');
@@ -134,7 +136,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       setTheme(savedTheme);
       document.documentElement.setAttribute('data-theme', savedTheme);
     }
+    const savedCollapsed = localStorage.getItem('admin-sidebar-collapsed');
+    if (savedCollapsed === '1') setSidebarCollapsed(true);
   }, []);
+
+  const toggleSidebarCollapse = () => {
+    setSidebarCollapsed(prev => {
+      const next = !prev;
+      localStorage.setItem('admin-sidebar-collapsed', next ? '1' : '0');
+      return next;
+    });
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }: any) => {
@@ -240,9 +252,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="admin-shell">
+    <div className={`admin-shell ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       {/* ──── Sidebar ──── */}
-      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`}>
+      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="sidebar-brand">
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
             <img src="/logo.png" alt="OBGP" style={{ width: 40, height: 40, objectFit: 'contain', flexShrink: 0 }} />
@@ -267,6 +279,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
         </div>
       </aside>
+
+      {/* ──── Notch para ocultar/mostrar a sidebar (somente desktop) ──── */}
+      <button
+        type="button"
+        className="sidebar-collapse-notch"
+        onClick={toggleSidebarCollapse}
+        aria-label={sidebarCollapsed ? 'Mostrar sidebar' : 'Ocultar sidebar'}
+        title={sidebarCollapsed ? 'Mostrar sidebar' : 'Ocultar sidebar'}
+      >
+        {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+      </button>
 
       {/* ──── Main Content ──── */}
       <div className="admin-main">

@@ -553,19 +553,19 @@ function OscsContent() {
                         </div>
                       </td>
                       <td style={{ color: 'var(--admin-text-secondary)', fontSize: '0.82rem' }}>{fmtDate(osc.created_at)}</td>
-                      <td onClick={e => e.stopPropagation()}>
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', width: '290px' }}>
-                          <button onClick={() => setReviewOscId(osc.id)}
-                            style={{ flex: 1, height: '38px', border: 'none', borderRadius: '8px', background: 'var(--admin-primary)', color: '#fff', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                      <td onClick={e => e.stopPropagation()} style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center', justifyContent: 'flex-end' }}>
+                          <button onClick={() => setReviewOscId(osc.id)} title="Avaliar processo"
+                            style={{ height: '36px', padding: '0 12px', border: 'none', borderRadius: '8px', background: 'var(--admin-primary)', color: '#fff', fontSize: '0.82rem', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
                             <CheckCircle size={14} /> Avaliar
                           </button>
-                          <Link href={`/gestao/dashboard/oscs/${osc.id}`}
-                            style={{ flex: 1, height: '38px', borderRadius: '8px', background: 'var(--admin-surface)', border: '1px solid var(--admin-border)', color: 'var(--admin-text-primary)', fontSize: '0.85rem', fontWeight: 700, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                          <Link href={`/gestao/dashboard/oscs/${osc.id}`} title="Ver perfil completo"
+                            style={{ height: '36px', padding: '0 12px', borderRadius: '8px', background: 'var(--admin-surface)', border: '1px solid var(--admin-border)', color: 'var(--admin-text-primary)', fontSize: '0.82rem', fontWeight: 700, textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
                             <Eye size={14} /> Perfil
                           </Link>
-                          <button onClick={() => handleMoveToTrash([osc.id])} disabled={actionLoading} title="Mover para lixeira"
-                            style={{ flex: 1, height: '38px', border: 'none', borderRadius: '8px', background: 'rgba(220,38,38,0.08)', color: '#dc2626', fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-                            <Trash2 size={14} /> Excluir
+                          <button onClick={() => handleMoveToTrash([osc.id])} disabled={actionLoading} title="Mover para lixeira" aria-label="Mover para lixeira"
+                            style={{ width: '36px', height: '36px', flexShrink: 0, border: 'none', borderRadius: '8px', background: 'rgba(220,38,38,0.08)', color: '#dc2626', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <Trash2 size={14} />
                           </button>
                         </div>
                       </td>
