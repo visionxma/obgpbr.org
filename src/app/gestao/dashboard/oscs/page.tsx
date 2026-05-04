@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useCallback, Suspense } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -172,6 +173,11 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
   const [loadingDocx, setLoadingDocx] = useState(false);
   const [obs, setObs] = useState('');
   const [showReject, setShowReject] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [selectedRelId, setSelectedRelId] = useState(osc.relatorios[0]?.id);
   const rel = osc.relatorios.find(r => r.id === selectedRelId);
@@ -197,8 +203,10 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
     onClose();
   };
 
-  return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(15,23,42,0.4)', backdropFilter: 'blur(4px)' }}>
+  if (!mounted) return null;
+
+  return createPortal(
+    <div style={{ position: 'fixed', inset: 0, zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(15,23,42,0.4)', backdropFilter: 'blur(4px)' }}>
       <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 700, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
         
         {/* Header */}
@@ -238,7 +246,7 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
                   >
                     {osc.relatorios.map((r, idx) => (
                       <option key={r.id} value={r.id}>
-                        Processo {r.numero || r.id.substring(0,8)} • Data: {new Date(r.created_at).toLocaleDateString('pt-BR')} • Status: {r.status.toUpperCase()}
+                        Processo {r.numero || r.id.substring(0,8)} • Data: {new Date(r.created_at).toLocaleDateString('pt-BR')} às {new Date(r.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} • Status: {r.status.toUpperCase()}
                       </option>
                     ))}
                   </select>
@@ -298,7 +306,8 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
