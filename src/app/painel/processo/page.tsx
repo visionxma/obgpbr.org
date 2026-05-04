@@ -548,6 +548,10 @@ export default function ProcessoPage() {
   const handleBack = () => {
     if (showPaymentScreen) {
       setShowPaymentScreen(false);
+    } else if (step === 1) {
+      setShowCnpjStep(true);
+      setCnpjError('');
+      setCnpjSuccess(false);
     } else {
       setStep(s => Math.max(s - 1, 1));
     }
@@ -785,44 +789,43 @@ export default function ProcessoPage() {
           }}>
             {/* LEFT: Back + Title */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 20, flex: '1 1 auto', minWidth: 0 }}>
-              {(step > 1 || showPaymentScreen) && (
-                <button 
-                  onClick={handleBack}
-                  style={{ 
-                    padding: '10px 20px', 
-                    fontSize: '0.8rem', 
-                    fontWeight: 700, 
-                    borderRadius: 'var(--site-radius-full)', 
-                    border: '1px solid var(--site-border)', 
-                    background: '#fff',
-                    color: 'var(--site-primary)', 
-                    cursor: 'pointer', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: 8, 
-                    transition: 'all .25s ease',
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0
-                  }}
-                  onMouseOver={(e) => { 
-                    e.currentTarget.style.background = 'var(--site-primary)';
-                    e.currentTarget.style.color = '#fff';
-                    e.currentTarget.style.borderColor = 'var(--site-primary)';
-                    e.currentTarget.style.transform = 'translateX(-3px)'; 
-                    e.currentTarget.style.boxShadow = '0 6px 20px rgba(13,54,79,0.15)';
-                  }}
-                  onMouseOut={(e) => { 
-                    e.currentTarget.style.background = '#fff';
-                    e.currentTarget.style.color = 'var(--site-primary)';
-                    e.currentTarget.style.borderColor = 'var(--site-border)';
-                    e.currentTarget.style.transform = 'translateX(0)'; 
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  <ArrowLeft size={16} strokeWidth={2.5} />
-                  Voltar
-                </button>
-              )}
+              <button
+                onClick={handleBack}
+                title={step === 1 && !showPaymentScreen ? 'Voltar para a consulta de CNPJ' : 'Voltar para a etapa anterior'}
+                style={{
+                  padding: '10px 20px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  borderRadius: 'var(--site-radius-full)',
+                  border: '1px solid var(--site-border)',
+                  background: '#fff',
+                  color: 'var(--site-primary)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  transition: 'all .25s ease',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0
+                }}
+                onMouseOver={(e) => {
+                  e.currentTarget.style.background = 'var(--site-primary)';
+                  e.currentTarget.style.color = '#fff';
+                  e.currentTarget.style.borderColor = 'var(--site-primary)';
+                  e.currentTarget.style.transform = 'translateX(-3px)';
+                  e.currentTarget.style.boxShadow = '0 6px 20px rgba(13,54,79,0.15)';
+                }}
+                onMouseOut={(e) => {
+                  e.currentTarget.style.background = '#fff';
+                  e.currentTarget.style.color = 'var(--site-primary)';
+                  e.currentTarget.style.borderColor = 'var(--site-border)';
+                  e.currentTarget.style.transform = 'translateX(0)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                <ArrowLeft size={16} strokeWidth={2.5} />
+                Voltar
+              </button>
 
               <div style={{ minWidth: 0 }}>
                 <h1 style={{ 
@@ -990,13 +993,16 @@ export default function ProcessoPage() {
                 </div>
               </div>
 
-              <div className="processo-nav-btns" style={{ display: 'flex', justifyContent: step === 1 ? 'flex-end' : 'space-between', alignItems: 'center', marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid var(--site-border)' }}>
-                {step > 1 && (
-                  <button onClick={handleBack} className="btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', fontSize: '0.85rem', background: 'var(--site-surface-warm)', color: 'var(--site-text-primary)', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', fontWeight: 700 }}>
-                    <ChevronLeft size={16} /> Voltar
-                  </button>
-                )}
-                {step < 7 && (
+              <div className="processo-nav-btns" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid var(--site-border)' }}>
+                <button
+                  onClick={handleBack}
+                  className="btn"
+                  title={step === 1 ? 'Voltar para a consulta de CNPJ' : 'Voltar para a etapa anterior'}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', fontSize: '0.85rem', background: 'var(--site-surface-warm)', color: 'var(--site-text-primary)', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', fontWeight: 700 }}
+                >
+                  <ChevronLeft size={16} /> Voltar
+                </button>
+                {step < 7 ? (
                   <button onClick={handleNext} disabled={saving} className="btn btn-gold" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', fontSize: '0.9rem', fontWeight: 700, opacity: saving ? 0.7 : 1 }}>
                     {saving ? (
                       <><Loader2 size={16} className="spin-anim" /> Salvando...</>
@@ -1004,6 +1010,10 @@ export default function ProcessoPage() {
                       <>Salvar e Avançar <ChevronRight size={16} /></>
                     )}
                   </button>
+                ) : (
+                  <span style={{ fontSize: '0.8rem', color: 'var(--site-text-secondary)', fontWeight: 600, fontStyle: 'italic' }}>
+                    Etapa final — finalize abaixo
+                  </span>
                 )}
               </div>
             </>
@@ -1468,13 +1478,16 @@ export default function ProcessoPage() {
 
           {/* NAVIGATION (BOTTOM) */}
           {!showPaymentScreen && (
-            <div className="processo-nav-btns" style={{ display: 'flex', justifyContent: step === 1 ? 'flex-end' : 'space-between', alignItems: 'center', marginTop: 8 }}>
-              {step > 1 && (
-                <button onClick={handleBack} className="btn" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', fontSize: '0.9rem', background: 'var(--site-surface-warm)', color: 'var(--site-text-primary)', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', fontWeight: 700 }}>
-                  <ChevronLeft size={18} /> Voltar
-                </button>
-              )}
-              {step < 7 && (
+            <div className="processo-nav-btns" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginTop: 8 }}>
+              <button
+                onClick={handleBack}
+                className="btn"
+                title={step === 1 ? 'Voltar para a consulta de CNPJ' : 'Voltar para a etapa anterior'}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', fontSize: '0.9rem', background: 'var(--site-surface-warm)', color: 'var(--site-text-primary)', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', fontWeight: 700 }}
+              >
+                <ChevronLeft size={18} /> Voltar
+              </button>
+              {step < 7 ? (
                 <button onClick={handleNext} disabled={saving} className="btn btn-gold" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 28px', fontSize: '0.95rem', fontWeight: 700, opacity: saving ? 0.7 : 1 }}>
                   {saving ? (
                     <><Loader2 size={18} className="spin-anim" /> Salvando...</>
@@ -1482,6 +1495,10 @@ export default function ProcessoPage() {
                     <>Salvar e Avançar <ChevronRight size={18} /></>
                   )}
                 </button>
+              ) : (
+                <span style={{ fontSize: '0.85rem', color: 'var(--site-text-secondary)', fontWeight: 600, fontStyle: 'italic' }}>
+                  Etapa final — use os botões de finalização acima
+                </span>
               )}
             </div>
           )}
