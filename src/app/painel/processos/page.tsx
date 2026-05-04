@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import { FolderOpen, Calendar, Clock, CheckCircle2, AlertCircle, Plus, ArrowRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../PainelContext';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 type Processo = {
   id: string;
@@ -122,8 +123,10 @@ export default function ProcessosPage() {
           </button>
         </div>
       ) : loadingProcessos ? (
-        <div style={{ textAlign: 'center', padding: '80px 40px', color: 'var(--site-text-secondary)', fontWeight: 700 }}>
-          Carregando processos...
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+           <Skeleton height="130px" borderRadius="20px" />
+           <Skeleton height="130px" borderRadius="20px" />
+           <Skeleton height="130px" borderRadius="20px" />
         </div>
       ) : loadError ? (
         <div style={{ textAlign: 'center', padding: '80px 40px', background: '#fff', borderRadius: 24, border: '1px solid rgba(220,38,38,0.16)', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
@@ -182,9 +185,9 @@ export default function ProcessosPage() {
                   </div>
                   <button
                     onClick={() => router.push(`/painel/relatorio-conformidade?relatorio=${p.id}`)}
-                    style={{ background: '#fff', color: 'var(--site-primary)', border: '1px solid var(--site-border)', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 999, fontWeight: 800, cursor: 'pointer' }}
+                    style={{ background: p.status === 'pendente' || p.status === 'em_preenchimento' ? 'var(--site-primary)' : '#fff', color: p.status === 'pendente' || p.status === 'em_preenchimento' ? '#fff' : 'var(--site-primary)', border: '1px solid var(--site-border)', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 999, fontWeight: 800, cursor: 'pointer', transition: 'all 0.2s', boxShadow: p.status === 'pendente' || p.status === 'em_preenchimento' ? '0 4px 14px rgba(13,54,79,0.15)' : 'none' }}
                   >
-                    Abrir <ArrowRight size={15} />
+                    {p.status === 'pendente' ? 'Resolver Pendência' : p.status === 'em_preenchimento' ? 'Continuar Relatório' : 'Acompanhar Processo'} <ArrowRight size={15} />
                   </button>
                   {p.status === 'aprovado' && (
                     <button

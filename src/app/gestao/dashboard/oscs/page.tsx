@@ -6,9 +6,11 @@ import { supabase } from '@/lib/supabase';
 import {
   Search, Users, Eye, CheckCircle, Clock, XCircle, Circle,
   Trash2, Trash, ChevronRight, ChevronDown, FileText,
-  CreditCard, Award, ExternalLink, AlertCircle, Download
+  CreditCard, Award, ExternalLink, AlertCircle, Download, X
 } from 'lucide-react';
 import { gerarRelatorioDocx } from '@/lib/docxGenerator';
+import { toast } from '@/components/ui/Toast';
+import { Skeleton } from '@/components/ui/Skeleton';
 
 interface Pagamento {
   id: string; osc_id: string; status: string; valor: number;
@@ -54,18 +56,17 @@ function fmtCurrency(v: number) {
 }
 
 /* ── Inline payment confirm ── */
-function PaymentRow({ pag, oscId, onDone }: { pag: Pagamento; oscId: string; onDone: () => void }) {
+function PaymentRow({ pag, oscId, onDone }: { pag: Pagamento; oscId: string; onDone: (pagId: string) => void }) {
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState('');
   const confirm = async () => {
     setBusy(true);
     const { error } = await supabase.rpc('confirmar_pagamento_admin', {
       p_pagamento_id: pag.id, p_osc_id: oscId,
     });
     setBusy(false);
-    if (error) { setMsg('Erro ao confirmar.'); return; }
-    setMsg('Pagamento confirmado!');
-    setTimeout(() => { setMsg(''); onDone(); }, 1500);
+    if (error) { toast('Erro ao confirmar pagamento.', 'error'); return; }
+    toast('Pagamento confirmado!', 'success');
+    onDone(pag.id);
   };
   const isPago = pag.status === 'pago';
   return (
@@ -80,7 +81,6 @@ function PaymentRow({ pag, oscId, onDone }: { pag: Pagamento; oscId: string; onD
             Comprovante: {pag.arquivo_comprovante_nome}
           </div>
         )}
-        {msg && <div style={{ fontSize: '0.68rem', color: '#16a34a', marginTop: 1, fontWeight: 700 }}>{msg}</div>}
       </div>
       {!isPago && (
         <button onClick={confirm} disabled={busy}
@@ -92,204 +92,193 @@ function PaymentRow({ pag, oscId, onDone }: { pag: Pagamento; oscId: string; onD
   );
 }
 
-/* ── Inline seal status change ── */
-function SealControl({ osc, onDone }: { osc: OscPerfil; onDone: () => void }) {
-  const [status, setStatus] = useState(osc.status_selo);
+/* ── Docx Logic ── */
+async function generateDocxForRelatorio(relId: string, oscId: string, onStart: () => void, onEnd: () => void) {
+  onStart();
+  try {
+    const [relRes, itensRes, perfRes] = await Promise.all([
+      supabase.from('relatorios_conformidade').select('*').eq('id', relId).single(),
+      supabase.from('relatorio_itens').select('*').eq('relatorio_id', relId).order('secao').order('ordem'),
+      supabase.from('osc_perfis').select('*').eq('id', oscId).single()
+    ]);
+    const relatorio = relRes.data;
+    const itens = itensRes.data || [];
+    const perfil = perfRes.data;
+    if (!relatorio || !perfil) throw new Error('Dados não encontrados');
+    
+    const de = relatorio.dados_entidade ?? {};
+    const enderecoGeral = [
+      de.logradouro || perfil.logradouro, de.numero_endereco || perfil.numero_endereco,
+      de.bairro || perfil.bairro, de.municipio || perfil.municipio, de.estado || perfil.estado,
+    ].filter(Boolean).join(', ');
+
+    const fmt = (iso: string | null) => iso ? new Date(iso + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
+    const STATUS_DOCX: Record<string,string> = { conforme: 'CONFORME', nao_aplicavel: 'N/A', nao_conforme: 'NÃO CONFORME', pendente: 'PENDENTE' };
+    const rowsFromItens = (secao: number) => itens
+      .filter((i: any) => i.secao === secao && !i.is_header)
+      .map((i: any) => ({
+        label: i.descricao, status: STATUS_DOCX[i.status] ?? 'PENDENTE',
+        codigo: i.codigo_controle || '—', emissao: fmt(i.data_emissao),
+        validade: fmt(i.data_validade), analise: i.analise_atual || '—',
+      }));
+    
+    const numeroBase = relatorio.numero || `OBGP${new Date().getFullYear()}${perfil.id.substring(0, 4).toUpperCase()}`;
+    const numeroRelatorio = numeroBase.startsWith('N.º') ? numeroBase : `N.º ${numeroBase}`;
+    const docxData = {
+      cnpj: de.cnpj || perfil.cnpj || 'Não Informado',
+      natureza_juridica: de.natureza_juridica || perfil.natureza_juridica || 'Não Informado',
+      razao_social: de.razao_social || perfil.razao_social || 'Não Informado',
+      nome_fantasia: de.nome_fantasia || perfil.nome_fantasia || 'Não Informado',
+      logradouro: enderecoGeral || 'Não Informado',
+      data_abertura_cnpj: de.data_abertura_cnpj || perfil.data_abertura_cnpj || 'Não Informado',
+      email_osc: de.email_osc || perfil.email_osc || 'Não Informado',
+      telefone: de.telefone || perfil.telefone || 'Não Informado',
+      responsavel: de.responsavel || perfil.responsavel || 'Não Informado',
+      municipio_uf: [de.municipio || perfil.municipio, de.estado || perfil.estado].filter(Boolean).join('/') || 'Não Informado',
+      numero_relatorio: numeroRelatorio,
+      codigo_controle: relatorio.certificado_numero ?? `RC ${numeroRelatorio}`,
+      data_hoje: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
+      habilitacao_juridica: rowsFromItens(2),
+      regularidade_fiscal: rowsFromItens(3),
+      qualificacao_economica: rowsFromItens(4),
+      qualificacao_tecnica: rowsFromItens(5),
+      outros_registros: rowsFromItens(6),
+      status_final: relatorio.status === 'aprovado' ? 'APROVADO' : 'EM ANÁLISE',
+      observacao_admin: relatorio.observacao_admin || 'Nenhuma observação extra.',
+    };
+    const blob = await gerarRelatorioDocx(docxData);
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `RELATORIO_CONFORMIDADE_${perfil.osc_id}.docx`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  } catch (e: any) {
+    toast(`Erro ao gerar DOCX: ${e.message}`, 'error');
+  } finally {
+    onEnd();
+  }
+}
+
+/* ── Evaluation Modal ── */
+function ReviewModal({ osc, onClose, onApprove, onReject }: { 
+  osc: OscPerfil; 
+  onClose: () => void; 
+  onApprove: (oscId: string, relId: string) => Promise<void>; 
+  onReject: (oscId: string, relId: string, obs: string) => Promise<void>; 
+}) {
+  const [loadingApprove, setLoadingApprove] = useState(false);
+  const [loadingReject, setLoadingReject] = useState(false);
+  const [loadingDocx, setLoadingDocx] = useState(false);
   const [obs, setObs] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState('');
-  const save = async () => {
-    setSaving(true);
-    const { error } = await supabase.from('osc_perfis').update({
-      status_selo: status, observacao_selo: obs.trim() || null,
-      updated_at: new Date().toISOString(),
-    }).eq('id', osc.id);
-    setSaving(false);
-    if (error) { setMsg('Erro ao salvar.'); return; }
-    setMsg('Salvo!');
-    setTimeout(() => { setMsg(''); onDone(); }, 1200);
+  const [showReject, setShowReject] = useState(false);
+
+  const rel = osc.relatorios[0]; // Pega o mais recente
+  
+  const handleDownload = () => {
+    if (!rel) return toast('Nenhum relatório para avaliar.', 'error');
+    generateDocxForRelatorio(rel.id, osc.id, () => setLoadingDocx(true), () => setLoadingDocx(false));
   };
+
+  const doApprove = async () => {
+    if (!rel) return;
+    setLoadingApprove(true);
+    await onApprove(osc.id, rel.id);
+    setLoadingApprove(false);
+    onClose();
+  };
+
+  const doReject = async () => {
+    if (!rel) return;
+    if (!obs.trim()) return toast('Por favor, informe o motivo da rejeição.', 'error');
+    setLoadingReject(true);
+    await onReject(osc.id, rel.id, obs);
+    setLoadingReject(false);
+    onClose();
+  };
+
   return (
-    <div style={{ padding: '10px 12px', borderRadius: 10, background: 'var(--admin-primary-subtle)', border: '1px solid var(--admin-border)' }}>
-      <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--admin-text-tertiary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 5 }}>
-        <Award size={12} /> Gestão do Selo OSC
-      </div>
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        <select value={status} onChange={e => setStatus(e.target.value)}
-          style={{ border: '1px solid var(--admin-border)', borderRadius: 7, padding: '5px 10px', fontSize: '0.78rem', background: 'var(--admin-surface)', color: 'var(--admin-text-primary)' }}>
-          <option value="pendente">Pendente</option>
-          <option value="em_analise">Em Análise</option>
-          <option value="aprovado">Aprovado</option>
-          <option value="rejeitado">Rejeitado</option>
-        </select>
-        {status === 'rejeitado' && (
-          <input value={obs} onChange={e => setObs(e.target.value)} placeholder="Motivo da reprovação..."
-            style={{ border: '1px solid var(--admin-border)', borderRadius: 7, padding: '5px 10px', fontSize: '0.78rem', flex: 1, minWidth: 160, background: 'var(--admin-surface)', color: 'var(--admin-text-primary)' }} />
-        )}
-        <button onClick={save} disabled={saving}
-          style={{ padding: '5px 14px', border: 'none', borderRadius: 7, background: 'var(--admin-primary)', color: '#fff', fontSize: '0.78rem', fontWeight: 700, cursor: 'pointer' }}>
-          {saving ? '...' : 'Salvar'}
-        </button>
-        {msg && <span style={{ fontSize: '0.72rem', color: '#16a34a', fontWeight: 700 }}>{msg}</span>}
+    <div style={{ position: 'fixed', inset: 0, zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(15,23,42,0.4)', backdropFilter: 'blur(4px)' }}>
+      <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 700, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+        
+        {/* Header */}
+        <div style={{ padding: '24px 32px', background: 'var(--site-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--site-gold)', letterSpacing: '.1em', textTransform: 'uppercase', marginBottom: 4 }}>
+              Sala de Avaliação
+            </div>
+            <h2 style={{ fontSize: '1.5rem', margin: 0 }}>{osc.razao_social || 'OSC Não Identificada'}</h2>
+            <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', marginTop: 4 }}>ID: {osc.osc_id} — CNPJ: {osc.cnpj || 'Não informado'}</div>
+          </div>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', width: 36, height: 36, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div style={{ padding: '32px', flex: 1, overflowY: 'auto' }}>
+          {!rel ? (
+            <div style={{ textAlign: 'center', padding: 40, color: 'var(--site-text-tertiary)' }}>
+              <FileText size={40} style={{ opacity: 0.3, margin: '0 auto 16px' }} />
+              <p>Nenhum relatório submetido para avaliação.</p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+              
+              {/* Box Baixar Documento */}
+              <div style={{ background: 'var(--site-surface-warm)', border: '1px solid var(--site-border)', padding: 24, borderRadius: 16, textAlign: 'center' }}>
+                <h3 style={{ fontSize: '1.1rem', marginBottom: 8, color: 'var(--site-text-primary)' }}>1. Análise do Dossiê</h3>
+                <p style={{ fontSize: '0.9rem', color: 'var(--site-text-secondary)', marginBottom: 20 }}>
+                  Faça o download do documento gerado com as respostas e comprovantes da OSC para verificar a conformidade.
+                </p>
+                <button onClick={handleDownload} disabled={loadingDocx}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 12, background: 'var(--site-primary)', color: '#fff', border: 'none', padding: '14px 28px', borderRadius: 999, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 14px var(--site-primary-glow)' }}>
+                  {loadingDocx ? 'Gerando...' : <><Download size={18} /> Baixar Dossiê Completo (DOCX)</>}
+                </button>
+              </div>
+
+              {/* Box Decisão */}
+              <div style={{ borderTop: '1px solid var(--site-border)', paddingTop: 32 }}>
+                <h3 style={{ fontSize: '1.1rem', marginBottom: 16, color: 'var(--site-text-primary)', textAlign: 'center' }}>2. Qual o parecer desta avaliação?</h3>
+                
+                {!showReject ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <button onClick={doApprove} disabled={loadingApprove}
+                      style={{ padding: 20, background: '#f0fdf4', border: '1px solid #4ade80', color: '#166534', borderRadius: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', transition: 'all 0.2s' }}>
+                      <CheckCircle size={32} />
+                      <span style={{ fontWeight: 800 }}>Aprovar Processo<br/>e Emitir Selo</span>
+                    </button>
+                    <button onClick={() => setShowReject(true)}
+                      style={{ padding: 20, background: '#fef2f2', border: '1px solid #f87171', color: '#991b1b', borderRadius: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', transition: 'all 0.2s' }}>
+                      <XCircle size={32} />
+                      <span style={{ fontWeight: 800 }}>Rejeitar e Solicitar<br/>Correções</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ background: '#fef2f2', border: '1px solid #f87171', borderRadius: 16, padding: 20 }}>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#991b1b', marginBottom: 12 }}>Motivo da Rejeição (será enviado para a OSC):</div>
+                    <textarea 
+                      value={obs} onChange={e => setObs(e.target.value)}
+                      placeholder="Descreva o que está faltando ou o que precisa ser corrigido..."
+                      style={{ width: '100%', padding: 12, borderRadius: 8, border: '1px solid #fca5a5', minHeight: 100, fontSize: '0.9rem', marginBottom: 16, fontFamily: 'inherit' }}
+                    />
+                    <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+                      <button onClick={() => setShowReject(false)} style={{ padding: '10px 16px', background: 'transparent', border: 'none', color: '#991b1b', fontWeight: 600, cursor: 'pointer' }}>
+                        Cancelar
+                      </button>
+                      <button onClick={doReject} disabled={loadingReject} style={{ padding: '10px 24px', background: '#dc2626', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
+                        {loadingReject ? 'Salvando...' : 'Confirmar Rejeição'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  );
-}
-
-/* ── Inline DOCX Generator ── */
-function DocxButton({ relId, oscId }: { relId: string, oscId: string }) {
-  const [loading, setLoading] = useState(false);
-  const handleGenerate = async () => {
-    setLoading(true);
-    try {
-      const [relRes, itensRes, perfRes] = await Promise.all([
-        supabase.from('relatorios_conformidade').select('*').eq('id', relId).single(),
-        supabase.from('relatorio_itens').select('*').eq('relatorio_id', relId).order('secao').order('ordem'),
-        supabase.from('osc_perfis').select('*').eq('id', oscId).single()
-      ]);
-      const relatorio = relRes.data;
-      const itens = itensRes.data || [];
-      const perfil = perfRes.data;
-      if (!relatorio || !perfil) throw new Error('Dados não encontrados');
-      
-      const de = relatorio.dados_entidade ?? {};
-      const enderecoGeral = [
-        de.logradouro || perfil.logradouro,
-        de.numero_endereco || perfil.numero_endereco,
-        de.bairro || perfil.bairro,
-        de.municipio || perfil.municipio,
-        de.estado || perfil.estado,
-      ].filter(Boolean).join(', ');
-
-      const fmt = (iso: string | null) => iso ? new Date(iso + 'T12:00:00').toLocaleDateString('pt-BR') : '—';
-      const STATUS_DOCX: Record<string,string> = { conforme: 'CONFORME', nao_aplicavel: 'N/A', nao_conforme: 'NÃO CONFORME', pendente: 'PENDENTE' };
-      const rowsFromItens = (secao: number) => itens
-        .filter((i: any) => i.secao === secao && !i.is_header)
-        .map((i: any) => ({
-          label: i.descricao, status: STATUS_DOCX[i.status] ?? 'PENDENTE',
-          codigo: i.codigo_controle || '—', emissao: fmt(i.data_emissao),
-          validade: fmt(i.data_validade), analise: i.analise_atual || '—',
-        }));
-      
-      const numeroBase = relatorio.numero || `OBGP${new Date().getFullYear()}${perfil.id.substring(0, 4).toUpperCase()}`;
-      const numeroRelatorio = numeroBase.startsWith('N.º') ? numeroBase : `N.º ${numeroBase}`;
-      const docxData = {
-        cnpj: de.cnpj || perfil.cnpj || 'Não Informado',
-        natureza_juridica: de.natureza_juridica || perfil.natureza_juridica || 'Não Informado',
-        razao_social: de.razao_social || perfil.razao_social || 'Não Informado',
-        nome_fantasia: de.nome_fantasia || perfil.nome_fantasia || 'Não Informado',
-        logradouro: enderecoGeral || 'Não Informado',
-        data_abertura_cnpj: de.data_abertura_cnpj || perfil.data_abertura_cnpj || 'Não Informado',
-        email_osc: de.email_osc || perfil.email_osc || 'Não Informado',
-        telefone: de.telefone || perfil.telefone || 'Não Informado',
-        responsavel: de.responsavel || perfil.responsavel || 'Não Informado',
-        municipio_uf: [de.municipio || perfil.municipio, de.estado || perfil.estado].filter(Boolean).join('/') || 'Não Informado',
-        numero_relatorio: numeroRelatorio,
-        codigo_controle: relatorio.certificado_numero ?? `RC ${numeroRelatorio}`,
-        data_hoje: new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }),
-        habilitacao_juridica: rowsFromItens(2),
-        regularidade_fiscal: rowsFromItens(3),
-        qualificacao_economica: rowsFromItens(4),
-        qualificacao_tecnica: rowsFromItens(5),
-        outros_registros: rowsFromItens(6),
-        status_final: relatorio.status === 'aprovado' ? 'APROVADO' : 'EM ANÁLISE',
-        observacao_admin: relatorio.observacao_admin || 'Nenhuma observação extra.',
-      };
-      const blob = await gerarRelatorioDocx(docxData);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `RELATORIO_CONFORMIDADE_${perfil.osc_id}.docx`;
-      link.click();
-      window.URL.revokeObjectURL(url);
-    } catch (e: any) {
-      alert(`Erro ao gerar DOCX: ${e.message}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-  return (
-    <button onClick={handleGenerate} disabled={loading} title="Gerar DOCX para Análise"
-      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 7, fontSize: '0.72rem', fontWeight: 700, background: 'var(--admin-secondary)', color: 'var(--admin-primary)', border: '1px solid var(--admin-border)', cursor: loading ? 'wait' : 'pointer' }}>
-      {loading ? '...' : <><Download size={11} /> DOCX</>}
-    </button>
-  );
-}
-
-/* ── Expanded OSC folder row ── */
-function OscExpandedRow({ osc, onRefresh }: { osc: OscPerfil; onRefresh: () => void }) {
-  return (
-    <tr>
-      <td colSpan={7} style={{ padding: 0, background: 'var(--admin-primary-subtle)' }}>
-        <div style={{ padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
-
-          {/* Payments */}
-          {osc.pagamentos.length > 0 ? (
-            <div>
-              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--admin-text-tertiary)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.05em' }}>
-                Pagamentos de Certificação
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {osc.pagamentos.map(pag => (
-                  <PaymentRow key={pag.id} pag={pag} oscId={osc.osc_id} onDone={onRefresh} />
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>
-              <AlertCircle size={13} /> Nenhum pagamento registrado ainda.
-            </div>
-          )}
-
-          {/* Reports */}
-          {osc.relatorios.length > 0 ? (
-            <div>
-              <div style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--admin-text-tertiary)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.05em' }}>
-                Relatórios de Conformidade
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {osc.relatorios.map(r => (
-                  <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', borderRadius: 9, background: 'var(--admin-surface)', border: '1px solid var(--admin-border)' }}>
-                    <FileText size={13} style={{ color: 'var(--admin-primary)', flexShrink: 0 }} />
-                    <span style={{ fontFamily: 'monospace', fontSize: '0.78rem', fontWeight: 700, color: 'var(--admin-primary)', flex: 1 }}>
-                      {r.numero ?? r.id.slice(-10)}
-                    </span>
-                    <span className={`adm-badge ${relCls(r.status)}`} style={{ fontSize: '0.65rem' }}>
-                      {REL_STATUS_LABEL[r.status] ?? r.status}
-                    </span>
-                    {r.submitted_at && (
-                      <span style={{ fontSize: '0.68rem', color: 'var(--admin-text-tertiary)' }}>
-                        {fmtDate(r.submitted_at)}
-                      </span>
-                    )}
-                    <DocxButton relId={r.id} oscId={osc.id} />
-                    <Link href={`/gestao/dashboard/oscs/${osc.id}?relatorio=${r.id}`}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 7, fontSize: '0.72rem', fontWeight: 700, background: 'var(--admin-primary)', color: '#fff', textDecoration: 'none' }}>
-                      <ExternalLink size={11} /> Abrir
-                    </Link>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <FileText size={13} /> Nenhum relatório enviado.
-            </div>
-          )}
-
-          {/* Seal control */}
-          <SealControl osc={osc} onDone={onRefresh} />
-
-          {/* Full profile link */}
-          <div>
-            <Link href={`/gestao/dashboard/oscs/${osc.id}`}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: '0.75rem', fontWeight: 600, color: 'var(--admin-primary)', textDecoration: 'none' }}>
-              <Eye size={12} /> Ver perfil completo →
-            </Link>
-          </div>
-        </div>
-      </td>
-    </tr>
   );
 }
 
@@ -303,7 +292,7 @@ function OscsContent() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState(searchParams.get('status') ?? '');
   const [query, setQuery] = useState('');
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [reviewOscId, setReviewOscId] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -367,18 +356,54 @@ function OscsContent() {
     rejeitado: all.filter(o => o.status_selo === 'rejeitado').length,
   };
 
-  const toggleExpand = (id: string) => setExpanded(prev => {
-    const next = new Set(prev);
-    next.has(id) ? next.delete(id) : next.add(id);
-    return next;
-  });
   const toggleSelect = (id: string) => setSelected(prev => {
     const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next;
   });
   const handleMoveToTrash = async (ids: string[]) => {
     setActionLoading(true);
     await supabase.from('osc_perfis').update({ deleted_at: new Date().toISOString() }).in('id', ids);
+    toast('Movido para a lixeira.', 'info');
     await loadData(); setSelected(new Set()); setActionLoading(false);
+  };
+
+  const handlePaymentConfirm = (oscId: string, pagId: string) => {
+    setAll(prev => prev.map(osc => {
+      if (osc.id !== oscId) return osc;
+      return {
+        ...osc,
+        pagamentos: osc.pagamentos.map(p => p.id === pagId ? { ...p, status: 'pago', paid_at: new Date().toISOString() } : p)
+      };
+    }));
+  };
+
+  const handleApprove = async (oscId: string, relId: string) => {
+    await supabase.from('relatorios_conformidade').update({ status: 'aprovado', updated_at: new Date().toISOString() }).eq('id', relId);
+    await supabase.from('osc_perfis').update({ status_selo: 'aprovado', observacao_selo: null, updated_at: new Date().toISOString() }).eq('id', oscId);
+    
+    setAll(prev => prev.map(o => {
+      if (o.id !== oscId) return o;
+      return {
+        ...o,
+        status_selo: 'aprovado',
+        relatorios: o.relatorios.map(r => r.id === relId ? { ...r, status: 'aprovado' } : r)
+      };
+    }));
+    toast('Processo aprovado e selo emitido com sucesso!', 'success');
+  };
+
+  const handleReject = async (oscId: string, relId: string, obs: string) => {
+    await supabase.from('relatorios_conformidade').update({ status: 'reprovado', observacao_admin: obs, updated_at: new Date().toISOString() }).eq('id', relId);
+    await supabase.from('osc_perfis').update({ status_selo: 'rejeitado', observacao_selo: obs, updated_at: new Date().toISOString() }).eq('id', oscId);
+    
+    setAll(prev => prev.map(o => {
+      if (o.id !== oscId) return o;
+      return {
+        ...o,
+        status_selo: 'rejeitado',
+        relatorios: o.relatorios.map(r => r.id === relId ? { ...r, status: 'reprovado' } : r)
+      };
+    }));
+    toast('Processo rejeitado. OSC notificada.', 'info');
   };
 
   return (
@@ -427,8 +452,12 @@ function OscsContent() {
       {/* Table */}
       <div className="glass-card">
         {loading ? (
-          <div style={{ padding: '48px 0', display: 'flex', justifyContent: 'center' }}>
-            <div style={{ width: 32, height: 32, border: '3px solid var(--admin-border)', borderTopColor: 'var(--admin-primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 24 }}>
+            <Skeleton height="40px" borderRadius="10px" />
+            <Skeleton height="50px" borderRadius="10px" />
+            <Skeleton height="50px" borderRadius="10px" />
+            <Skeleton height="50px" borderRadius="10px" />
+            <Skeleton height="50px" borderRadius="10px" />
           </div>
         ) : filtered.length === 0 ? (
           <div className="admin-empty-state">
@@ -448,7 +477,6 @@ function OscsContent() {
                       onChange={() => setSelected(selected.size === filtered.length ? new Set() : new Set(filtered.map(o => o.id)))}
                       style={{ cursor: 'pointer', accentColor: 'var(--admin-primary)' }} />
                   </th>
-                  <th style={{ width: 32 }}></th>
                   <th>ID OSC</th>
                   <th>Responsável / Organização</th>
                   <th>CNPJ</th>
@@ -461,20 +489,13 @@ function OscsContent() {
               </thead>
               <tbody>
                 {filtered.map(osc => {
-                  const isOpen = expanded.has(osc.id);
                   const hasPendingPayment = osc.pagamentos.some(p => p.status !== 'pago');
-                  return [
+                  return (
                     <tr key={osc.id}
-                      style={{ cursor: 'pointer', background: isOpen ? 'var(--admin-primary-subtle)' : undefined, opacity: actionLoading && selected.has(osc.id) ? 0.5 : 1 }}
-                      onClick={() => toggleExpand(osc.id)}>
+                      style={{ cursor: 'default', opacity: actionLoading && selected.has(osc.id) ? 0.5 : 1 }}>
                       <td onClick={e => e.stopPropagation()}>
                         <input type="checkbox" checked={selected.has(osc.id)} onChange={() => toggleSelect(osc.id)}
                           style={{ cursor: 'pointer', accentColor: 'var(--admin-primary)' }} />
-                      </td>
-                      <td style={{ padding: '0 8px' }}>
-                        {isOpen
-                          ? <ChevronDown size={15} style={{ color: 'var(--admin-primary)' }} />
-                          : <ChevronRight size={15} style={{ color: 'var(--admin-text-tertiary)' }} />}
                       </td>
                       <td>
                         <span style={{ fontFamily: 'monospace', fontSize: '0.8rem', background: 'var(--admin-primary-subtle)', color: 'var(--admin-primary)', padding: '3px 8px', borderRadius: 6, fontWeight: 700 }}>
@@ -505,6 +526,10 @@ function OscsContent() {
                       <td style={{ color: 'var(--admin-text-secondary)', fontSize: '0.82rem' }}>{fmtDate(osc.created_at)}</td>
                       <td onClick={e => e.stopPropagation()}>
                         <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                          <button onClick={() => setReviewOscId(osc.id)}
+                            style={{ padding: '6px 14px', border: 'none', borderRadius: 8, background: 'var(--admin-primary)', color: '#fff', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <CheckCircle size={12} /> Avaliar
+                          </button>
                           <Link href={`/gestao/dashboard/oscs/${osc.id}`}
                             className="admin-btn admin-btn-secondary"
                             style={{ padding: '6px 12px', fontSize: '0.75rem', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
@@ -516,15 +541,24 @@ function OscsContent() {
                           </button>
                         </div>
                       </td>
-                    </tr>,
-                    isOpen && <OscExpandedRow key={`${osc.id}-expanded`} osc={osc} onRefresh={loadData} />,
-                  ];
+                    </tr>
+                  );
                 })}
               </tbody>
             </table>
           </div>
         )}
       </div>
+
+      {reviewOscId && (
+        <ReviewModal 
+          osc={all.find(o => o.id === reviewOscId)!} 
+          onClose={() => setReviewOscId(null)} 
+          onApprove={handleApprove} 
+          onReject={handleReject} 
+        />
+      )}
+
       <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
