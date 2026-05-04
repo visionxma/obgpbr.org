@@ -1215,13 +1215,16 @@ export default function OscDetailPage() {
                     {savingRel ? '...' : <><Save size={13} /> Salvar</>}
                   </button>
                   
-                  <button className="admin-btn"
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '7px 16px', fontSize: '0.82rem', background: '#0D364F', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
-                    onClick={handleGenerateAdminDocx}
-                    title="Baixar relatório oficial preenchido no modelo DOCX da OBGP"
+                  <a
+                    href={`/gestao/relatorio-preview/${relatorio.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="admin-btn"
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '7px 16px', fontSize: '0.82rem', background: '#0D364F', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer', textDecoration: 'none' }}
+                    title="Pré-visualizar relatório e inserir assinatura digital antes de imprimir"
                   >
-                    <FileSignature size={13} /> Gerar Relatório Oficial
-                  </button>
+                    <Eye size={13} /> Pré-visualizar Relatório
+                  </a>
 
                   {relatorio.arquivo_docx_path && (
                     <button className="admin-btn"
