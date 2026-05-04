@@ -4,11 +4,10 @@ import { useEffect, useState } from 'react';
 import PublicLayout from '../components/PublicLayout';
 import { supabase } from '@/lib/supabase';
 import {
-  Calendar, Clock, Tag, Loader2, BookOpen, User, Search,
+  Calendar, Clock, Tag, Loader2, BookOpen, Search,
   ArrowRight, Sparkles, TrendingUp,
 } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
 
 interface BlogPost {
   id: string;
@@ -481,147 +480,145 @@ function FeaturedPost({ post }: { post: BlogPost }) {
 }
 
 /* ═══════════════════════════════════════
-   POST CARD — grid item
+   POST CARD — grid item (Genesis reference layout)
    ═══════════════════════════════════════ */
 function PostCard({ post, index }: { post: BlogPost; index: number }) {
-  const cs = catStyle(post.category);
+  // Pills exibidas abaixo do resumo — apenas as que tiverem dado.
+  const pills: string[] = [];
+  if (post.read_time) pills.push(`${post.read_time} min`);
+  if (post.published_at) pills.push(formatDateShort(post.published_at));
+  if (post.author) pills.push(post.author);
+
   return (
-    <Link href={`/blog/${post.id}`} style={{ textDecoration: 'none', color: 'inherit', height: '100%' }}>
-      <article
-        className={`stagger-${Math.min(index + 1, 8)} blog-standard-card`}
-        style={{
-          display: 'flex', flexDirection: 'column',
-          height: '100%', borderRadius: 24,
-          background: '#fff', border: '1px solid rgba(0,0,0,0.06)',
-          boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
-          transition: 'all .4s cubic-bezier(.23,1,.32,1)',
-          position: 'relative', overflow: 'hidden'
-        }}
-      >
-        {/* Image */}
-        <div style={{ height: 220, overflow: 'hidden', position: 'relative' }}>
-          {post.image_url ? (
-            <img src={post.image_url} alt={post.title || 'Artigo'} 
-              className="standard-image"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform .6s cubic-bezier(.23,1,.32,1)' }} 
-            />
-          ) : (
-            <div className="standard-image" style={{
-              width: '100%', height: '100%',
-              background: 'linear-gradient(135deg, var(--site-surface-blue) 0%, var(--site-surface-gold) 100%)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              transition: 'transform .6s cubic-bezier(.23,1,.32,1)'
-            }}>
-              <BookOpen size={40} color="var(--site-gold-dark)" style={{ opacity: 0.2 }} />
-            </div>
-          )}
-          
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.4) 100%)',
-            pointerEvents: 'none'
-          }} />
+    <article
+      className={`stagger-${Math.min(index + 1, 8)} blog-ref-card`}
+      style={{
+        display: 'flex', flexDirection: 'column',
+        height: '100%', borderRadius: 18,
+        background: '#fff',
+        border: '1px solid rgba(15,23,42,0.08)',
+        boxShadow: '0 1px 3px rgba(15,23,42,0.04)',
+        transition: 'all .35s cubic-bezier(.23,1,.32,1)',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Imagem com tag vermelha sobreposta */}
+      <Link href={`/blog/${post.id}`} style={{ display: 'block', position: 'relative', height: 240, overflow: 'hidden' }}>
+        {post.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={post.image_url}
+            alt={post.title || 'Artigo'}
+            className="blog-ref-image"
+            style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', transition: 'transform .6s cubic-bezier(.23,1,.32,1)' }}
+          />
+        ) : (
+          <div className="blog-ref-image" style={{
+            width: '100%', height: '100%',
+            background: 'linear-gradient(135deg, var(--site-surface-blue) 0%, var(--site-surface-gold) 100%)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            transition: 'transform .6s cubic-bezier(.23,1,.32,1)',
+          }}>
+            <BookOpen size={40} color="var(--site-gold-dark)" style={{ opacity: 0.25 }} />
+          </div>
+        )}
 
-          {/* Reading time */}
-          {post.read_time && (
-            <div style={{
-              position: 'absolute', bottom: 16, right: 16,
-              display: 'flex', alignItems: 'center', gap: 5,
-              background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(8px)',
-              padding: '6px 12px', borderRadius: 999,
-              color: '#fff', fontSize: '.7rem', fontWeight: 600,
-            }}>
-              <Clock size={10} /> {post.read_time} min
-            </div>
-          )}
-          
-          {/* Category Pill */}
-          {post.category && (
-            <div style={{
-              position: 'absolute', top: 16, left: 16,
-              display: 'flex', alignItems: 'center', gap: 5,
-              background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(8px)',
-              padding: '6px 14px', borderRadius: 999,
-              fontSize: '.7rem', fontWeight: 800,
-              color: cs.fg, textTransform: 'uppercase', letterSpacing: '.06em',
-              boxShadow: '0 4px 10px rgba(0,0,0,0.1)'
-            }}>
-              <Tag size={10} /> {post.category}
-            </div>
-          )}
-        </div>
+        {post.category && (
+          <span style={{
+            position: 'absolute', top: 16, left: 16,
+            padding: '6px 14px',
+            background: '#dc2626',
+            color: '#fff',
+            fontSize: '.72rem', fontWeight: 700,
+            letterSpacing: '.02em',
+            borderRadius: 6,
+            boxShadow: '0 4px 14px rgba(220,38,38,0.35)',
+            maxWidth: 'calc(100% - 32px)',
+            overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          }}>
+            {post.category}
+          </span>
+        )}
+      </Link>
 
-        {/* Body */}
-        <div style={{ padding: '28px 24px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+      {/* Corpo */}
+      <div style={{ padding: '26px 26px 22px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <Link href={`/blog/${post.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
           <h3 style={{
-            fontSize: '1.15rem', fontWeight: 800, lineHeight: 1.4,
-            marginBottom: 12, color: 'var(--site-text-primary)',
+            fontSize: '1.05rem', fontWeight: 800, lineHeight: 1.25,
+            marginBottom: 16, color: 'var(--site-text-primary)',
+            textTransform: 'uppercase', letterSpacing: '-0.01em',
             display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+            minHeight: '2.6em',
           }}>
             {post.title || 'Artigo sem título'}
           </h3>
-          {post.summary && (
-            <p style={{
-              color: 'var(--site-text-secondary)', lineHeight: 1.6,
-              fontSize: '.9rem', marginBottom: 24, flex: 1,
-              display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-            }}>
-              {post.summary}
-            </p>
-          )}
+        </Link>
 
-          {/* Footer Meta */}
-          <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-            paddingTop: 20, borderTop: '1px solid rgba(0,0,0,0.06)', marginTop: 'auto',
+        {post.summary && (
+          <p style={{
+            color: 'var(--site-text-secondary)', lineHeight: 1.65,
+            fontSize: '.9rem', marginBottom: 22,
+            display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{
-                width: 36, height: 36, borderRadius: 10,
-                background: 'var(--site-surface-blue)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: 'var(--site-primary)', fontSize: '.7rem', fontWeight: 800,
-                flexShrink: 0,
+            {post.summary}
+          </p>
+        )}
+
+        {pills.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 22, marginTop: post.summary ? 0 : 'auto' }}>
+            {pills.map((p, i) => (
+              <span key={i} style={{
+                padding: '5px 12px',
+                fontSize: '.74rem', fontWeight: 600,
+                color: 'var(--site-text-secondary)',
+                background: '#fff',
+                border: '1px solid rgba(15,23,42,0.12)',
+                borderRadius: 6,
+                whiteSpace: 'nowrap',
               }}>
-                {getInitials(post.author)}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: '.8rem', fontWeight: 700, color: 'var(--site-text-primary)' }}>
-                  {post.author || 'Equipe OBGP'}
-                </div>
-                {post.published_at && (
-                  <div style={{ fontSize: '.75rem', color: 'var(--site-text-tertiary)', fontWeight: 500, marginTop: 2 }}>
-                    {formatDateShort(post.published_at)}
-                  </div>
-                )}
-              </div>
-            </div>
-            <div className="card-arrow" style={{
-              width: 32, height: 32, borderRadius: '50%',
-              background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'var(--site-text-secondary)', transition: 'all .3s ease'
-            }}>
-              <ArrowRight size={14} />
-            </div>
+                {p}
+              </span>
+            ))}
           </div>
-        </div>
-      </article>
+        )}
+
+        {/* Botão inferior com borda */}
+        <Link
+          href={`/blog/${post.id}`}
+          className="blog-ref-cta"
+          style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '14px 18px', marginTop: 'auto',
+            border: '1px solid rgba(15,23,42,0.16)',
+            borderRadius: 10,
+            color: 'var(--site-text-primary)',
+            fontSize: '.92rem', fontWeight: 700,
+            textDecoration: 'none',
+            transition: 'all .25s ease',
+            background: '#fff',
+          }}
+        >
+          Ler Artigo
+          <ArrowRight size={16} />
+        </Link>
+      </div>
 
       <style dangerouslySetInnerHTML={{__html: `
-        .blog-standard-card:hover {
-          transform: translateY(-8px);
-          box-shadow: 0 16px 40px rgba(30,58,138,0.08) !important;
-          border-color: rgba(30,58,138,0.2) !important;
+        .blog-ref-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 14px 36px rgba(15,23,42,0.08);
+          border-color: rgba(15,23,42,0.16);
         }
-        .blog-standard-card:hover .standard-image {
-          transform: scale(1.05) !important;
+        .blog-ref-card:hover .blog-ref-image {
+          transform: scale(1.04);
         }
-        .blog-standard-card:hover .card-arrow {
+        .blog-ref-cta:hover {
           background: var(--site-primary) !important;
-          color: white !important;
-          transform: translateX(4px);
+          border-color: var(--site-primary) !important;
+          color: #fff !important;
         }
       `}} />
-    </Link>
+    </article>
   );
 }
