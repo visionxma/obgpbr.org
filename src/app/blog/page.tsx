@@ -315,8 +315,7 @@ function FeaturedPost({ post }: { post: BlogPost }) {
         className="blog-featured-card group"
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-          minHeight: 460,
+          minHeight: 400,
           borderRadius: 32,
           overflow: 'hidden',
           background: '#fff',
@@ -456,6 +455,14 @@ function FeaturedPost({ post }: { post: BlogPost }) {
 
       {/* Internal CSS for hover effects that React inline styles can't easily do without state */}
       <style dangerouslySetInnerHTML={{__html: `
+        .blog-featured-card {
+          grid-template-columns: 1fr;
+        }
+        @media (min-width: 992px) {
+          .blog-featured-card {
+            grid-template-columns: 36% 64%;
+          }
+        }
         .blog-featured-card:hover {
           transform: translateY(-8px);
           box-shadow: 0 20px 60px rgba(30,58,138,0.15) !important;
