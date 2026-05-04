@@ -391,7 +391,9 @@ p {
   display: flex;
   flex-direction: column;
 }
-/* Logo watermark do hero: centralizada, grande, conteúdo sobrepõe */
+/* Logo watermark do hero: centralizada, grande, conteúdo sobrepõe.
+   Sem brightness/saturate para preservar as cores originais (verde, azul, dourado);
+   opacidade calibrada para watermark sutil sem comprometer a leitura. */
 .glass-section-blue.hero-inicio::before {
   width: clamp(500px, 68vw, 900px);
   height: clamp(500px, 68vw, 900px);
@@ -399,7 +401,7 @@ p {
   left: 50%;
   right: auto;
   transform: translate(-50%, -50%);
-  filter: brightness(12) saturate(0) opacity(0.10);
+  filter: opacity(0.18);
 }
 
 /* ── Marca d'água da logo — seções claras ────────────────────
