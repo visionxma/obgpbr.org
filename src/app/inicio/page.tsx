@@ -31,6 +31,7 @@ import {
   BadgeCheck,
   Landmark,
   Zap,
+  Eye,
 } from "lucide-react";
 
 export const metadata = {
@@ -178,18 +179,18 @@ const CHANNELS = [
 ];
 
 const TICKER_ITEMS = [
-  "Lei nº 13.019/2014",
-  "MROSC",
-  "SUAS",
-  "SUS",
-  "Termo de Colaboração",
-  "Chamamento Público",
-  "Prestação de Contas",
-  "Transparência Pública",
-  "Gestão de Parcerias",
-  "OSC Certificada",
-  "Decreto nº 8.726/2016",
-  "Selo OSC",
+  { icon: Scale,         label: "Lei nº 13.019/2014",   featured: true  },
+  { icon: BookOpen,      label: "MROSC",                featured: true  },
+  { icon: HeartHandshake, label: "SUAS",                featured: false },
+  { icon: Stethoscope,   label: "SUS",                  featured: false },
+  { icon: FileCheck,     label: "Termo de Colaboração", featured: false },
+  { icon: BadgeCheck,    label: "Chamamento Público",   featured: false },
+  { icon: FileText,      label: "Prestação de Contas",  featured: false },
+  { icon: Eye,           label: "Transparência Pública", featured: false },
+  { icon: HandCoins,     label: "Gestão de Parcerias",  featured: false },
+  { icon: ShieldCheck,   label: "OSC Certificada",      featured: false },
+  { icon: Landmark,      label: "Decreto nº 8.726/2016", featured: false },
+  { icon: Award,         label: "Selo OSC",             featured: true  },
 ];
 const TICKER_DOUBLED = [...TICKER_ITEMS, ...TICKER_ITEMS];
 
@@ -437,18 +438,12 @@ export default function InicioPage() {
       {/* Ticker */}
       <div className="ticker-wrap" aria-hidden>
         <div className="ticker">
-          {TICKER_DOUBLED.map((item, i) => (
-            <span key={i} className="ticker-item">
-              <Star
-                size={9}
-                style={{ color: "var(--site-gold)", flexShrink: 0 }}
-              />
-              <span
-                className="ticker-item-value"
-                style={{ fontSize: "var(--text-sm)" }}
-              >
-                {item}
+          {TICKER_DOUBLED.map(({ icon: Icon, label, featured }, i) => (
+            <span key={i} className={`ticker-item ${featured ? "ticker-item--featured" : ""}`}>
+              <span className="ticker-item-icon">
+                <Icon size={12} strokeWidth={2.5} />
               </span>
+              <span className="ticker-item-value">{label}</span>
             </span>
           ))}
         </div>
