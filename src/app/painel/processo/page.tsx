@@ -706,8 +706,8 @@ export default function ProcessoPage() {
             {!cnpjSuccess ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                 <div style={{ display: 'flex', gap: 12, flexDirection: 'row' }}>
-                  <button 
-                    className="panel-btn panel-btn-primary" 
+                  <button
+                    className="panel-btn panel-btn-primary"
                     style={{ flex: 1, padding: 16, fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                     onClick={() => handleConsultarCNPJ(entidadeData.cnpj)}
                     disabled={!entidadeData.cnpj || entidadeData.cnpj.replace(/\D/g, '').length !== 14 || loadingData}
@@ -730,20 +730,28 @@ export default function ProcessoPage() {
 
                 {cnpjError && (
                   <div style={{ animation: 'fadeIn .3s ease' }}>
-                    <div style={{ padding: 12, borderRadius: 8, background: 'rgba(220,38,38,0.05)', border: '1px solid rgba(220,38,38,0.1)', color: '#dc2626', fontSize: '0.85rem', fontWeight: 600, marginBottom: 16 }}>
+                    <div style={{ padding: 12, borderRadius: 8, background: 'rgba(220,38,38,0.05)', border: '1px solid rgba(220,38,38,0.1)', color: '#dc2626', fontSize: '0.85rem', fontWeight: 600 }}>
                       {cnpjError}
                     </div>
-                    
-                    <button 
-                      onClick={handleManualEntry}
-                      style={{ background: 'none', border: '1px solid var(--site-border)', color: 'var(--site-text-secondary)', padding: '12px 20px', borderRadius: 10, fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer', width: '100%', transition: 'all .2s' }}
-                      onMouseOver={(e) => { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = 'var(--site-primary)'; }}
-                      onMouseOut={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--site-text-secondary)'; }}
-                    >
-                      Preencher Dados Manualmente
-                    </button>
                   </div>
                 )}
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '4px 0' }}>
+                  <div style={{ flex: 1, height: 1, background: 'var(--site-border)' }} />
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--site-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ou</span>
+                  <div style={{ flex: 1, height: 1, background: 'var(--site-border)' }} />
+                </div>
+
+                <button
+                  onClick={handleManualEntry}
+                  disabled={loadingData}
+                  style={{ background: 'none', border: '1px solid var(--site-border)', color: 'var(--site-text-secondary)', padding: '14px 20px', borderRadius: 10, fontSize: '0.9rem', fontWeight: 700, cursor: loadingData ? 'not-allowed' : 'pointer', width: '100%', transition: 'all .2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: loadingData ? 0.5 : 1 }}
+                  onMouseOver={(e) => { if (!loadingData) { e.currentTarget.style.background = '#f8fafc'; e.currentTarget.style.color = 'var(--site-primary)'; e.currentTarget.style.borderColor = 'var(--site-primary)'; } }}
+                  onMouseOut={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = 'var(--site-text-secondary)'; e.currentTarget.style.borderColor = 'var(--site-border)'; }}
+                >
+                  <Edit2 size={16} />
+                  Preencher Manualmente
+                </button>
               </div>
             ) : (
               <div style={{ padding: 16, borderRadius: 12, background: 'rgba(22,163,74,0.05)', border: '1px solid rgba(22,163,74,0.1)', textAlign: 'center' }}>
