@@ -1236,17 +1236,17 @@ export default function ProcessoPage() {
                       </div>
 
                       {/* Upload Comprovante */}
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
                         <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#0D364F', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
                           <FileUp size={16}/> Comprovante de Pagamento <span style={{ color: '#dc2626', fontSize: '0.9rem' }}>*</span>
                         </div>
-                      <input
-                        type="file"
-                        accept="image/*,application/pdf"
-                        onChange={(e) => setComprovanteFile(e.target.files?.[0] || null)}
-                        style={{ display: 'none' }}
-                        id="comprovante-upload"
-                      />
+                        <input
+                          type="file"
+                          accept="image/*,application/pdf"
+                          onChange={(e) => setComprovanteFile(e.target.files?.[0] || null)}
+                          style={{ display: 'none' }}
+                          id="comprovante-upload"
+                        />
                         <label
                           htmlFor="comprovante-upload"
                           style={{
@@ -1255,41 +1255,41 @@ export default function ProcessoPage() {
                             borderRadius: 14, padding: '16px 20px', cursor: 'pointer',
                             background: comprovanteFile ? 'rgba(22,163,74,0.03)' : '#fafbfc',
                             transition: 'all .2s',
-                            minHeight: '100%',
-                            width: 'fit-content',
-                            minWidth: 420
+                            width: '100%',
+                            minWidth: 0,
+                            boxSizing: 'border-box'
                           }}
                         >
-                        <div style={{ 
-                          width: 48, height: 48, borderRadius: 12, flexShrink: 0,
-                          background: comprovanteFile ? 'rgba(22,163,74,0.1)' : '#e2e8f0', 
-                          color: comprovanteFile ? '#16a34a' : '#64748b', 
-                          display: 'flex', alignItems: 'center', justifyContent: 'center' 
-                        }}>
-                          {comprovanteFile ? <CheckCircle2 size={24} /> : <FileUp size={22} />}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          {comprovanteFile ? (
-                            <>
-                              <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#16a34a' }}>Comprovante anexado</div>
-                              <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{comprovanteFile.name}</div>
-                            </>
-                          ) : (
-                            <>
-                              <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#334155' }}>Selecionar comprovante</div>
-                              <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>PDF, PNG ou JPG · até 10 MB</div>
-                            </>
-                          )}
-                        </div>
-                        <span style={{ 
-                          padding: '8px 16px', borderRadius: 'var(--site-radius-full)', 
-                          border: comprovanteFile ? '1px solid #16a34a' : '1px solid var(--site-border)', 
-                          color: comprovanteFile ? '#16a34a' : 'var(--site-text-secondary)', 
-                          fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.04em',
-                          flexShrink: 0
-                        }}>
-                          {comprovanteFile ? 'Trocar' : 'Selecionar'}
-                        </span>
+                          <div style={{
+                            width: 48, height: 48, borderRadius: 12, flexShrink: 0,
+                            background: comprovanteFile ? 'rgba(22,163,74,0.1)' : '#e2e8f0',
+                            color: comprovanteFile ? '#16a34a' : '#64748b',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                          }}>
+                            {comprovanteFile ? <CheckCircle2 size={24} /> : <FileUp size={22} />}
+                          </div>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            {comprovanteFile ? (
+                              <>
+                                <div style={{ fontSize: '0.9rem', fontWeight: 800, color: '#16a34a' }}>Comprovante anexado</div>
+                                <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{comprovanteFile.name}</div>
+                              </>
+                            ) : (
+                              <>
+                                <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#334155' }}>Selecionar comprovante</div>
+                                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 2 }}>PDF, PNG ou JPG · até 10 MB</div>
+                              </>
+                            )}
+                          </div>
+                          <span style={{
+                            padding: '8px 16px', borderRadius: 'var(--site-radius-full)',
+                            border: comprovanteFile ? '1px solid #16a34a' : '1px solid var(--site-border)',
+                            color: comprovanteFile ? '#16a34a' : 'var(--site-text-secondary)',
+                            fontSize: '0.7rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.04em',
+                            flexShrink: 0
+                          }}>
+                            {comprovanteFile ? 'Trocar' : 'Selecionar'}
+                          </span>
                         </label>
                       </div>
                     </div>
