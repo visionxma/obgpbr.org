@@ -851,21 +851,39 @@ export default function OscDetailPage() {
 
             {!editMode ? (
               /* View mode */
-              <>
-                {[
-                  { icon: Hash,      label: 'ID OSC',              value: perfil.osc_id },
-                  { icon: User,      label: 'Responsável',         value: perfil.responsavel },
-                  { icon: Building2, label: 'Razão Social',        value: perfil.razao_social },
-                  { icon: FileText,  label: 'CNPJ',                value: perfil.cnpj },
-                  { icon: Building2, label: 'Natureza Jurídica',   value: perfil.natureza_juridica },
-                  { icon: Phone,     label: 'Telefone',            value: perfil.telefone },
-                  { icon: Mail,      label: 'E-mail',              value: perfil.email_osc },
-                  { icon: Home,      label: 'Endereço',            value: [perfil.logradouro, perfil.numero_endereco].filter(Boolean).join(', ') || null },
-                  { icon: MapPin,    label: 'Bairro',              value: perfil.bairro },
-                  { icon: MapPin,    label: 'Cidade / UF',         value: [perfil.municipio, perfil.estado].filter(Boolean).join(' / ') || null },
-                  { icon: Hash,      label: 'CEP',                 value: perfil.cep },
-                  { icon: FileText,  label: 'Abertura CNPJ',       value: perfil.data_abertura_cnpj },
-                ].map(({ icon: Icon, label, value }) => (
+              (() => {
+                const de = relatorio?.dados_entidade || {};
+                const d = {
+                  responsavel: de.responsavel || perfil.responsavel,
+                  razao_social: de.razao_social || perfil.razao_social,
+                  cnpj: de.cnpj || perfil.cnpj,
+                  natureza_juridica: de.natureza_juridica || perfil.natureza_juridica,
+                  telefone: de.telefone || perfil.telefone,
+                  email_osc: de.email_osc || perfil.email_osc,
+                  logradouro: de.logradouro || perfil.logradouro,
+                  numero_endereco: de.numero_endereco || perfil.numero_endereco,
+                  bairro: de.bairro || perfil.bairro,
+                  municipio: de.municipio || perfil.municipio,
+                  estado: de.estado || perfil.estado,
+                  cep: de.cep || perfil.cep,
+                  data_abertura_cnpj: de.data_abertura_cnpj || perfil.data_abertura_cnpj,
+                };
+                return (
+                  <>
+                    {[
+                      { icon: Hash,      label: 'ID OSC',              value: perfil.osc_id },
+                      { icon: User,      label: 'Responsável',         value: d.responsavel },
+                      { icon: Building2, label: 'Razão Social',        value: d.razao_social },
+                      { icon: FileText,  label: 'CNPJ',                value: d.cnpj },
+                      { icon: Building2, label: 'Natureza Jurídica',   value: d.natureza_juridica },
+                      { icon: Phone,     label: 'Telefone',            value: d.telefone },
+                      { icon: Mail,      label: 'E-mail',              value: d.email_osc },
+                      { icon: Home,      label: 'Endereço',            value: [d.logradouro, d.numero_endereco].filter(Boolean).join(', ') || null },
+                      { icon: MapPin,    label: 'Bairro',              value: d.bairro },
+                      { icon: MapPin,    label: 'Cidade / UF',         value: [d.municipio, d.estado].filter(Boolean).join(' / ') || null },
+                      { icon: Hash,      label: 'CEP',                 value: d.cep },
+                      { icon: FileText,  label: 'Abertura CNPJ',       value: d.data_abertura_cnpj },
+                    ].map(({ icon: Icon, label, value }) => (
                   <div key={label} style={{ display: 'flex', gap: 12, padding: '9px 0', borderBottom: '1px solid var(--admin-border)' }}>
                     <div style={{ width: 30, height: 30, borderRadius: 7, background: 'var(--admin-primary-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--admin-primary)', flexShrink: 0 }}>
                       <Icon size={13} />
@@ -882,7 +900,9 @@ export default function OscDetailPage() {
                   <div style={labelStyle}>Cadastro</div>
                   <div style={{ fontSize: '0.82rem', color: 'var(--admin-text-secondary)' }}>{fmtDate(perfil.created_at)}</div>
                 </div>
-              </>
+                  </>
+                );
+              })()
             ) : (
               /* Edit mode */
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
