@@ -206,13 +206,13 @@ export default function SeloOscPage() {
               <p style={{ color: 'rgba(255,255,255,0.9)', lineHeight: 1.5, fontSize: '.9rem', margin: 0 }}>
                 Inicie sua jornada de excelência e conquiste o Selo OSC Gestão de Parcerias.
               </p>
-              <a href="/inicio#contato" className="btn" style={{
+              <Link href="/painel" className="btn" style={{
                 marginTop: 'auto', padding: '10px 24px', fontSize: '0.85rem', fontWeight: 700,
                 background: 'white', color: 'var(--site-gold-dark)', borderRadius: 'var(--site-radius-full)',
                 display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none'
               }}>
-                Falar com consultor <ArrowRight size={16} />
-              </a>
+                Acessar o Painel OSC <ArrowRight size={16} />
+              </Link>
             </div>
           </div>
         </div>
