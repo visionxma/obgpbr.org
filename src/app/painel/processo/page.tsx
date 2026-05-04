@@ -287,8 +287,24 @@ function DocumentSection({ number, title, items, data, handleUpdate, showErrors,
                   <input type="date" value={doc.validade || ''} onChange={(e) => handleUpdate(item.id, 'validade', e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid var(--site-border)', fontSize: '0.85rem' }} />
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--site-text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Análise de Conformidade Atual</label>
-                  <textarea placeholder="Inclua aqui qualquer observação relevante sobre o documento. A análise técnica será realizada pela equipe OBGP." value={doc.obs || ''} onChange={(e) => handleUpdate(item.id, 'obs', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--site-border)', fontSize: '0.85rem', minHeight: 80, resize: 'vertical' }} />
+                  {(() => {
+                    const obsRequired = item.required || !!files[item.id];
+                    const obsError = showErrors && obsRequired && !doc.obs;
+                    return (
+                      <>
+                        <label style={{ fontSize: '0.7rem', fontWeight: 700, color: obsError ? '#dc2626' : 'var(--site-text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>
+                          Análise de Conformidade Atual {obsRequired && <span style={{ color: '#dc2626' }}>*</span>}
+                        </label>
+                        <textarea
+                          placeholder="Descreva a situação atual de conformidade deste documento."
+                          value={doc.obs || ''}
+                          onChange={(e) => handleUpdate(item.id, 'obs', e.target.value)}
+                          style={{ width: '100%', padding: '12px', borderRadius: 8, border: obsError ? '1px solid #dc2626' : '1px solid var(--site-border)', fontSize: '0.85rem', minHeight: 80, resize: 'vertical', background: obsError ? '#fff5f5' : undefined }}
+                        />
+                        {obsError && <span style={{ color: '#dc2626', fontSize: '0.7rem', fontWeight: 700, marginTop: 2, display: 'block' }}>⚠️ Campo obrigatório.</span>}
+                      </>
+                    );
+                  })()}
                 </div>
                 <DocFileField
                   itemId={item.id}
@@ -635,6 +651,21 @@ export default function ProcessoPage() {
       }
     }
     */
+
+    // Análise de Conformidade Atual — obrigatória para itens required ou com arquivo anexado
+    if (step >= 2 && step <= 6) {
+      const stepLists: Record<number, DocItem[]> = { 2: HABILITACAO_JURIDICA, 3: REGULARIDADE_FISCAL, 4: QUALIFICACAO_FINANCEIRA, 5: QUALIFICACAO_TECNICA, 6: OUTROS_REGISTROS };
+      const itemsList = stepLists[step] || [];
+      const missingObs = itemsList.find(item => {
+        const obsRequired = item.required || !!files[item.id];
+        return obsRequired && !data[item.id]?.obs;
+      });
+      if (missingObs) {
+        setShowValidationErrors(true);
+        document.getElementById(`doc-item-${missingObs.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+    }
 
     // Etapa 5 — validação cruzada (Art. 33, V, MROSC):
     // pelo menos UM dos quatro instrumentos deve ser anexado para
