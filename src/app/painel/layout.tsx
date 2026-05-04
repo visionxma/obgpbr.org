@@ -8,11 +8,11 @@ import PublicLayout from '../components/PublicLayout';
 import './painel.css';
 
 const BACK_NAV: Record<string, { href: string; label: string }> = {
-  '/painel/certificacao':                     { href: '/painel/processo',    label: 'Processo' },
-  '/painel/documentos':                       { href: '/painel/processo',    label: 'Processo' },
-  '/painel/prestacao-contas':                 { href: '/painel/processo',    label: 'Processo' },
-  '/painel/formularios':                      { href: '/painel/processo',    label: 'Processo' },
-  '/painel/relatorio-conformidade':           { href: '/painel/processo',    label: 'Processo' },
+  '/painel/certificacao':                     { href: '/painel/processos',   label: 'Processos' },
+  '/painel/documentos':                       { href: '/painel/processos',   label: 'Processos' },
+  '/painel/prestacao-contas':                 { href: '/painel/processos',   label: 'Processos' },
+  '/painel/formularios':                      { href: '/painel/processos',   label: 'Processos' },
+  '/painel/relatorio-conformidade':           { href: '/painel/processos',   label: 'Processos' },
   '/painel/formularios/cadastramento':        { href: '/painel/formularios', label: 'Formulários' },
   '/painel/formularios/diagnostico':          { href: '/painel/formularios', label: 'Formulários' },
   '/painel/formularios/relatorio_atividades': { href: '/painel/formularios', label: 'Formulários' },
