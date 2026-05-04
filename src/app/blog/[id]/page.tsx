@@ -5,7 +5,7 @@ import { useParams } from 'next/navigation';
 import PublicLayout from '../../components/PublicLayout';
 import { supabase } from '@/lib/supabase';
 import {
-  Calendar, Clock, Tag, Loader2, User, ArrowLeft, Share2, Link as LinkIcon, BookOpen, ChevronRight
+  Calendar, Clock, Tag, Loader2, User, ArrowLeft, Share2, Facebook, Twitter, Linkedin, Link as LinkIcon, BookOpen
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -28,6 +28,11 @@ function formatDate(dateStr: string | null) {
   return new Date(dateStr).toLocaleDateString('pt-BR', {
     day: '2-digit', month: 'long', year: 'numeric',
   });
+}
+
+function getInitials(name: string | null) {
+  if (!name) return 'OB';
+  return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
 }
 
 export default function BlogPostPage() {
@@ -66,8 +71,9 @@ export default function BlogPostPage() {
   if (loading) {
     return (
       <PublicLayout>
-        <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Loader2 size={40} style={{ animation: 'spin 1s linear infinite', color: 'var(--site-primary)' }} />
+        <div style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+          <Loader2 size={48} strokeWidth={2} style={{ animation: 'spin 1s linear infinite', color: 'var(--site-primary)', marginBottom: 20 }} />
+          <p style={{ color: 'var(--site-text-secondary)', fontWeight: 500 }}>Carregando artigo...</p>
         </div>
       </PublicLayout>
     );
@@ -76,9 +82,13 @@ export default function BlogPostPage() {
   if (!post) {
     return (
       <PublicLayout>
-        <div style={{ minHeight: '80vh', textAlign: 'center', padding: '100px 20px' }}>
-          <h2 style={{ marginBottom: 16 }}>Post não encontrado</h2>
-          <Link href="/blog" className="btn btn-primary">Voltar para o Blog</Link>
+        <div style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#f8fafc' }}>
+          <div style={{ width: 80, height: 80, borderRadius: '50%', background: '#fee2e2', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24 }}>
+            <BookOpen size={32} color="#ef4444" />
+          </div>
+          <h2 style={{ marginBottom: 16, color: 'var(--site-text-primary)' }}>Artigo não encontrado</h2>
+          <p style={{ color: 'var(--site-text-tertiary)', marginBottom: 32 }}>Este conteúdo pode ter sido movido ou não está mais disponível.</p>
+          <Link href="/blog" className="btn btn-primary" style={{ padding: '12px 28px', borderRadius: 999 }}>Voltar para o Blog</Link>
         </div>
       </PublicLayout>
     );
@@ -86,229 +96,303 @@ export default function BlogPostPage() {
 
   return (
     <PublicLayout>
-      {/* Barra de Progresso */}
+      {/* ── PROGRESS BAR ── */}
       <div style={{
-        position: 'fixed', top: 76, left: 0, width: `${scrollProgress}%`,
-        height: 3, background: 'var(--site-gold)', zIndex: 1000,
+        position: 'fixed', top: 0, left: 0, width: `${scrollProgress}%`,
+        height: 4, background: 'linear-gradient(to right, var(--site-primary), var(--site-gold))', zIndex: 9999,
         transition: 'width 0.1s ease-out'
       }} />
 
-      <article style={{ background: '#fff' }}>
-        {/* ── HEADER PREMIUM ── */}
-        <header className="glass-section-blue" style={{ 
-          padding: '160px 0 120px', 
-          textAlign: 'center',
-          backgroundAttachment: 'fixed'
+      <article style={{ background: '#fcfcfd', minHeight: '100vh', paddingBottom: 100 }}>
+        
+        {/* ── HERO HEADER ── */}
+        <header style={{ 
+          padding: '120px 24px 60px', 
+          background: 'linear-gradient(180deg, rgba(30,58,138,0.03) 0%, rgba(255,255,255,1) 100%)',
+          position: 'relative'
         }}>
-          <div className="container" style={{ maxWidth: 1000 }}>
-            {/* Breadcrumb / Back Link */}
-            <div style={{ marginBottom: 40, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10 }}>
-              <Link href="/blog" className="blog-nav-link">Blog</Link>
-              <ChevronRight size={14} color="rgba(255,255,255,0.3)" />
-              <span style={{ color: 'var(--site-gold)', fontSize: '0.8rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-                {post.category || 'Artigo'}
-              </span>
-            </div>
+          <div style={{ maxWidth: 840, margin: '0 auto' }}>
+            
+            {/* Back Button */}
+            <Link href="/blog" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              color: 'var(--site-text-tertiary)', fontSize: '0.85rem', fontWeight: 600,
+              textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 40,
+              padding: '8px 16px', borderRadius: 999, background: '#fff', border: '1px solid var(--site-border)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.02)', transition: 'all 0.2s ease', textDecoration: 'none'
+            }} className="btn-back">
+              <ArrowLeft size={16} /> Voltar ao Blog
+            </Link>
 
+            {/* Category */}
+            {post.category && (
+              <div style={{ display: 'flex', marginBottom: 20 }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '6px 14px', borderRadius: 999,
+                  background: 'rgba(30,58,138,0.08)', color: 'var(--site-primary)',
+                  fontSize: '0.75rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.1em'
+                }}>
+                  <Tag size={12} /> {post.category}
+                </span>
+              </div>
+            )}
+
+            {/* Title */}
             <h1 style={{ 
-              maxWidth: 850, margin: '0 auto 36px', 
-              fontSize: 'clamp(2.2rem, 6vw, 4rem)', 
-              fontWeight: 800, lineHeight: 1.1, color: '#fff',
-              letterSpacing: '-0.02em'
+              fontSize: 'clamp(2rem, 5vw, 3.5rem)', 
+              fontWeight: 800, lineHeight: 1.15, color: 'var(--site-text-primary)',
+              letterSpacing: '-0.02em', marginBottom: 32
             }}>
               {post.title}
             </h1>
 
+            {/* Metadata Bar */}
             <div style={{ 
-              display: 'flex', justifyContent: 'center', gap: 32, flexWrap: 'wrap',
-              color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem',
-              fontWeight: 500
+              display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap',
+              padding: '24px 0', borderTop: '1px solid var(--site-border)', borderBottom: '1px solid var(--site-border)'
             }}>
-              {post.author && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--site-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <User size={18} color="var(--site-primary)" />
+              {/* Author */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ 
+                  width: 44, height: 44, borderRadius: '50%', 
+                  background: 'linear-gradient(135deg, var(--site-primary) 0%, #1e40af 100%)', 
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#fff', fontWeight: 700, fontSize: '0.9rem', boxShadow: '0 4px 12px rgba(30,58,138,0.2)'
+                }}>
+                  {getInitials(post.author)}
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--site-text-primary)' }}>{post.author || 'Equipe OBGP'}</div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--site-text-tertiary)' }}>Autor</div>
+                </div>
+              </div>
+
+              <div style={{ width: 1, height: 40, background: 'var(--site-border)', display: 'none' }} className="meta-divider" />
+
+              {/* Date & Time */}
+              <div style={{ display: 'flex', gap: 24, color: 'var(--site-text-secondary)', fontSize: '0.9rem', fontWeight: 500 }}>
+                {post.published_at && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Calendar size={18} color="var(--site-gold)" />
+                    {formatDate(post.published_at)}
                   </div>
-                  <span style={{ color: '#fff', fontWeight: 600 }}>{post.author}</span>
-                </div>
-              )}
-              {post.published_at && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Calendar size={18} color="var(--site-gold)" />
-                  {formatDate(post.published_at)}
-                </div>
-              )}
-              {post.read_time && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Clock size={18} color="var(--site-gold)" />
-                  {post.read_time} min de leitura
-                </div>
-              )}
+                )}
+                {post.read_time && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Clock size={18} color="var(--site-primary)" />
+                    {post.read_time} min de leitura
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </header>
 
-        {/* ── CORPO DO ARTIGO ── */}
-        <section style={{ position: 'relative', marginTop: -60, paddingBottom: 120 }}>
-          <div className="container" style={{ maxWidth: 900 }}>
-            
-            {/* Imagem de Destaque formatada como Banner Editorial */}
-            {post.image_url && (
-              <div style={{ 
-                borderRadius: 24, overflow: 'hidden', 
-                boxShadow: '0 20px 50px rgba(30,58,138,0.15)',
-                marginBottom: 64, background: '#fff',
-                border: '6px solid #fff',
-                height: 'clamp(300px, 45vh, 480px)',
-                position: 'relative'
-              }}>
-                <img 
-                  src={post.image_url} 
-                  alt={post.title || 'Imagem de destaque'} 
-                  style={{ 
-                    width: '100%', 
-                    height: '100%', 
-                    objectFit: 'cover', 
-                    objectPosition: 'center',
-                    display: 'block' 
-                  }} 
-                />
-              </div>
-            )}
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 60 }}>
-              
-              {/* Conteúdo Principal */}
-              <main>
-                {post.summary && (
-                  <p style={{ 
-                    fontSize: '1.4rem', lineHeight: 1.6, color: 'var(--site-text-secondary)',
-                    fontWeight: 500, marginBottom: 48, borderLeft: '4px solid var(--site-gold)',
-                    paddingLeft: 24, fontStyle: 'italic'
-                  }}>
-                    {post.summary}
-                  </p>
-                )}
-
-                <div 
-                  className="blog-rich-text"
-                  dangerouslySetInnerHTML={{ __html: post.content || '' }} 
-                />
-
-                {/* Footer do Artigo */}
-                <footer style={{ 
-                  marginTop: 80, padding: '40px 0', 
-                  borderTop: '1px solid #f1f5f9',
-                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  flexWrap: 'wrap', gap: 32
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                    <span style={{ fontWeight: 700, color: 'var(--site-text-primary)', fontSize: '0.9rem' }}>COMPARTILHE:</span>
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <button className="share-pill"><Share2 size={16} /> Enviar</button>
-                      <button className="share-pill"><LinkIcon size={16} /> Link</button>
-                    </div>
-                  </div>
-
-                  <Link href="/blog" className="btn-back-magazine">
-                    <ArrowLeft size={16} /> Todos os Artigos
-                  </Link>
-                </footer>
-              </main>
+        {/* ── POST COVER IMAGE ── */}
+        {post.image_url && (
+          <div className="container" style={{ maxWidth: 1040, padding: '0 24px', marginBottom: 60 }}>
+            <div style={{ 
+              width: '100%', height: 'clamp(300px, 50vh, 550px)', 
+              borderRadius: 32, overflow: 'hidden',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.08)',
+              position: 'relative',
+              background: '#fff'
+            }}>
+              <img 
+                src={post.image_url} 
+                alt={post.title} 
+                style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} 
+              />
             </div>
           </div>
-        </section>
+        )}
+
+        {/* ── ARTICLE CONTENT ── */}
+        <div className="container" style={{ maxWidth: 760, padding: '0 24px' }}>
+          
+          {post.summary && (
+            <p style={{ 
+              fontSize: '1.25rem', lineHeight: 1.7, color: 'var(--site-text-primary)',
+              fontWeight: 500, marginBottom: 48, fontStyle: 'italic',
+              background: 'rgba(197,171,118,0.06)', padding: '32px', borderRadius: 20,
+              borderLeft: '4px solid var(--site-gold)'
+            }}>
+              {post.summary}
+            </p>
+          )}
+
+          <div 
+            className="editorial-content"
+            dangerouslySetInnerHTML={{ __html: post.content || '' }} 
+          />
+
+          {/* ── ARTICLE FOOTER & SHARE ── */}
+          <footer style={{ 
+            marginTop: 80, padding: '40px 0', 
+            borderTop: '1px solid var(--site-border)',
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            flexWrap: 'wrap', gap: 32
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+              <span style={{ fontWeight: 800, color: 'var(--site-text-primary)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                Compartilhe
+              </span>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button className="social-btn"><Linkedin size={18} /></button>
+                <button className="social-btn"><Twitter size={18} /></button>
+                <button className="social-btn"><Facebook size={18} /></button>
+                <button className="social-btn" title="Copiar link" onClick={() => navigator.clipboard.writeText(window.location.href)}><LinkIcon size={18} /></button>
+              </div>
+            </div>
+
+            <Link href="/blog" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10,
+              color: 'var(--site-primary)', fontWeight: 700, fontSize: '0.95rem',
+              padding: '12px 24px', borderRadius: 999, background: 'rgba(30,58,138,0.05)',
+              transition: 'all 0.2s', textDecoration: 'none'
+            }} className="btn-return">
+              <ArrowLeft size={18} /> Voltar para Artigos
+            </Link>
+          </footer>
+        </div>
       </article>
 
       <style jsx global>{`
-        .blog-nav-link {
-          color: rgba(255,255,255,0.5);
-          font-weight: 700;
-          text-transform: uppercase;
-          font-size: 0.8rem;
-          letter-spacing: 0.1em;
-          transition: all 0.2s;
-        }
-        .blog-nav-link:hover { color: #fff; }
-        
-        .blog-rich-text {
-          font-size: 1.15rem;
-          line-height: 1.85;
-          color: #334155;
-        }
-        .blog-rich-text h2 {
-          font-size: 2.2rem;
-          font-weight: 800;
-          margin: 64px 0 24px;
-          color: var(--site-primary);
-          letter-spacing: -0.02em;
-        }
-        .blog-rich-text h3 {
-          font-size: 1.6rem;
-          font-weight: 700;
-          margin: 40px 0 16px;
-          color: var(--site-primary);
-        }
-        .blog-rich-text p { margin-bottom: 28px; }
-        .blog-rich-text blockquote {
-          margin: 48px 0;
-          padding: 32px 40px;
-          background: #f8fafc;
-          border-radius: 20px;
-          position: relative;
-          font-size: 1.3rem;
-          color: var(--site-primary);
-          font-weight: 500;
-        }
-        .blog-rich-text blockquote::before {
-          content: '"';
-          position: absolute;
-          top: -20px; left: 30px;
-          font-size: 5rem;
-          color: var(--site-gold);
-          opacity: 0.4;
-          font-family: serif;
-        }
-        .blog-rich-text img {
-          border-radius: 16px;
-          margin: 40px 0;
-          box-shadow: var(--site-shadow-lg);
-        }
-        
-        .share-pill {
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          padding: 10px 20px;
-          border-radius: var(--site-radius-full);
-          border: 1px solid #e2e8f0;
-          background: #fff;
-          color: #64748b;
-          font-weight: 700;
-          font-size: 0.8rem;
-          text-transform: uppercase;
-          cursor: pointer;
-          transition: all 0.2s;
-        }
-        .share-pill:hover {
-          border-color: var(--site-primary);
-          color: var(--site-primary);
-          background: var(--site-surface-blue);
-          transform: translateY(-2px);
+        /* Utilitários Locais do Blog */
+        .btn-back:hover {
+          background: #f8fafc !important;
+          border-color: #cbd5e1 !important;
+          color: var(--site-text-primary) !important;
         }
 
-        .btn-back-magazine {
-          display: inline-flex;
-          align-items: center;
-          gap: 10px;
+        .social-btn {
+          width: 44px; height: 44px;
+          border-radius: 50%;
+          background: #fff;
+          border: 1px solid var(--site-border);
+          display: flex; align-items: center; justify-content: center;
           color: var(--site-text-secondary);
-          font-weight: 700;
-          font-size: 0.9rem;
-          transition: all 0.2s;
+          cursor: pointer;
+          transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+          box-shadow: 0 2px 8px rgba(0,0,0,0.02);
         }
-        .btn-back-magazine:hover {
+        .social-btn:hover {
+          background: var(--site-surface-blue);
+          border-color: var(--site-primary);
           color: var(--site-primary);
-          transform: translateX(-4px);
+          transform: translateY(-4px) scale(1.05);
+          box-shadow: 0 8px 16px rgba(30,58,138,0.15);
+        }
+
+        .btn-return:hover {
+          background: var(--site-primary) !important;
+          color: #fff !important;
+        }
+
+        @media (min-width: 640px) {
+          .meta-divider { display: block !important; }
+        }
+
+        /* ── EDITORIAL CONTENT STYLING ── */
+        .editorial-content {
+          font-size: 1.125rem;
+          line-height: 1.9;
+          color: #334155;
+          font-family: var(--font-inter), sans-serif;
+        }
+        
+        .editorial-content > * {
+          margin-bottom: 32px;
+        }
+
+        .editorial-content h2 {
+          font-size: 2.1rem;
+          font-weight: 800;
+          margin: 64px 0 24px;
+          color: var(--site-text-primary);
+          letter-spacing: -0.02em;
+          line-height: 1.3;
+        }
+
+        .editorial-content h3 {
+          font-size: 1.6rem;
+          font-weight: 700;
+          margin: 48px 0 20px;
+          color: var(--site-text-primary);
+        }
+        
+        .editorial-content h4 {
+          font-size: 1.25rem;
+          font-weight: 700;
+          margin: 32px 0 16px;
+          color: var(--site-text-primary);
+        }
+
+        .editorial-content p {
+          margin-bottom: 28px;
+        }
+        
+        /* Links */
+        .editorial-content a {
+          color: var(--site-primary);
+          text-decoration: underline;
+          text-decoration-color: rgba(30,58,138,0.3);
+          text-underline-offset: 4px;
+          transition: text-decoration-color 0.2s;
+        }
+        .editorial-content a:hover {
+          text-decoration-color: var(--site-primary);
+        }
+
+        /* Blockquotes / Citações */
+        .editorial-content blockquote {
+          margin: 48px 0;
+          padding: 36px 40px;
+          background: #fff;
+          border-left: 4px solid var(--site-gold);
+          border-radius: 0 24px 24px 0;
+          position: relative;
+          font-size: 1.3rem;
+          color: var(--site-text-primary);
+          font-weight: 500;
+          font-style: italic;
+          box-shadow: 0 10px 30px rgba(0,0,0,0.03);
+          line-height: 1.6;
+        }
+
+        /* Listas */
+        .editorial-content ul, .editorial-content ol {
+          margin: 0 0 32px 0;
+          padding-left: 24px;
+        }
+        .editorial-content li {
+          margin-bottom: 12px;
+          padding-left: 8px;
+        }
+        .editorial-content li::marker {
+          color: var(--site-primary);
+          font-weight: 700;
+        }
+
+        /* Imagens */
+        .editorial-content img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 24px;
+          margin: 48px auto;
+          display: block;
+          box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+          .editorial-content {
+            font-size: 1.05rem;
+            line-height: 1.7;
+          }
+          .editorial-content h2 { font-size: 1.8rem; margin: 48px 0 20px; }
+          .editorial-content blockquote { font-size: 1.15rem; padding: 24px; }
         }
       `}</style>
     </PublicLayout>
