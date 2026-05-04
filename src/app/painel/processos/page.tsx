@@ -1,7 +1,7 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { FolderOpen, Calendar, Clock, CheckCircle2, AlertCircle, Plus, ArrowRight } from 'lucide-react';
+import { FolderOpen, Calendar, Clock, CheckCircle2, AlertCircle, Plus, ArrowRight, Trash2, X, Download } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { usePainel } from '../PainelContext';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -20,6 +20,7 @@ type Processo = {
     razao_social?: string;
     cnpj?: string;
   } | null;
+  documento_final_path?: string | null;
 };
 
 const STATUS_META: Record<string, { label: string; icon: React.ReactNode; bg: string; color: string }> = {
@@ -37,6 +38,31 @@ export default function ProcessosPage() {
   const [trackedProcesses, setTrackedProcesses] = useState<Processo[]>([]);
   const [loadingProcessos, setLoadingProcessos] = useState(true);
   const [loadError, setLoadError] = useState('');
+  
+  // Controle de exclusão
+  const [processToDelete, setProcessToDelete] = useState<Processo | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteProcess = async () => {
+    if (!processToDelete || !perfil) return;
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from('relatorios_conformidade')
+        .delete()
+        .eq('id', processToDelete.id)
+        .eq('osc_id', perfil.osc_id);
+
+      if (error) throw error;
+      
+      setTrackedProcesses(prev => prev.filter(p => p.id !== processToDelete.id));
+      setProcessToDelete(null);
+    } catch (err: any) {
+      alert('Erro ao excluir processo: ' + err.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   useEffect(() => {
     let active = true;
@@ -209,18 +235,70 @@ export default function ProcessosPage() {
                   >
                     {p.status === 'pendente' ? 'Resolver Pendência' : p.status === 'em_preenchimento' ? 'Continuar Relatório' : 'Acompanhar Processo'} <ArrowRight size={15} />
                   </button>
-                  {p.status === 'aprovado' && (
+                  {p.status === 'aprovado' && !p.documento_final_path && (
                     <button
                       onClick={() => window.open(`/api/relatorio/pdf/${p.id}`, '_blank', 'noopener,noreferrer')}
                       style={{ background: 'var(--site-primary)', color: '#fff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 999, fontWeight: 800, cursor: 'pointer' }}
+                      title="Baixar rascunho de aprovação do sistema"
                     >
                       PDF / Selo
                     </button>
                   )}
+                  {p.documento_final_path && (
+                    <button
+                      onClick={async () => {
+                        const { data } = await supabase.storage.from('osc-docs').createSignedUrl(p.documento_final_path!, 3600);
+                        if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                        else alert('Documento temporariamente indisponível.');
+                      }}
+                      style={{ background: 'var(--site-gold)', color: '#fff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 999, fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 14px rgba(204,153,51,0.2)' }}
+                      title="Baixar versão oficial final com o Selo OSC"
+                    >
+                      <Download size={15} /> Baixar Certificação
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setProcessToDelete(p)}
+                    style={{ background: '#fff', color: '#dc2626', border: '1px solid #dc2626', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 38, height: 38, borderRadius: '50%', cursor: 'pointer', transition: 'all 0.2s' }}
+                    title="Excluir Processo"
+                    onMouseOver={(e) => { e.currentTarget.style.background = '#fef2f2'; }}
+                    onMouseOut={(e) => { e.currentTarget.style.background = '#fff'; }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Modal de Confirmação de Exclusão */}
+      {processToDelete && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(13,54,79,0.4)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: 20 }}>
+          <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 420, padding: 32, boxShadow: '0 20px 40px rgba(0,0,0,0.1)', animation: 'panelPageIn 0.2s ease-out' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+              <div style={{ width: 48, height: 48, borderRadius: '50%', background: 'rgba(220,38,38,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#dc2626' }}>
+                <AlertCircle size={24} />
+              </div>
+              <button onClick={() => setProcessToDelete(null)} disabled={isDeleting} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--site-text-tertiary)' }}>
+                <X size={20} />
+              </button>
+            </div>
+            <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--site-primary)', margin: '0 0 10px' }}>Excluir Processo?</h3>
+            <p style={{ fontSize: '0.9rem', color: 'var(--site-text-secondary)', lineHeight: 1.6, margin: '0 0 24px' }}>
+              Tem certeza que deseja excluir o processo <strong>{(processToDelete.numero || processToDelete.id.slice(-6)).toUpperCase()}</strong>? 
+              Todos os dados preenchidos serão perdidos permanentemente e essa ação não pode ser desfeita.
+            </p>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <button onClick={() => setProcessToDelete(null)} disabled={isDeleting} style={{ flex: 1, padding: '12px', background: '#f8fafc', color: 'var(--site-text-secondary)', border: '1px solid var(--site-border)', borderRadius: 999, fontWeight: 700, cursor: 'pointer' }}>
+                Cancelar
+              </button>
+              <button onClick={handleDeleteProcess} disabled={isDeleting} style={{ flex: 1, padding: '12px', background: '#dc2626', color: '#fff', border: 'none', borderRadius: 999, fontWeight: 700, cursor: isDeleting ? 'not-allowed' : 'pointer', opacity: isDeleting ? 0.7 : 1 }}>
+                {isDeleting ? 'Excluindo...' : 'Sim, excluir'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

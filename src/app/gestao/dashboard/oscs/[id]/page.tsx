@@ -4,10 +4,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import {
-  ArrowLeft, CheckCircle, XCircle, Clock, ExternalLink,
-  FileText, BookOpen, ClipboardList, AlertCircle, Save,
-  Building2, Phone, MapPin, Hash, ShieldCheck, ChevronDown, ChevronUp,
-  Edit2, X, Mail, Home, User, Award, CreditCard, PenLine, Download, FileSignature
+  CheckCircle, XCircle, FileText, Calendar, Building2, Phone, Mail, Home, Hash, MapPin, ExternalLink, RefreshCw, Eye, Edit2, ShieldCheck, PenLine, CreditCard, Award, ArrowLeft, Save, X, ClipboardList, Clock, FileSignature, ChevronDown, ChevronUp, AlertCircle, Download, Upload, Trash2, User, BookOpen
 } from 'lucide-react';
 import { gerarRelatorioDocx } from '@/lib/docxGenerator';
 import DiagSeloCard from '@/components/admin/DiagSeloCard';
@@ -107,6 +104,7 @@ interface Relatorio {
   certificado_emitido_at?: string | null;
   created_at: string;
   arquivo_docx_path?: string | null;
+  documento_final_path?: string | null;
 }
 
 /* ── Constants ── */
@@ -638,6 +636,59 @@ export default function OscDetailPage() {
     }
   };
 
+  const [uploadingFinalDoc, setUploadingFinalDoc] = useState(false);
+  const handleUploadFinalDoc = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files[0] || !relatorio) return;
+    const file = e.target.files[0];
+    setUploadingFinalDoc(true);
+    setRelMsg('Enviando documento final...');
+    
+    try {
+      const ext = file.name.split('.').pop();
+      const filename = `certificados/${relatorio.id}_final_${Date.now()}.${ext}`;
+      
+      const { error: uploadErr } = await supabase.storage.from('osc-docs').upload(filename, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+
+      const { error: updateErr } = await supabase
+        .from('relatorios_conformidade')
+        .update({ documento_final_path: filename })
+        .eq('id', relatorio.id);
+        
+      if (updateErr) throw updateErr;
+
+      setRelMsg('Documento final com Selo OSC anexado com sucesso!');
+      setRelatorio({ ...relatorio, documento_final_path: filename });
+    } catch (err: any) {
+      setRelMsg('Erro ao enviar anexo: ' + err.message);
+    } finally {
+      setUploadingFinalDoc(false);
+    }
+  };
+
+  const handleDeleteFinalDoc = async () => {
+    if (!relatorio || !relatorio.documento_final_path) return;
+    if (!confirm('Deseja remover o anexo final? Ele não ficará mais disponível para a OSC.')) return;
+    
+    setUploadingFinalDoc(true);
+    try {
+      await supabase.storage.from('osc-docs').remove([relatorio.documento_final_path]);
+      const { error: updateErr } = await supabase
+        .from('relatorios_conformidade')
+        .update({ documento_final_path: null })
+        .eq('id', relatorio.id);
+      
+      if (updateErr) throw updateErr;
+      
+      setRelMsg('Anexo final removido.');
+      setRelatorio({ ...relatorio, documento_final_path: null });
+    } catch (err: any) {
+      setRelMsg('Erro ao remover anexo: ' + err.message);
+    } finally {
+      setUploadingFinalDoc(false);
+    }
+  };
+
   /* ── Render helpers ── */
   // msgParts and MsgBanner are defined at module level above
 
@@ -1164,6 +1215,49 @@ export default function OscDetailPage() {
                     >
                       <Download size={13} /> Ver Original (DOCX)
                     </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Box para Anexo do Selo Final pelo Admin */}
+              <div style={{ marginBottom: 24, padding: '16px 20px', background: 'rgba(204,153,51,0.06)', border: '1px solid rgba(204,153,51,0.2)', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+                <div>
+                  <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--site-gold-dark)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Award size={16} /> Relatório Final com Selo OSC
+                  </div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--admin-text-secondary)', marginTop: 4 }}>
+                    Após a aprovação, gere o DOCX, adicione a imagem do Selo e anexe o PDF/DOCX finalizado aqui para a OSC poder baixar.
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {!relatorio.documento_final_path ? (
+                    <>
+                      <input type="file" id="upload-final-doc" style={{ display: 'none' }} accept=".pdf,.doc,.docx" onChange={handleUploadFinalDoc} disabled={uploadingFinalDoc} />
+                      <label htmlFor="upload-final-doc" className="admin-btn" style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '8px 16px', fontSize: '0.82rem', background: 'var(--site-gold)', color: '#fff', border: 'none', fontWeight: 800, cursor: uploadingFinalDoc ? 'wait' : 'pointer', transition: 'all 0.2s', opacity: uploadingFinalDoc ? 0.7 : 1 }}>
+                        <Upload size={13} /> {uploadingFinalDoc ? 'Enviando...' : 'Anexar Documento Final'}
+                      </label>
+                    </>
+                  ) : (
+                    <>
+                      <button className="admin-btn"
+                        onClick={async () => {
+                          const { data } = await supabase.storage.from('osc-docs').createSignedUrl(relatorio.documento_final_path!, 3600);
+                          if (data?.signedUrl) window.open(data.signedUrl, '_blank');
+                        }}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '8px 16px', fontSize: '0.82rem', background: 'var(--site-primary)', color: '#fff', border: 'none', fontWeight: 800, cursor: 'pointer' }}
+                      >
+                        <Eye size={13} /> Ver Documento Anexado
+                      </button>
+                      <button className="admin-btn"
+                        onClick={handleDeleteFinalDoc}
+                        disabled={uploadingFinalDoc}
+                        style={{ display: 'flex', alignItems: 'center', gap: 6, borderRadius: 8, padding: '8px 12px', fontSize: '0.82rem', background: 'rgba(220,38,38,0.1)', color: '#dc2626', border: '1px solid rgba(220,38,38,0.2)', fontWeight: 800, cursor: 'pointer' }}
+                        title="Remover anexo final"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
