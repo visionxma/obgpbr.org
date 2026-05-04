@@ -98,8 +98,14 @@ export default function ProcessosPage() {
           <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: 'var(--site-primary)', fontFamily: 'var(--font-heading)', margin: 0 }}>Meus Processos</h2>
           <p style={{ color: 'var(--site-text-secondary)', margin: '4px 0 0' }}>Acompanhe o status dos seus relatórios de conformidade.</p>
         </div>
-        <button 
-          onClick={() => router.push('/painel/relatorio-conformidade?novo=1')} 
+        <button
+          onClick={() => {
+            localStorage.removeItem('obgp_processo_state');
+            localStorage.removeItem('obgp_guest_entidade');
+            localStorage.removeItem('obgp_guest_docs');
+            localStorage.removeItem('obgp_guest_step');
+            router.push('/painel/processo');
+          }}
           style={{ background: 'var(--site-primary)', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 'var(--site-radius-full)', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(13,54,79,0.2)', transition: 'all .2s' }}
           onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(13,54,79,0.3)'; }}
           onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 14px rgba(13,54,79,0.2)'; }}
@@ -148,7 +154,13 @@ export default function ProcessosPage() {
           <div style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--site-primary)', marginBottom: 10 }}>Vamos começar sua certificação?</div>
           <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.95rem', maxWidth: 460, margin: '0 auto 28px', lineHeight: 1.65 }}>Você ainda não tem processos por aqui. Inicie seu Relatório de Conformidade — é rápido, e eu te acompanho em cada etapa.</p>
           <button
-            onClick={() => router.push('/painel/relatorio-conformidade?novo=1')}
+            onClick={() => {
+              localStorage.removeItem('obgp_processo_state');
+              localStorage.removeItem('obgp_guest_entidade');
+              localStorage.removeItem('obgp_guest_docs');
+              localStorage.removeItem('obgp_guest_step');
+              router.push('/painel/processo');
+            }}
             style={{ background: 'var(--site-primary)', color: '#fff', border: 'none', display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 28px', borderRadius: 'var(--site-radius-full)', fontWeight: 800, cursor: 'pointer', transition: 'all .2s', boxShadow: '0 8px 24px rgba(13,54,79,0.18)' }}
             onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(13,54,79,0.24)'; }}
             onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(13,54,79,0.18)'; }}
