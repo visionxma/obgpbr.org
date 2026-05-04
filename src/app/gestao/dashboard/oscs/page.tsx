@@ -7,7 +7,8 @@ import { supabase } from '@/lib/supabase';
 import {
   Search, Users, Eye, CheckCircle, Clock, XCircle, Circle,
   Trash2, Trash, ChevronRight, ChevronDown, FileText,
-  CreditCard, Award, ExternalLink, AlertCircle, Download, X
+  CreditCard, Award, ExternalLink, AlertCircle, Download, X,
+  ArrowUp, ArrowDown
 } from 'lucide-react';
 import { gerarRelatorioDocx } from '@/lib/docxGenerator';
 import { toast } from '@/components/ui/Toast';
@@ -179,6 +180,12 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
     setMounted(true);
   }, []);
 
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
+  const relatoriosOrdenados = [...osc.relatorios].sort((a, b) => {
+    const da = new Date(a.created_at).getTime();
+    const db = new Date(b.created_at).getTime();
+    return sortOrder === 'desc' ? db - da : da - db;
+  });
   const [selectedRelId, setSelectedRelId] = useState(osc.relatorios[0]?.id);
   const rel = osc.relatorios.find(r => r.id === selectedRelId);
   const handleDownload = () => {
@@ -235,16 +242,37 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
               
               {osc.relatorios.length > 1 && (
                 <div style={{ background: 'var(--site-surface-blue)', padding: 16, borderRadius: 12, border: '1px solid var(--site-border)' }}>
-                  <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--site-primary)', marginBottom: 8 }}>Múltiplos Processos Encontrados ({osc.relatorios.length})</div>
-                  <select 
-                    value={selectedRelId} 
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 8 }}>
+                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--site-primary)' }}>
+                      Múltiplos Processos Encontrados ({osc.relatorios.length})
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setSortOrder(o => (o === 'desc' ? 'asc' : 'desc'))}
+                      title={sortOrder === 'desc' ? 'Ordenar do mais antigo para o mais recente' : 'Ordenar do mais recente para o mais antigo'}
+                      aria-label={`Alternar ordenação (atual: ${sortOrder === 'desc' ? 'mais recente primeiro' : 'mais antigo primeiro'})`}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
+                        padding: '6px 10px', borderRadius: 8,
+                        background: '#fff', border: '1px solid var(--site-border)',
+                        color: 'var(--site-primary)',
+                        fontSize: '0.75rem', fontWeight: 700,
+                        cursor: 'pointer', whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {sortOrder === 'desc' ? <ArrowDown size={13} /> : <ArrowUp size={13} />}
+                      {sortOrder === 'desc' ? 'Mais recente' : 'Mais antigo'}
+                    </button>
+                  </div>
+                  <select
+                    value={selectedRelId}
                     onChange={e => {
                       setSelectedRelId(e.target.value);
                       setShowReject(false); // reset reject form on change
                     }}
                     style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--site-border)', background: '#fff', fontSize: '0.9rem', fontFamily: 'inherit', color: 'var(--site-text-primary)', outline: 'none' }}
                   >
-                    {osc.relatorios.map((r, idx) => (
+                    {relatoriosOrdenados.map((r) => (
                       <option key={r.id} value={r.id}>
                         Processo {r.numero || r.id.substring(0,8)} • Data: {new Date(r.created_at).toLocaleDateString('pt-BR')} às {new Date(r.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} • Status: {r.status.toUpperCase()}
                       </option>
