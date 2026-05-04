@@ -287,7 +287,7 @@ function DocumentSection({ number, title, items, data, handleUpdate, showErrors,
                   <input type="date" value={doc.validade || ''} onChange={(e) => handleUpdate(item.id, 'validade', e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid var(--site-border)', fontSize: '0.85rem' }} />
                 </div>
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--site-text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Observações da OSC (opcional)</label>
+                  <label style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--site-text-secondary)', textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Análise de Conformidade Atual</label>
                   <textarea placeholder="Inclua aqui qualquer observação relevante sobre o documento. A análise técnica será realizada pela equipe OBGP." value={doc.obs || ''} onChange={(e) => handleUpdate(item.id, 'obs', e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: 8, border: '1px solid var(--site-border)', fontSize: '0.85rem', minHeight: 80, resize: 'vertical' }} />
                 </div>
                 <DocFileField
