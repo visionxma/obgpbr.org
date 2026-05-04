@@ -8,7 +8,7 @@ import {
   Search, Users, Eye, CheckCircle, Clock, XCircle, Circle,
   Trash2, Trash, ChevronRight, ChevronDown, FileText,
   CreditCard, Award, ExternalLink, AlertCircle, Download, X,
-  ArrowUp, ArrowDown
+  ArrowUp, ArrowDown, Upload
 } from 'lucide-react';
 import { gerarRelatorioDocx } from '@/lib/docxGenerator';
 import { toast } from '@/components/ui/Toast';
@@ -174,6 +174,9 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
   const [loadingDocx, setLoadingDocx] = useState(false);
   const [obs, setObs] = useState('');
   const [showReject, setShowReject] = useState(false);
+  const [showApproveUpload, setShowApproveUpload] = useState(false);
+  const [uploadingFinalDoc, setUploadingFinalDoc] = useState(false);
+  const [finalDocFile, setFinalDocFile] = useState<File | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -196,7 +199,24 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
   const doApprove = async () => {
     if (!rel) return;
     setLoadingApprove(true);
+    
+    // First update statuses
     await onApprove(osc.id, rel.id);
+
+    // If there's a file, upload it
+    if (finalDocFile) {
+      try {
+        const ext = finalDocFile.name.split('.').pop();
+        const filename = `certificados/${rel.id}_final_${Date.now()}.${ext}`;
+        const { error: uploadErr } = await supabase.storage.from('osc-docs').upload(filename, finalDocFile, { upsert: true });
+        if (!uploadErr) {
+          await supabase.from('relatorios_conformidade').update({ documento_final_path: filename }).eq('id', rel.id);
+        }
+      } catch (err) {
+        console.error('Erro no upload do doc final:', err);
+      }
+    }
+    
     setLoadingApprove(false);
     onClose();
   };
@@ -268,7 +288,9 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
                     value={selectedRelId}
                     onChange={e => {
                       setSelectedRelId(e.target.value);
-                      setShowReject(false); // reset reject form on change
+                      setShowReject(false);
+                      setShowApproveUpload(false);
+                      setFinalDocFile(null);
                     }}
                     style={{ width: '100%', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--site-border)', background: '#fff', fontSize: '0.9rem', fontFamily: 'inherit', color: 'var(--site-text-primary)', outline: 'none' }}
                   >
@@ -283,23 +305,29 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
 
               {/* Box Baixar Documento */}
               <div style={{ background: 'var(--site-surface-warm)', border: '1px solid var(--site-border)', padding: 24, borderRadius: 16, textAlign: 'center' }}>
-                <h3 style={{ fontSize: '1.1rem', marginBottom: 8, color: 'var(--site-text-primary)' }}>1. Análise do Dossiê</h3>
+                <h3 style={{ fontSize: '1.1rem', marginBottom: 8, color: 'var(--site-text-primary)' }}>1. Análise do Dossiê e Documentos</h3>
                 <p style={{ fontSize: '0.9rem', color: 'var(--site-text-secondary)', marginBottom: 20 }}>
-                  Faça o download do documento gerado com as respostas e comprovantes da OSC para verificar a conformidade.
+                  Para aprovar ou rejeitar os documentos anexados um a um, acesse o painel completo da OSC. Caso prefira a análise rápida consolidada, baixe o dossiê.
                 </p>
-                <button onClick={handleDownload} disabled={loadingDocx}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 12, background: 'var(--site-primary)', color: '#fff', border: 'none', padding: '14px 28px', borderRadius: 999, fontSize: '1rem', fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 14px var(--site-primary-glow)' }}>
-                  {loadingDocx ? 'Gerando...' : <><Download size={18} /> Baixar Dossiê Completo (DOCX)</>}
-                </button>
+                <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                  <Link href={`/gestao/dashboard/oscs/${osc.id}`}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 12, background: '#fff', color: 'var(--site-primary)', border: '1px solid var(--site-border)', padding: '14px 24px', borderRadius: 999, fontSize: '0.95rem', fontWeight: 800, cursor: 'pointer', textDecoration: 'none', transition: 'all 0.2s' }}>
+                    <Eye size={18} /> Avaliar Documentos Individualmente
+                  </Link>
+                  <button onClick={handleDownload} disabled={loadingDocx}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: 12, background: 'var(--site-primary)', color: '#fff', border: 'none', padding: '14px 24px', borderRadius: 999, fontSize: '0.95rem', fontWeight: 800, cursor: 'pointer', boxShadow: '0 4px 14px var(--site-primary-glow)', transition: 'all 0.2s' }}>
+                    {loadingDocx ? 'Gerando...' : <><Download size={18} /> Baixar Dossiê (DOCX)</>}
+                  </button>
+                </div>
               </div>
 
               {/* Box Decisão */}
               <div style={{ borderTop: '1px solid var(--site-border)', paddingTop: 32 }}>
                 <h3 style={{ fontSize: '1.1rem', marginBottom: 16, color: 'var(--site-text-primary)', textAlign: 'center' }}>2. Qual o parecer desta avaliação?</h3>
                 
-                {!showReject ? (
+                {!showReject && !showApproveUpload ? (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                    <button onClick={doApprove} disabled={loadingApprove}
+                    <button onClick={() => setShowApproveUpload(true)}
                       style={{ padding: 20, background: '#f0fdf4', border: '1px solid #4ade80', color: '#166534', borderRadius: 16, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, cursor: 'pointer', transition: 'all 0.2s' }}>
                       <CheckCircle size={32} />
                       <span style={{ fontWeight: 800 }}>Aprovar Processo<br/>e Emitir Selo</span>
@@ -310,7 +338,7 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
                       <span style={{ fontWeight: 800 }}>Rejeitar e Solicitar<br/>Correções</span>
                     </button>
                   </div>
-                ) : (
+                ) : showReject ? (
                   <div style={{ background: '#fef2f2', border: '1px solid #f87171', borderRadius: 16, padding: 20 }}>
                     <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#991b1b', marginBottom: 12 }}>Motivo da Rejeição (será enviado para a OSC):</div>
                     <textarea 
@@ -324,6 +352,35 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
                       </button>
                       <button onClick={doReject} disabled={loadingReject} style={{ padding: '10px 24px', background: '#dc2626', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 700, cursor: 'pointer' }}>
                         {loadingReject ? 'Salvando...' : 'Confirmar Rejeição'}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ background: '#f0fdf4', border: '1px solid #4ade80', borderRadius: 16, padding: 24 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16, color: '#166534' }}>
+                      <Award size={24} />
+                      <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>Upload do Certificado Final (Opcional)</h4>
+                    </div>
+                    <p style={{ fontSize: '0.9rem', color: '#166534', opacity: 0.8, marginBottom: 20, lineHeight: 1.5 }}>
+                      Você está prestes a aprovar este processo. Se desejar, já anexe o documento final com o Selo OSC em formato PDF/DOCX. O usuário poderá baixar este arquivo no painel dele.
+                    </p>
+                    <div style={{ marginBottom: 24 }}>
+                      <input type="file" id="upload-final-doc-modal" style={{ display: 'none' }} accept=".pdf,.doc,.docx" onChange={(e) => setFinalDocFile(e.target.files?.[0] || null)} />
+                      <label htmlFor="upload-final-doc-modal" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 20px', borderRadius: 8, background: '#fff', border: '1px solid #4ade80', color: '#166534', fontWeight: 700, cursor: 'pointer' }}>
+                        <Upload size={16} /> {finalDocFile ? finalDocFile.name : 'Selecionar Arquivo do Computador'}
+                      </label>
+                      {finalDocFile && (
+                        <button onClick={() => setFinalDocFile(null)} style={{ marginLeft: 12, background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontWeight: 600 }}>
+                          Remover
+                        </button>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', borderTop: '1px solid rgba(74,222,128,0.3)', paddingTop: 20 }}>
+                      <button onClick={() => { setShowApproveUpload(false); setFinalDocFile(null); }} style={{ padding: '10px 16px', background: 'transparent', border: 'none', color: '#166534', fontWeight: 600, cursor: 'pointer' }}>
+                        Cancelar
+                      </button>
+                      <button onClick={doApprove} disabled={loadingApprove} style={{ padding: '10px 24px', background: '#16a34a', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}>
+                        {loadingApprove ? 'Aprovando...' : <><CheckCircle size={16} /> Confirmar Aprovação</>}
                       </button>
                     </div>
                   </div>
