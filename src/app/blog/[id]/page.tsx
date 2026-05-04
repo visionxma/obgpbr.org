@@ -82,7 +82,7 @@ export default function BlogPostPage() {
       <article style={{ background: '#fff', minHeight: '100vh', paddingBottom: 100, fontFamily: 'Arial, Helvetica, sans-serif' }}>
         
         {/* Container Central estilo Portal de Notícias */}
-        <div style={{ maxWidth: 840, margin: '0 auto', padding: '40px 20px 0' }}>
+        <div style={{ maxWidth: 840, margin: '0 auto', padding: '120px 20px 0' }}>
           
           {/* Breadcrumb / Back Link */}
           <button onClick={() => router.back()} style={{
