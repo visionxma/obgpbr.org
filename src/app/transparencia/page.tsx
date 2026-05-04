@@ -189,7 +189,7 @@ export default function Transparencia() {
           {/* Abas */}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 28 }}>
             {([
-              { key: 'convenios', label: 'Convênios e Emendas', Icon: FileText },
+              { key: 'convenios', label: 'Contratos e Parcerias', Icon: FileText },
               { key: 'oscs', label: 'OSCs Certificadas', Icon: Award },
             ] as const).map(({ key, label, Icon }) => (
               <button
@@ -254,7 +254,7 @@ export default function Transparencia() {
       <section className="section-padding">
         <div className="container">
 
-          {/* ── Aba: Convênios e Emendas ── */}
+          {/* ── Aba: Contratos e Parcerias ── */}
           {tab === 'convenios' && (
             loadingRecords ? (
               <div style={{ textAlign: 'center', padding: '100px 0' }}>
