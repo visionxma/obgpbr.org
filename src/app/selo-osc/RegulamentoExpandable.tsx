@@ -28,15 +28,6 @@ export default function RegulamentoExpandable() {
           transition: "max-height 0.5s ease",
         }}
       >
-        {/* Cabeçalho institucional */}
-        <header style={{ textAlign: "center", paddingBottom: 24, marginBottom: 32, borderBottom: "2px solid var(--site-gold)" }}>
-          <div style={{ fontSize: "0.72rem", fontWeight: 800, letterSpacing: "0.1em", color: "var(--site-gold-dark)", textTransform: "uppercase", marginBottom: 8 }}>
-            Organização Brasil Gestão de Parcerias — OBGP
-          </div>
-          <h3 style={{ fontSize: "clamp(1.2rem, 3vw, 1.6rem)", fontWeight: 900, color: "var(--site-primary)", margin: 0, fontFamily: "var(--font-heading)", letterSpacing: "-0.01em" }}>
-            Regulamento do Selo OSC Gestão de Parcerias
-          </h3>
-        </header>
 
         {/* 1. Objetivo */}
         <section style={{ marginBottom: 32 }}>
