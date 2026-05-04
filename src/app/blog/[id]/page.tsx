@@ -188,12 +188,29 @@ export default function BlogPostPage() {
             className="g1-content"
             dangerouslySetInnerHTML={{ __html: post.content || '' }} 
           />
+
+          {/* Rodapé / Voltar */}
+          <div style={{ marginTop: 40, borderTop: '1px solid #ddd', paddingTop: 24, paddingBottom: 40, display: 'flex', justifyContent: 'center' }}>
+            <Link href="/blog" style={{
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+              color: '#c00', fontSize: '1rem', fontWeight: 700,
+              textDecoration: 'none', padding: '12px 24px', border: '1px solid #c00',
+              borderRadius: 4, transition: 'all 0.2s'
+            }} className="g1-return-btn">
+              <ArrowLeft size={18} /> Voltar para Notícias
+            </Link>
+          </div>
         </div>
       </article>
 
       <style jsx global>{`
         .g1-back-link:hover {
           text-decoration: underline !important;
+        }
+
+        .g1-return-btn:hover {
+          background: #c00;
+          color: #fff !important;
         }
 
         .g1-social-btn {
