@@ -52,9 +52,14 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
-  // Oculta "X-Powered-By: Next.js" da resposta HTTP
   poweredByHeader: false,
-  
+
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '10mb',
+    },
+  },
+
   async headers() {
     return [
       {

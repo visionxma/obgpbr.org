@@ -515,6 +515,10 @@ export default function ProcessoPage() {
       setImportError('Formato não suportado. Envie um PDF ou DOCX.');
       return;
     }
+    if (file.size > 10 * 1024 * 1024) {
+      setImportError('Arquivo muito grande. O limite é 10 MB.');
+      return;
+    }
     setImportando(true);
     setImportError('');
     setImportSuccess(false);
@@ -522,7 +526,13 @@ export default function ProcessoPage() {
       const fd = new FormData();
       fd.append('file', file);
       const res = await fetch('/api/painel/importar-documento', { method: 'POST', body: fd });
-      const json = await res.json();
+      const text = await res.text();
+      let json: any;
+      try {
+        json = JSON.parse(text);
+      } catch {
+        throw new Error(res.status === 413 ? 'Arquivo muito grande para processar. Use um arquivo menor.' : 'Resposta inválida do servidor.');
+      }
       if (!res.ok || json.error) {
         setImportError(json.error || 'Erro ao processar o documento.');
         return;
