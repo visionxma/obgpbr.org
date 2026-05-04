@@ -74,7 +74,7 @@ function formatCnpj(cnpj: string | null): string {
 }
 
 export default function Transparencia() {
-  const [tab, setTab] = useState<'convenios' | 'oscs'>('convenios');
+  const [tab, setTab] = useState<'legislacao' | 'convenios' | 'oscs'>('legislacao');
   const [search, setSearch] = useState('');
 
   // Convênios
@@ -191,6 +191,7 @@ export default function Transparencia() {
           {/* Abas */}
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 28 }}>
             {([
+              { key: 'legislacao', label: 'Legislação Vigente', Icon: Landmark },
               { key: 'convenios', label: 'Contratos e Parcerias', Icon: FileText },
               { key: 'oscs', label: 'OSCs Certificadas', Icon: Award },
             ] as const).map(({ key, label, Icon }) => (
@@ -255,6 +256,76 @@ export default function Transparencia() {
       {/* ═══ CONTEÚDO ═══ */}
       <section className="section-padding">
         <div className="container">
+
+          {/* ── Aba: Legislação Vigente ── */}
+          {tab === 'legislacao' && (
+            <div style={{ maxWidth: 780, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <p style={{ fontSize: '0.95rem', color: 'var(--site-text-secondary)', lineHeight: 1.75, marginBottom: 8 }}>
+                As parcerias entre a administração pública e as organizações da sociedade civil são reguladas pela legislação federal abaixo. Clique em cada lei para acessar o texto oficial no portal do Governo Federal.
+              </p>
+              {[
+                {
+                  numero: 'Lei nº 13.019/2014',
+                  apelido: 'MROSC — Marco Regulatório das Organizações da Sociedade Civil',
+                  descricao: 'Estabelece regras específicas para as parcerias entre a administração pública e as organizações da sociedade civil (OSC). Fomenta a atuação conjunta de Estado e OSC por meio de parcerias alinhadas às políticas públicas. É aplicável à administração direta e indireta da União, Estados, Distrito Federal e Municípios.',
+                  href: 'https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l13019.htm',
+                  destaque: true,
+                },
+                {
+                  numero: 'Decreto nº 8.726/2016',
+                  apelido: 'Regulamentação Federal',
+                  descricao: 'Regulamenta a Lei nº 13.019/2014 no âmbito da administração pública federal, definindo os procedimentos para celebração, execução, monitoramento e prestação de contas das parcerias.',
+                  href: 'https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2016/decreto/d8726.htm',
+                  destaque: false,
+                },
+                {
+                  numero: 'Decreto nº 11.948/2024',
+                  apelido: 'Atualização Vigente',
+                  descricao: 'Altera o Decreto nº 8.726, de 27 de abril de 2016, atualizando a regulamentação da Lei nº 13.019/2014 com as disposições mais recentes sobre parcerias federais com OSCs.',
+                  href: 'https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2024/decreto/d11948.htm',
+                  destaque: false,
+                },
+              ].map(({ numero, apelido, descricao, href, destaque }) => (
+                <a
+                  key={numero}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="legal-card-link"
+                  style={{
+                    display: 'flex', flexDirection: 'column', gap: 10,
+                    padding: '24px 28px',
+                    borderRadius: 'var(--site-radius-xl)',
+                    border: destaque ? '2px solid var(--site-gold)' : '1px solid var(--site-border)',
+                    background: destaque ? 'var(--site-surface-gold)' : '#fff',
+                    textDecoration: 'none',
+                    boxShadow: 'var(--site-shadow-xs)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                    <div>
+                      <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--site-primary)', marginBottom: 2 }}>{numero}</div>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: destaque ? 'var(--site-gold-dark)' : 'var(--site-text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{apelido}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', fontWeight: 700, color: 'var(--site-primary)', whiteSpace: 'nowrap' }}>
+                      <ExternalLink size={14} /> Acessar lei
+                    </div>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '0.88rem', color: 'var(--site-text-secondary)', lineHeight: 1.7 }}>{descricao}</p>
+                </a>
+              ))}
+              <p style={{ fontSize: '0.75rem', color: 'var(--site-text-secondary)', textAlign: 'center', marginTop: 8 }}>
+                Fonte:{' '}
+                <a href="https://www.gov.br/secretariageral/pt-br/dialogos/parcerias/legislacao" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--site-primary)', textDecoration: 'underline' }}>
+                  Secretaria-Geral da Presidência da República
+                </a>
+                {' · '}
+                <a href="https://www.planalto.gov.br" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--site-primary)', textDecoration: 'underline' }}>
+                  Planalto.gov.br
+                </a>
+              </p>
+            </div>
+          )}
 
           {/* ── Aba: Contratos e Parcerias ── */}
           {tab === 'convenios' && (
