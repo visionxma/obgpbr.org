@@ -160,7 +160,7 @@ export default function Transparencia() {
             <span className="hero-accent-white">pública</span>
           </h1>
           <p className="hero-subtitle">
-            Divulgação de informações organizacionais para controle social, conforme Art. 11 da Lei Federal nº 13.019/2014.
+            Divulgação de informações organizacionais para controle social, conforme Art. 11 da{' '}<a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l13019.htm" target="_blank" rel="noopener noreferrer" style={{ color: 'rgba(255,255,255,0.9)', fontWeight: 700, textDecoration: 'underline' }}>Lei Federal nº 13.019/2014</a>.
           </p>
 
           {/* Busca */}

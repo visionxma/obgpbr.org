@@ -805,6 +805,95 @@ export default function InicioPage() {
       </section>
 
       {/* ══════════════════════════════════════════════
+          FUNDAMENTOS LEGAIS
+      ══════════════════════════════════════════════ */}
+      <section className="glass-section-white section-padding">
+        <div className="container">
+          <div className="section-header">
+            <span className="section-label">Base Jurídica</span>
+            <h2>
+              Os{" "}
+              <span className="font-cursive" style={{ color: "var(--site-gold-dark)" }}>
+                3 pilares
+              </span>{" "}
+              legais
+            </h2>
+            <p>A legislação que fundamenta todas as parcerias entre OSCs e a administração pública no Brasil.</p>
+            <div className="section-line" />
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+            {[
+              {
+                numero: "Lei nº 13.019/2014",
+                apelido: "MROSC",
+                descricao: "Estabelece regras específicas para as parcerias entre a administração pública e as organizações da sociedade civil (OSC). Aplicável à União, Estados, Distrito Federal e Municípios.",
+                href: "https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l13019.htm",
+                destaque: true,
+              },
+              {
+                numero: "Decreto nº 8.726/2016",
+                apelido: "Regulamentação Federal",
+                descricao: "Regulamenta a Lei nº 13.019/2014 no âmbito da administração pública federal, definindo procedimentos e critérios para celebração e execução das parcerias.",
+                href: "https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2016/decreto/d8726.htm",
+                destaque: false,
+              },
+              {
+                numero: "Decreto nº 11.948/2024",
+                apelido: "Atualização Vigente",
+                descricao: "Altera o Decreto nº 8.726/2016, atualizando a regulamentação da Lei nº 13.019/2014 com as disposições mais recentes sobre parcerias federais.",
+                href: "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2024/decreto/d11948.htm",
+                destaque: false,
+              },
+            ].map(({ numero, apelido, descricao, href, destaque }) => (
+              <a
+                key={numero}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "flex", flexDirection: "column", gap: 14,
+                  padding: "28px 24px",
+                  borderRadius: "var(--site-radius-xl)",
+                  border: destaque ? "2px solid var(--site-gold)" : "1px solid var(--site-border)",
+                  background: destaque ? "var(--site-surface-gold)" : "#fff",
+                  textDecoration: "none",
+                  transition: "box-shadow 0.2s, transform 0.2s",
+                  boxShadow: "var(--site-shadow-xs)",
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--site-shadow-md)"; (e.currentTarget as HTMLElement).style.transform = "translateY(-2px)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--site-shadow-xs)"; (e.currentTarget as HTMLElement).style.transform = "none"; }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: destaque ? "var(--site-gold)" : "var(--site-primary)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Scale size={17} color="#fff" />
+                    </div>
+                    <span style={{ fontSize: "0.68rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.1em", color: destaque ? "var(--site-gold-dark)" : "var(--site-text-secondary)" }}>{apelido}</span>
+                  </div>
+                  <ArrowUpRight size={16} style={{ color: "var(--site-gold)", flexShrink: 0 }} />
+                </div>
+                <div>
+                  <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "var(--site-primary)", marginBottom: 8, lineHeight: 1.3 }}>{numero}</div>
+                  <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--site-text-secondary)", lineHeight: 1.7 }}>{descricao}</p>
+                </div>
+                <div style={{ marginTop: "auto", display: "flex", alignItems: "center", gap: 6, fontSize: "0.75rem", fontWeight: 700, color: "var(--site-gold-dark)" }}>
+                  <Landmark size={13} />
+                  Acessar legislação oficial →
+                </div>
+              </a>
+            ))}
+          </div>
+
+          <p style={{ textAlign: "center", fontSize: "0.78rem", color: "var(--site-text-secondary)", marginTop: 20 }}>
+            Fontes: <a href="https://www.planalto.gov.br" target="_blank" rel="noopener noreferrer" style={{ color: "var(--site-primary)", textDecoration: "underline" }}>Planalto.gov.br</a>
+            {" · "}
+            <a href="https://www.gov.br/secretariageral/pt-br/dialogos/parcerias/legislacao" target="_blank" rel="noopener noreferrer" style={{ color: "var(--site-primary)", textDecoration: "underline" }}>Secretaria-Geral da Presidência</a>
+          </p>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════
           ATUAÇÃO
       ══════════════════════════════════════════════ */}
       <section id="atuacao" className="glass-section-white section-padding">

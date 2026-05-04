@@ -81,7 +81,7 @@ export default function SeloOscPage() {
               identificou
             </h2>
             <p style={pStyle}>
-              O Ministério Público do Maranhão, no exercício de suas atribuições de controle externo, identificou um conjunto de irregularidades recorrentes nas entidades sem fins lucrativos — padrões que comprometem diretamente a elegibilidade das OSCs para celebrar parcerias com a administração pública, nos termos da <strong style={{ color: 'var(--site-text-primary)' }}>Lei Federal nº 13.019/2014</strong> (MROSC).
+              O Ministério Público do Maranhão, no exercício de suas atribuições de controle externo, identificou um conjunto de irregularidades recorrentes nas entidades sem fins lucrativos — padrões que comprometem diretamente a elegibilidade das OSCs para celebrar parcerias com a administração pública, nos termos da{' '}<a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l13019.htm" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--site-primary)', fontWeight: 700, textDecoration: 'underline' }}>Lei Federal nº 13.019/2014</a>{' '}(MROSC).
             </p>
             <p style={{ ...pStyle, marginBottom: 0 }}>
               Essas irregularidades limitam o acesso das organizações a recursos públicos e agravam desigualdades nas políticas de fomento à sociedade civil — cenário que o <strong style={{ color: 'var(--site-text-primary)' }}>Selo OSC Gestão de Parcerias</strong> foi concebido para enfrentar de forma estruturada e preventiva.
@@ -160,7 +160,7 @@ export default function SeloOscPage() {
             O <strong style={{ color: 'var(--site-text-primary)' }}>"Selo OSC Gestão de Parcerias"</strong> fundamenta-se na necessidade de criar um mecanismo independente de certificação que ateste a regularidade, conformidade e capacidade institucional para celebração de parcerias com a administração pública.
           </p>
           <p style={pStyle}>
-            O selo promove avaliação técnica e documental estruturada, orientada pelos requisitos da Lei nº 13.019/2014 e do Decreto nº 8.726/2016, reduzindo a assimetria entre a legislação e sua implementação efetiva.
+            O selo promove avaliação técnica e documental estruturada, orientada pelos requisitos da{' '}<a href="https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2014/lei/l13019.htm" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--site-primary)', fontWeight: 700, textDecoration: 'underline' }}>Lei nº 13.019/2014</a>{' '}e do{' '}<a href="https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2016/decreto/d8726.htm" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--site-primary)', fontWeight: 700, textDecoration: 'underline' }}>Decreto nº 8.726/2016</a>, reduzindo a assimetria entre a legislação e sua implementação efetiva.
           </p>
           <p style={{ ...pStyle, fontWeight: 500, color: 'var(--site-text-primary)', background: 'var(--site-surface-gold)', padding: '20px 24px', borderRadius: 'var(--site-radius-md)', borderLeft: '4px solid var(--site-gold)' }}>
             O selo constitui um mecanismo inovador de qualificação e reconhecimento institucional, capaz de elevar o padrão de confiabilidade e governança das OSCs.
