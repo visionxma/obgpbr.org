@@ -182,7 +182,7 @@ function FeaturedPost({ post }: { post: BlogPost }) {
         {post.image_url ? (
           <img
             src={post.image_url}
-            alt={post.title}
+            alt={post.title || 'Capa do artigo'}
             className="img-cover"
             style={{ height: '100%', minHeight: 260 }}
           />
@@ -220,7 +220,7 @@ function FeaturedPost({ post }: { post: BlogPost }) {
         )}
         <Link href={`/blog/${post.id}`}>
           <h2 style={{ marginBottom: 14, lineHeight: 1.3, fontSize: 'clamp(1.3rem, 2.5vw, 1.7rem)', cursor: 'pointer', transition: 'color .2s' }} className="hdr-link-hover">
-            {post.title}
+            {post.title || 'Artigo sem título'}
           </h2>
         </Link>
         {post.summary && (
@@ -248,7 +248,7 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
       {/* Imagem */}
       <Link href={`/blog/${post.id}`} style={{ height: 180, overflow: 'hidden' }}>
         {post.image_url ? (
-          <img src={post.image_url} alt={post.title} className="img-cover" style={{ height: '100%' }} />
+          <img src={post.image_url} alt={post.title || 'Capa do artigo'} className="img-cover" style={{ height: '100%' }} />
         ) : (
           <div style={{
             height: 180,
@@ -273,7 +273,7 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
           </span>
         )}
         <Link href={`/blog/${post.id}`}>
-          <h3 className="h3-card" style={{ marginBottom: 10, cursor: 'pointer', transition: 'color .2s' }}>{post.title}</h3>
+          <h3 className="h3-card" style={{ marginBottom: 10, cursor: 'pointer', transition: 'color .2s' }}>{post.title || 'Artigo sem título'}</h3>
         </Link>
         {post.summary && (
           <p style={{

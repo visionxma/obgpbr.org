@@ -1,14 +1,20 @@
 'use client';
+
 import { supabase } from '@/lib/supabase';
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
 import {
-  Sparkles, Plus, Trash2, Edit3, Loader2, FolderOpen,
-  AlertCircle, CheckCircle2, Search, X, Save, Upload, Calendar, MapPin,
+  Sparkles, Trash2, Edit3, Loader2, FolderOpen,
+  Calendar, MapPin, Image as ImageIcon, Tag, FileText, Rocket,
 } from 'lucide-react';
+import {
+  AdminToast, AdminToolbar, AdminEmpty, AdminSkeletonGrid,
+  SlidePanel, Section, Field, TextInput, TextArea,
+  PublishToggle, ImageUploadField, ListRow, useNotice,
+} from '../_shared/AdminUI';
 
 interface Experience {
   id: string;
-  title: string;
+  title: string | null;
   description: string | null;
   image_url: string | null;
   location: string | null;
@@ -17,339 +23,247 @@ interface Experience {
   created_at: string;
 }
 
-const BUCKET_NAME = 'images';
-
-const ALLOWED_IMG_MIME_EXP = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
-const MAX_IMG_BYTES_EXP = 5 * 1024 * 1024;
-const IMG_EXT_EXP: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/gif': 'gif' };
-function safeImgExtExp(file: File): string { return IMG_EXT_EXP[file.type] ?? 'bin'; }
+const EMPTY_FORM = {
+  title: '',
+  description: '',
+  image_url: '',
+  location: '',
+  date: '',
+  is_published: true,
+};
 
 export default function ExperienciasAdmin() {
   const [items, setItems] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [search, setSearch] = useState('');
   const [showEditor, setShowEditor] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-
   const [editing, setEditing] = useState<Experience | null>(null);
-  const [formTitle, setFormTitle] = useState('');
-  const [formDescription, setFormDescription] = useState('');
-  const [formImageUrl, setFormImageUrl] = useState('');
-  const [formLocation, setFormLocation] = useState('');
-  const [formDate, setFormDate] = useState('');
-  const [formPublished, setFormPublished] = useState(true);
-  const [uploading, setUploading] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [form, setForm] = useState(EMPTY_FORM);
+  const { notice, setNotice } = useNotice();
 
-  const showNotification = (type: 'success' | 'error', message: string) => {
-    setNotification({ type, message });
-    setTimeout(() => setNotification(null), 3500);
-  };
+  useEffect(() => { fetchItems(); }, []);
 
-  const fetchItems = async () => {
+  async function fetchItems() {
     setLoading(true);
     const { data, error } = await supabase
       .from('experiences')
       .select('*')
       .order('created_at', { ascending: false });
-    if (error) showNotification('error', 'Erro ao carregar: ' + error.message);
+    if (error) setNotice({ type: 'error', message: 'Erro ao carregar: ' + error.message });
     else setItems((data as Experience[]) || []);
     setLoading(false);
-  };
+  }
 
-  useEffect(() => { fetchItems(); }, []);
+  function setField<K extends keyof typeof EMPTY_FORM>(key: K, val: typeof EMPTY_FORM[K]) {
+    setForm(f => ({ ...f, [key]: val }));
+  }
 
-  const resetForm = () => {
+  function openCreate() {
     setEditing(null);
-    setFormTitle('');
-    setFormDescription('');
-    setFormImageUrl('');
-    setFormLocation('');
-    setFormDate('');
-    setFormPublished(true);
-  };
-
-  const openCreate = () => { resetForm(); setShowEditor(true); };
-  const openEdit = (it: Experience) => {
-    setEditing(it);
-    setFormTitle(it.title || '');
-    setFormDescription(it.description || '');
-    setFormImageUrl(it.image_url || '');
-    setFormLocation(it.location || '');
-    setFormDate(it.date || '');
-    setFormPublished(it.is_published);
+    setForm(EMPTY_FORM);
     setShowEditor(true);
-  };
+  }
 
-  const handleUpload = async (file: File) => {
-    if (file.size > MAX_IMG_BYTES_EXP) { showNotification('error', 'Imagem muito grande. Máximo 5 MB.'); return; }
-    if (!ALLOWED_IMG_MIME_EXP.has(file.type)) { showNotification('error', 'Tipo não permitido. Use JPG, PNG, WebP ou GIF.'); return; }
-    setUploading(true);
-    try {
-      const ext = safeImgExtExp(file);
-      const path = `experiences/${Date.now()}-${crypto.randomUUID().replace(/-/g, '')}.${ext}`;
-      const { error } = await supabase.storage.from(BUCKET_NAME).upload(path, file, { contentType: file.type });
-      if (error) throw error;
-      const { data } = supabase.storage.from(BUCKET_NAME).getPublicUrl(path);
-      setFormImageUrl(data.publicUrl);
-      showNotification('success', 'Imagem enviada!');
-    } catch {
-      showNotification('error', 'Falha no upload. Tente novamente.');
-    } finally {
-      setUploading(false);
-    }
-  };
+  function openEdit(it: Experience) {
+    setEditing(it);
+    setForm({
+      title: it.title || '',
+      description: it.description || '',
+      image_url: it.image_url || '',
+      location: it.location || '',
+      date: it.date || '',
+      is_published: it.is_published,
+    });
+    setShowEditor(true);
+  }
 
-  const handleSave = async () => {
-    if (!formTitle.trim()) {
-      showNotification('error', 'O título é obrigatório.');
-      return;
-    }
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
     setSaving(true);
     const payload = {
-      title: formTitle.trim(),
-      description: formDescription.trim() || null,
-      image_url: formImageUrl.trim() || null,
-      location: formLocation.trim() || null,
-      date: formDate.trim() || null,
-      is_published: formPublished,
+      title: form.title.trim() || 'Sem título',
+      description: form.description.trim() || null,
+      image_url: form.image_url.trim() || null,
+      location: form.location.trim() || null,
+      date: form.date.trim() || null,
+      is_published: form.is_published,
     };
     const { error } = editing
       ? await supabase.from('experiences').update(payload).eq('id', editing.id)
       : await supabase.from('experiences').insert(payload);
     setSaving(false);
     if (error) {
-      showNotification('error', 'Erro ao salvar: ' + error.message);
+      setNotice({ type: 'error', message: 'Erro ao salvar: ' + error.message });
       return;
     }
-    showNotification('success', editing ? 'Atualizado com sucesso!' : 'Criado com sucesso!');
+    setNotice({ type: 'success', message: editing ? 'Experiência atualizada!' : 'Experiência criada!' });
     setShowEditor(false);
-    resetForm();
     fetchItems();
-  };
+  }
 
-  const handleDelete = async (id: string) => {
+  async function handleDelete(id: string) {
     if (!confirm('Excluir esta experiência?')) return;
     setDeletingId(id);
     const { error } = await supabase.from('experiences').delete().eq('id', id);
     setDeletingId(null);
     if (error) {
-      showNotification('error', 'Erro ao excluir: ' + error.message);
+      setNotice({ type: 'error', message: 'Erro ao excluir: ' + error.message });
       return;
     }
-    showNotification('success', 'Excluído.');
+    setNotice({ type: 'success', message: 'Experiência removida.' });
     fetchItems();
-  };
+  }
 
-  const filtered = items.filter((i) =>
-    i.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (i.description || '').toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const filtered = items.filter((i) => {
+    const q = search.toLowerCase();
+    return (
+      (i.title || '').toLowerCase().includes(q) ||
+      (i.description || '').toLowerCase().includes(q) ||
+      (i.location || '').toLowerCase().includes(q)
+    );
+  });
 
   return (
     <div>
-      {notification && (
-        <div style={{
-          padding: '14px 20px', borderRadius: 'var(--admin-radius-md)',
-          background: notification.type === 'success' ? 'rgba(38,102,47,0.1)' : 'rgba(220,38,38,0.1)',
-          border: `1px solid ${notification.type === 'success' ? 'var(--admin-success)' : 'var(--admin-danger)'}`,
-          color: notification.type === 'success' ? 'var(--admin-success)' : 'var(--admin-danger)',
-          marginBottom: 20, display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.9rem',
-        }}>
-          {notification.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-          {notification.message}
-        </div>
-      )}
+      <AdminToast notice={notice} />
 
-      {/* Toolbar */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 14px', height: 42, borderRadius: 'var(--admin-radius-md)', background: 'var(--admin-surface)', border: '1px solid var(--admin-border)', flex: 1, maxWidth: 360 }}>
-          <Search size={16} color="var(--admin-text-tertiary)" />
-          <input
-            placeholder="Buscar experiências..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            style={{ border: 'none', outline: 'none', background: 'transparent', flex: 1, fontSize: '0.85rem', color: 'var(--admin-text-primary)' }}
-          />
-        </div>
-        <button
-          onClick={openCreate}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 8, padding: '0 18px', height: 42,
-            borderRadius: 'var(--admin-radius-md)', background: 'var(--admin-primary)', color: 'white',
-            border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem',
-          }}
-        >
-          <Plus size={16} /> Nova Experiência
-        </button>
-      </div>
+      <AdminToolbar
+        search={search}
+        onSearch={setSearch}
+        placeholder="Buscar por título, descrição ou local…"
+        count={items.length}
+        countLabel={(n) => `${n} ${n === 1 ? 'experiência' : 'experiências'}`}
+        onNew={openCreate}
+        newLabel="Nova Experiência"
+      />
 
-      {/* List */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 60 }}>
-          <Loader2 size={28} className="spin" style={{ animation: 'spin 1s linear infinite' }} />
-          <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
-        </div>
+        <AdminSkeletonGrid count={4} height={120} />
       ) : filtered.length === 0 ? (
-        <div className="glass-card">
-          <div className="admin-empty-state">
-            <div className="admin-empty-state-icon"><FolderOpen size={32} /></div>
-            <div className="admin-empty-state-text" style={{ fontSize: '1.2rem', marginTop: 12 }}>{items.length === 0 ? 'Nenhuma experiência adicionada' : 'Nenhum resultado para a busca'}</div>
-            <div className="admin-empty-state-hint">{items.length === 0 ? 'Adicione a primeira experiência para popular o portfólio.' : 'Tente buscar com outros termos.'}</div>
-          </div>
-        </div>
+        <AdminEmpty
+          icon={items.length === 0 ? Rocket : FolderOpen}
+          title={items.length === 0 ? 'Nenhuma experiência adicionada' : 'Nenhum resultado'}
+          hint={items.length === 0
+            ? 'Adicione a primeira experiência para começar a popular o portfólio público.'
+            : 'Tente buscar com outros termos.'}
+        />
       ) : (
-        <div style={{ display: 'grid', gap: 16 }}>
+        <div className="admin-animate-in-delay-1" style={{ display: 'grid', gap: 14, paddingBottom: 60 }}>
           {filtered.map((it) => (
-            <div key={it.id} style={{
-              display: 'flex', gap: 18, padding: 18, alignItems: 'center',
-              background: 'var(--admin-surface)', border: '1px solid var(--admin-border)',
-              borderRadius: 'var(--admin-radius-md)',
-            }}>
-              {it.image_url ? (
-                <img src={it.image_url} alt={it.title} style={{ width: 76, height: 76, objectFit: 'cover', borderRadius: 'var(--admin-radius-sm)', flexShrink: 0 }} />
-              ) : (
-                <div style={{ width: 76, height: 76, borderRadius: 'var(--admin-radius-sm)', background: 'var(--admin-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Sparkles size={22} color="var(--admin-text-tertiary)" />
-                </div>
-              )}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--admin-text-primary)' }}>{it.title}</h3>
-                  <span style={{
-                    padding: '3px 10px', borderRadius: 999, fontSize: '0.68rem', fontWeight: 700,
-                    background: it.is_published ? 'rgba(38,102,47,0.12)' : 'rgba(163,163,153,0.18)',
-                    color: it.is_published ? 'var(--admin-success)' : 'var(--admin-text-tertiary)',
-                  }}>{it.is_published ? 'Publicado' : 'Rascunho'}</span>
-                </div>
-                {it.description && (
-                  <p style={{ fontSize: '0.82rem', color: 'var(--admin-text-secondary)', overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{it.description}</p>
-                )}
-                <div style={{ display: 'flex', gap: 14, marginTop: 6, fontSize: '0.72rem', color: 'var(--admin-text-tertiary)' }}>
-                  {it.location && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} />{it.location}</span>}
-                  {it.date && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={12} />{it.date}</span>}
-                </div>
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => openEdit(it)} style={iconBtn}><Edit3 size={15} /></button>
-                <button onClick={() => handleDelete(it.id)} disabled={deletingId === it.id} style={{ ...iconBtn, color: 'var(--admin-danger)' }}>
-                  {deletingId === it.id ? <Loader2 size={15} className="spin" style={{ animation: 'spin 1s linear infinite' }} /> : <Trash2 size={15} />}
+            <ListRow
+              key={it.id}
+              thumb={
+                it.image_url
+                  ? // eslint-disable-next-line @next/next/no-img-element
+                    <img src={it.image_url} alt={it.title || ''} style={{ width: 84, height: 84, objectFit: 'cover', borderRadius: 'var(--admin-radius-md)', flexShrink: 0 }} />
+                  : <div style={{ width: 84, height: 84, borderRadius: 'var(--admin-radius-md)', background: 'var(--admin-gold-light)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, color: 'var(--admin-gold-dark)' }}>
+                      <Sparkles size={26} />
+                    </div>
+              }
+              title={it.title || 'Sem título'}
+              status={{ label: it.is_published ? 'Publicado' : 'Rascunho', tone: it.is_published ? 'success' : 'muted' }}
+              summary={it.description || undefined}
+              meta={<>
+                {it.location && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {it.location}</span>}
+                {it.date && <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Calendar size={12} /> {it.date}</span>}
+              </>}
+              actions={<>
+                <button className="admin-btn admin-btn-icon" onClick={() => openEdit(it)} title="Editar">
+                  <Edit3 size={16} />
                 </button>
-              </div>
-            </div>
+                <button
+                  className="admin-btn admin-btn-icon"
+                  onClick={() => handleDelete(it.id)}
+                  disabled={deletingId === it.id}
+                  style={{ color: deletingId === it.id ? 'var(--admin-text-tertiary)' : 'var(--admin-danger)' }}
+                  title="Excluir"
+                >
+                  {deletingId === it.id
+                    ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
+                    : <Trash2 size={16} />}
+                </button>
+              </>}
+            />
           ))}
         </div>
       )}
 
-      {/* Editor modal */}
-      {showEditor && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: 20,
-        }} onClick={() => setShowEditor(false)}>
-          <div onClick={(e) => e.stopPropagation()} style={{
-            background: 'var(--admin-surface)', borderRadius: 'var(--admin-radius-lg)',
-            padding: 28, width: '100%', maxWidth: 620, maxHeight: '90vh', overflowY: 'auto',
-            border: '1px solid var(--admin-border)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--admin-text-primary)' }}>
-                {editing ? 'Editar' : 'Nova'} Experiência
-              </h2>
-              <button onClick={() => setShowEditor(false)} style={{ ...iconBtn, padding: 6 }}><X size={18} /></button>
-            </div>
+      <SlidePanel
+        open={showEditor}
+        onClose={() => setShowEditor(false)}
+        icon={Sparkles}
+        title={editing ? 'Editar Experiência' : 'Nova Experiência'}
+        subtitle="Todos os campos são opcionais"
+        onSubmit={handleSave}
+        saving={saving}
+        saveLabel={editing ? 'Salvar Alterações' : 'Adicionar Experiência'}
+      >
+        {/* Identidade */}
+        <Section title="Apresentação" hint="Como o projeto será exibido no portfólio">
+          <Field label="Título do Projeto" full icon={Tag}>
+            <TextInput
+              autoFocus
+              value={form.title}
+              onChange={(e) => setField('title', e.target.value)}
+              placeholder="Ex.: Centro de Convivência da Família — Paço do Lumiar/MA"
+            />
+          </Field>
+          <Field label="Descrição" full icon={FileText}
+            hint="Conte o objetivo, o público beneficiado e os resultados.">
+            <TextArea
+              rows={6}
+              value={form.description}
+              onChange={(e) => setField('description', e.target.value)}
+              placeholder="Descreva o projeto: contexto, objetivos, ações realizadas e impacto…"
+            />
+          </Field>
+        </Section>
 
-            <div style={{ display: 'grid', gap: 16 }}>
-              <Field label="Título *">
-                <input value={formTitle} onChange={(e) => setFormTitle(e.target.value)} style={inputStyle} />
-              </Field>
-              <Field label="Descrição">
-                <textarea value={formDescription} onChange={(e) => setFormDescription(e.target.value)} rows={4} style={{ ...inputStyle, resize: 'vertical', fontFamily: 'inherit' }} />
-              </Field>
-              <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1fr 1fr' }}>
-                <Field label="Local"><input value={formLocation} onChange={(e) => setFormLocation(e.target.value)} style={inputStyle} placeholder="Ex.: Paço do Lumiar/MA" /></Field>
-                <Field label="Data"><input value={formDate} onChange={(e) => setFormDate(e.target.value)} style={inputStyle} placeholder="Ex.: Março de 2025" /></Field>
-              </div>
+        {/* Imagem */}
+        <Section title="Imagem do Projeto" hint="JPG, PNG, WebP ou GIF até 5 MB" columns={1}>
+          <Field label="Foto principal" icon={ImageIcon}>
+            <ImageUploadField
+              value={form.image_url}
+              folder="experiences"
+              onChange={(url) => setField('image_url', url)}
+              onError={(m) => setNotice({ type: 'error', message: m })}
+              onSuccess={(m) => setNotice({ type: 'success', message: m })}
+            />
+          </Field>
+        </Section>
 
-              <Field label="Imagem">
-                <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                  <input value={formImageUrl} onChange={(e) => setFormImageUrl(e.target.value)} placeholder="URL ou faça upload" style={{ ...inputStyle, flex: 1 }} />
-                  <button type="button" onClick={() => fileInputRef.current?.click()} disabled={uploading} style={{
-                    height: 42, padding: '0 16px', borderRadius: 'var(--admin-radius-md)',
-                    background: 'var(--admin-bg)', border: '1px solid var(--admin-border)',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.82rem',
-                    color: 'var(--admin-text-primary)',
-                  }}>
-                    {uploading ? <Loader2 size={14} className="spin" style={{ animation: 'spin 1s linear infinite' }} /> : <Upload size={14} />}
-                    Upload
-                  </button>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); }}
-                  />
-                </div>
-                {formImageUrl && (
-                  <div style={{ marginTop: 10, borderRadius: 'var(--admin-radius-md)', overflow: 'hidden', border: '1px solid var(--admin-border)' }}>
-                    <img src={formImageUrl} alt="preview" style={{ width: '100%', maxHeight: 200, objectFit: 'cover', display: 'block' }} />
-                  </div>
-                )}
-              </Field>
+        {/* Detalhes */}
+        <Section title="Detalhes">
+          <Field label="Localização" icon={MapPin}>
+            <TextInput
+              value={form.location}
+              onChange={(e) => setField('location', e.target.value)}
+              placeholder="Ex.: São Luís/MA"
+            />
+          </Field>
+          <Field label="Data ou Período" icon={Calendar}>
+            <TextInput
+              value={form.date}
+              onChange={(e) => setField('date', e.target.value)}
+              placeholder="Ex.: Março de 2025"
+            />
+          </Field>
+        </Section>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderRadius: 'var(--admin-radius-md)', background: 'var(--admin-bg)', border: '1px solid var(--admin-border)' }}>
-                <span style={{ fontSize: '0.85rem', color: 'var(--admin-text-primary)', fontWeight: 600 }}>Publicado</span>
-                <button
-                  onClick={() => setFormPublished(!formPublished)}
-                  style={{ width: 44, height: 24, borderRadius: 999, border: 'none', cursor: 'pointer', position: 'relative', transition: 'background 0.2s', background: formPublished ? 'var(--admin-success)' : 'var(--admin-border)' }}
-                >
-                  <span style={{ position: 'absolute', top: 2, left: formPublished ? 22 : 2, width: 20, height: 20, borderRadius: '50%', background: 'white', transition: 'left 0.2s' }} />
-                </button>
-              </div>
-
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 8 }}>
-                <button onClick={() => setShowEditor(false)} style={{ ...inputStyle, padding: '0 18px', height: 42, width: 'auto', cursor: 'pointer', background: 'var(--admin-bg)' }}>Cancelar</button>
-                <button onClick={handleSave} disabled={saving} style={{
-                  padding: '0 22px', height: 42, borderRadius: 'var(--admin-radius-md)',
-                  background: 'var(--admin-primary)', color: 'white', border: 'none',
-                  cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8,
-                }}>
-                  {saving ? <Loader2 size={14} className="spin" style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={14} />}
-                  Salvar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-const inputStyle: React.CSSProperties = {
-  width: '100%', height: 42, padding: '0 14px',
-  borderRadius: 'var(--admin-radius-md)',
-  border: '1px solid var(--admin-border)',
-  background: 'var(--admin-bg)',
-  color: 'var(--admin-text-primary)',
-  fontSize: '0.88rem', outline: 'none',
-};
-
-const iconBtn: React.CSSProperties = {
-  width: 34, height: 34, borderRadius: 'var(--admin-radius-sm)',
-  background: 'var(--admin-bg)', border: '1px solid var(--admin-border)',
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  cursor: 'pointer', color: 'var(--admin-text-secondary)',
-};
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--admin-text-secondary)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</label>
-      {children}
+        {/* Status */}
+        <Section title="Status" columns={1}>
+          <PublishToggle
+            value={form.is_published}
+            onChange={(v) => setField('is_published', v)}
+            label="Publicar no portfólio"
+            hint={form.is_published
+              ? 'Visível para o público na página de Experiências.'
+              : 'Salvo como rascunho — não aparece publicamente.'}
+          />
+        </Section>
+      </SlidePanel>
     </div>
   );
 }

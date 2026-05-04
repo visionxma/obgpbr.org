@@ -277,7 +277,7 @@ export default function ExperienciasPage() {
                   }}>
                     <div style={{ minHeight: 320, overflow: 'hidden', position: 'relative' }}>
                       {items[0].image_url ? (
-                        <img src={items[0].image_url} alt={items[0].title} className="img-cover" style={{ height: '100%' }} />
+                        <img src={items[0].image_url} alt={items[0].title || 'Imagem do projeto em destaque'} className="img-cover" style={{ height: '100%' }} />
                       ) : (
                         <div style={{ height: '100%', background: 'linear-gradient(135deg, var(--site-primary) 0%, var(--site-gold) 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           <Rocket size={48} color="#fff" style={{ opacity: 0.3 }} />
@@ -291,7 +291,7 @@ export default function ExperienciasPage() {
                       <div style={{ color: 'var(--site-gold-dark)', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase', marginBottom: 12, letterSpacing: '0.1em' }}>
                         {items[0].location || 'Nacional'} • {items[0].date || '2026'}
                       </div>
-                      <h2 style={{ fontSize: 'clamp(1.5rem, 3vw, 2.2rem)', marginBottom: 20, lineHeight: 1.2 }}>{items[0].title}</h2>
+                      <h2 style={{ fontSize: 'clamp(1.5rem, 3vw, 2.2rem)', marginBottom: 20, lineHeight: 1.2 }}>{items[0].title || 'Projeto sem título'}</h2>
                       <p style={{ color: 'var(--site-text-secondary)', fontSize: '1.1rem', lineHeight: 1.6, marginBottom: 32 }}>{items[0].description}</p>
                       <Link href={`/experiencias/${items[0].id}`} className="btn btn-primary" style={{ display: 'inline-flex', padding: '12px 24px' }}>
                         Ver detalhes do caso <ArrowRight size={16} style={{ marginLeft: 8 }} />
@@ -320,7 +320,7 @@ export default function ExperienciasPage() {
                           >
                             <div style={{ height: 200, overflow: 'hidden', position: 'relative' }}>
                               {it.image_url ? (
-                                <img src={it.image_url} alt={it.title} className="img-cover" style={{ height: '100%', transition: 'transform 0.5s ease' }} />
+                                <img src={it.image_url} alt={it.title || 'Imagem do projeto'} className="img-cover" style={{ height: '100%', transition: 'transform 0.5s ease' }} />
                               ) : (
                                 <div style={{ height: '100%', background: 'var(--site-surface-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                   <Sparkles size={32} color="var(--site-gold)" style={{ opacity: 0.5 }} />
@@ -331,7 +331,7 @@ export default function ExperienciasPage() {
                               <div style={{ fontSize: '0.7rem', color: 'var(--site-gold-dark)', fontWeight: 700, marginBottom: 8, textTransform: 'uppercase' }}>
                                 {it.location}
                               </div>
-                              <h3 style={{ fontSize: '1.1rem', marginBottom: 12, lineHeight: 1.4 }}>{it.title}</h3>
+                              <h3 style={{ fontSize: '1.1rem', marginBottom: 12, lineHeight: 1.4 }}>{it.title || 'Projeto sem título'}</h3>
                               <p style={{ color: 'var(--site-text-secondary)', fontSize: '0.9rem', marginBottom: 20, flex: 1, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                                 {it.description}
                               </p>
