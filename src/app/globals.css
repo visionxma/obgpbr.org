@@ -581,35 +581,97 @@ p {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
-/* ── Sticky Stack Effect ─────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   STACKED CARDS — Sticky Stacking Effect (Desktop + Mobile)
+   ───────────────────────────────────────────────────────────────
+   Cada cartão "gruda" no topo enquanto o usuário rola.
+   Tops escalonados (offset de 6px) criam efeito de baralho.
+   Scroll-driven scale animation reduz o cartão de baixo,
+   gerando sensação de profundidade. Hover transforms desativados
+   nos sticky cards para evitar conflito com a transformação de scroll.
+   ═══════════════════════════════════════════════════════════════ */
+
 .mobile-sticky-stack {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 28px;
+  position: relative;
 }
 
-@media (max-width: 768px) {
-  .mobile-sticky-stack {
-    gap: 40px; /* Mais espaço para o scroll ser percebido */
+.mobile-sticky-stack > .sticky-item {
+  position: sticky;
+  top: 96px;
+  transform-origin: 50% 0%;
+  transition: transform 0.45s var(--ease-out), box-shadow 0.45s var(--ease-out);
+  will-change: transform;
+}
+
+/* Tops escalonados — cada card sobe 6px abaixo do anterior, criando "deck" */
+.mobile-sticky-stack > .sticky-item:nth-child(1) { top: 96px; }
+.mobile-sticky-stack > .sticky-item:nth-child(2) { top: 102px; }
+.mobile-sticky-stack > .sticky-item:nth-child(3) { top: 108px; }
+.mobile-sticky-stack > .sticky-item:nth-child(4) { top: 114px; }
+.mobile-sticky-stack > .sticky-item:nth-child(5) { top: 120px; }
+.mobile-sticky-stack > .sticky-item:nth-child(6) { top: 126px; }
+.mobile-sticky-stack > .sticky-item:nth-child(7) { top: 132px; }
+.mobile-sticky-stack > .sticky-item:nth-child(8) { top: 138px; }
+
+/* Hover transform desativado nos sticky cards — evita conflito com scroll-driven scale */
+.mobile-sticky-stack > .sticky-item.glass-panel:hover {
+  transform: none;
+  border-color: var(--site-border);
+  box-shadow: var(--site-shadow-lg);
+}
+
+/* Scroll-Driven Animation — cards reduzem suavemente ao "sair" do viewport,
+   criando profundidade real. Suporte: Chrome 115+, Edge 115+. Fallback: sem scale. */
+@supports (animation-timeline: view()) {
+  .mobile-sticky-stack > .sticky-item {
+    animation: stackedCardDepth linear forwards;
+    animation-timeline: view();
+    animation-range: exit 5% exit 70%;
   }
-  .mobile-sticky-stack .sticky-item {
-    position: sticky;
-    top: 80px;
-    z-index: 1;
-    transform-origin: top center;
-    background: #fff;
-    box-shadow: 0 -20px 40px rgba(0,0,0,0.08);
-    border-top: 1px solid rgba(0,0,0,0.05);
-    width: 100%;
-    margin-left: 0;
-  }
-  .glass-section-blue .sticky-item {
-    background: var(--site-primary) !important;
-    box-shadow: 0 -20px 50px rgba(0,0,0,0.3) !important;
-    border-top: 1px solid rgba(255,255,255,0.08);
+  @keyframes stackedCardDepth {
+    to {
+      transform: scale(0.94);
+      opacity: 0.78;
+      filter: brightness(0.96);
+    }
   }
 }
-/* Fim sticky stack */
+
+/* Mobile: header é mais baixo (62px float, 76px fixed) — ajusta tops */
+@media (max-width: 768px) {
+  .mobile-sticky-stack { gap: 32px; }
+  .mobile-sticky-stack > .sticky-item:nth-child(1) { top: 76px; }
+  .mobile-sticky-stack > .sticky-item:nth-child(2) { top: 82px; }
+  .mobile-sticky-stack > .sticky-item:nth-child(3) { top: 88px; }
+  .mobile-sticky-stack > .sticky-item:nth-child(4) { top: 94px; }
+  .mobile-sticky-stack > .sticky-item:nth-child(5) { top: 100px; }
+  .mobile-sticky-stack > .sticky-item:nth-child(6) { top: 106px; }
+  .mobile-sticky-stack > .sticky-item:nth-child(7) { top: 112px; }
+  .mobile-sticky-stack > .sticky-item:nth-child(8) { top: 118px; }
+  /* Mobile depth animation um pouco mais forte para amplificar a sensação */
+  @supports (animation-timeline: view()) {
+    @keyframes stackedCardDepth {
+      to {
+        transform: scale(0.92);
+        opacity: 0.7;
+        filter: brightness(0.94);
+      }
+    }
+  }
+}
+
+/* Acessibilidade: respeita prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .mobile-sticky-stack > .sticky-item {
+    animation: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
+/* Fim Stacked Cards */
 
 /* Utilitário para números de fundo mais visíveis */
 .bg-number-visible {
