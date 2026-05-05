@@ -1,7 +1,7 @@
 'use client';
 import { supabase } from '@/lib/supabase';
 import { createPortal } from 'react-dom';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Settings,
   User,
@@ -12,6 +12,7 @@ import {
   Sun,
   Bell,
   Globe,
+  Camera,
 } from 'lucide-react';
 
 /**
@@ -28,6 +29,8 @@ export default function SettingsAdmin() {
   } | null>(null);
   
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }: any) => {
@@ -36,10 +39,29 @@ export default function SettingsAdmin() {
     });
 
     const savedTheme = localStorage.getItem('admin-theme') as 'light' | 'dark';
-    if (savedTheme) {
-      setTheme(savedTheme);
-    }
+    if (savedTheme) setTheme(savedTheme);
+
+    const savedAvatar = localStorage.getItem('admin-avatar');
+    if (savedAvatar) setAvatarUrl(savedAvatar);
   }, []);
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showNotification('error', 'Imagem muito grande. Máximo 5 MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      setAvatarUrl(dataUrl);
+      localStorage.setItem('admin-avatar', dataUrl);
+      showNotification('success', 'Foto de perfil atualizada.');
+    };
+    reader.readAsDataURL(file);
+    e.target.value = '';
+  };
 
   useEffect(() => {
     if (notification) {
@@ -140,13 +162,25 @@ export default function SettingsAdmin() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                 {/* User email */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                  <div
+                  {/* Hidden file input — accept="image/*" triggers native picker on mobile (câmera + galeria + arquivos) */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={handleAvatarChange}
+                  />
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    title="Alterar foto de perfil"
                     style={{
+                      position: 'relative',
                       width: 54,
                       height: 54,
                       borderRadius: 'var(--admin-radius-md)',
-                      background:
-                        'linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark))',
+                      background: avatarUrl
+                        ? 'transparent'
+                        : 'linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark))',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -154,10 +188,41 @@ export default function SettingsAdmin() {
                       fontWeight: 800,
                       fontSize: '1.25rem',
                       flexShrink: 0,
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: 0,
+                      overflow: 'hidden',
                     }}
                   >
-                    {session.user?.email?.charAt(0).toUpperCase() || 'A'}
-                  </div>
+                    {avatarUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={avatarUrl}
+                        alt="Foto de perfil"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      session.user?.email?.charAt(0).toUpperCase() || 'A'
+                    )}
+                    {/* Overlay de câmera ao hover */}
+                    <span
+                      style={{
+                        position: 'absolute',
+                        inset: 0,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'rgba(0,0,0,0.45)',
+                        opacity: 0,
+                        transition: 'opacity 0.2s',
+                        borderRadius: 'inherit',
+                      }}
+                      className="avatar-overlay"
+                    >
+                      <Camera size={18} color="white" />
+                    </span>
+                  </button>
+                  <style>{`.avatar-overlay { opacity: 0 !important; } button:hover .avatar-overlay { opacity: 1 !important; }`}</style>
                   <div>
                     <div style={{ fontWeight: 700, fontSize: '1rem', color: 'var(--admin-text-primary)' }}>
                       {session.user?.email || 'Administrador'}
