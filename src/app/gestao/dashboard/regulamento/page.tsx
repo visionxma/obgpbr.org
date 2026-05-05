@@ -1,11 +1,12 @@
 'use client';
 
 import { supabase } from '@/lib/supabase';
+import { createPortal } from 'react-dom';
 import { useEffect, useRef, useState } from 'react';
 import {
   FileText, Plus, Trash2, ChevronUp, ChevronDown,
   Save, Loader2, GripVertical, Hash, Calendar, User, MapPin, Mail, Phone,
-  Upload, CheckCircle2, AlertCircle, X, Eye, Eraser,
+  Upload, CheckCircle2, AlertCircle, X, Eye, Eraser, FileWarning,
 } from 'lucide-react';
 import {
   AdminToast, Section, Field, TextInput, useNotice,
@@ -49,8 +50,31 @@ export default function RegulamentoAdmin() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [importState, setImportState] = useState<ImportState>({ status: 'idle' });
+  const [replaceModal, setReplaceModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { notice, setNotice } = useNotice();
+
+  function formHasData() {
+    return (
+      form.versao !== '' || form.versao_data !== '' ||
+      form.versao_descricao !== '' || form.versao_responsavel !== '' ||
+      form.secoes.length > 0 ||
+      form.footer_endereco !== '' || form.footer_email !== '' || form.footer_telefone !== ''
+    );
+  }
+
+  function handleSelectFile() {
+    if (formHasData() || importState.status === 'preview') {
+      setReplaceModal(true);
+    } else {
+      fileInputRef.current?.click();
+    }
+  }
+
+  function confirmReplace() {
+    setReplaceModal(false);
+    fileInputRef.current?.click();
+  }
 
   useEffect(() => { fetchData(); }, []);
 
@@ -217,6 +241,109 @@ export default function RegulamentoAdmin() {
     <div>
       <AdminToast notice={notice} />
 
+      {/* ── Modal de confirmação de substituição ── */}
+      {replaceModal && typeof document !== 'undefined' && createPortal(
+        <div
+          onClick={() => setReplaceModal(false)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            background: 'rgba(10, 20, 40, 0.55)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 24,
+            animation: 'fadeInOverlay 0.2s ease',
+          }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{
+              background: 'var(--admin-surface)',
+              border: '1px solid var(--admin-border)',
+              borderRadius: 'var(--admin-radius-xl)',
+              boxShadow: '0 24px 60px rgba(0,0,0,0.18), 0 8px 24px rgba(0,0,0,0.1)',
+              padding: '36px 32px 28px',
+              maxWidth: 440, width: '100%',
+              animation: 'slideUpModal 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              textAlign: 'center',
+            }}
+          >
+            {/* Ícone */}
+            <div style={{
+              width: 56, height: 56, borderRadius: '50%',
+              background: 'rgba(234, 179, 8, 0.12)',
+              border: '1px solid rgba(234, 179, 8, 0.25)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              margin: '0 auto 20px',
+            }}>
+              <FileWarning size={26} style={{ color: '#ca8a04' }} />
+            </div>
+
+            {/* Título */}
+            <div style={{
+              fontWeight: 800, fontSize: '1.05rem',
+              color: 'var(--admin-text-primary)',
+              marginBottom: 10, fontFamily: 'inherit',
+            }}>
+              Substituir conteúdo atual?
+            </div>
+
+            {/* Descrição */}
+            <div style={{
+              fontSize: '0.85rem', color: 'var(--admin-text-secondary)',
+              lineHeight: 1.65, marginBottom: 28,
+            }}>
+              O formulário já contém informações preenchidas. Ao importar um novo arquivo,
+              <strong style={{ color: 'var(--admin-text-primary)' }}> todo o conteúdo atual será substituído</strong> pelo
+              conteúdo extraído do novo documento.
+              <br /><br />
+              <span style={{ fontSize: '0.78rem', color: 'var(--admin-text-tertiary)' }}>
+                As alterações só serão aplicadas ao banco de dados após clicar em "Salvar Regulamento".
+              </span>
+            </div>
+
+            {/* Ações */}
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={() => setReplaceModal(false)}
+                style={{
+                  flex: 1, padding: '10px 16px',
+                  borderRadius: 'var(--admin-radius-md)',
+                  border: '1px solid var(--admin-border)',
+                  background: 'var(--admin-bg)',
+                  color: 'var(--admin-text-secondary)',
+                  fontWeight: 600, fontSize: '0.85rem', fontFamily: 'inherit',
+                  cursor: 'pointer',
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={confirmReplace}
+                style={{
+                  flex: 1, padding: '10px 16px',
+                  borderRadius: 'var(--admin-radius-md)',
+                  border: 'none',
+                  background: 'linear-gradient(135deg, var(--admin-primary), var(--admin-primary-dark))',
+                  color: '#fff',
+                  fontWeight: 700, fontSize: '0.85rem', fontFamily: 'inherit',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(var(--admin-primary-rgb, 15,52,96), 0.3)',
+                }}
+              >
+                Sim, substituir
+              </button>
+            </div>
+          </div>
+          <style>{`
+            @keyframes fadeInOverlay { from { opacity: 0 } to { opacity: 1 } }
+            @keyframes slideUpModal { from { opacity: 0; transform: translateY(16px) scale(0.97) } to { opacity: 1; transform: translateY(0) scale(1) } }
+          `}</style>
+        </div>,
+        document.body
+      )}
+
       {/* ── Painel de Importação ── */}
       <div style={{
         marginBottom: 28,
@@ -264,7 +391,7 @@ export default function RegulamentoAdmin() {
             />
             <button
               type="button"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={handleSelectFile}
               disabled={importState.status === 'loading'}
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: 6,
