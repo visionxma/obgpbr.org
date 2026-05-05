@@ -1300,7 +1300,7 @@ export default function InicioPage() {
             </p>
             <div className="section-line" />
           </div>
-          <div className="grid-3">
+          <div className="mobile-sticky-stack">
             {CHANNELS.map(
               ({ icon: Icon, title, info, sub, href, color }, i) => {
                 const Tag = href ? "a" : "div";
@@ -1319,7 +1319,7 @@ export default function InicioPage() {
                   <Tag
                     key={title}
                     {...extra}
-                    className={`glass-panel stagger-${i + 1}`}
+                    className={`glass-panel sticky-item stagger-${i + 1}`}
                     style={{
                       padding: "36px 26px",
                       display: "flex",
@@ -1328,8 +1328,8 @@ export default function InicioPage() {
                       textDecoration: "none",
                       color: "inherit",
                       cursor: href ? "pointer" : "default",
-                      position: "relative",
                       overflow: "hidden",
+                      zIndex: i + 1,
                     }}
                   >
                     {href && (
