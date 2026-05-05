@@ -25,14 +25,24 @@ export default function RelatorioPreviewPage() {
 
   /* ── Resize iframe ao conteúdo ── */
   const resizeIframe = useCallback(() => {
-    const iframe = iframeRef.current;
-    if (!iframe?.contentDocument?.body) return;
-    // Ocultar botão de impressão interno
-    const btn = iframe.contentDocument.querySelector('.no-print') as HTMLElement | null;
-    if (btn) btn.style.display = 'none';
-    const h = iframe.contentDocument.documentElement.scrollHeight;
-    setIframeHeight(Math.max(h, 1200));
+    // Sempre marca como pronto quando onLoad dispara
     setIframeReady(true);
+    try {
+      const iframe = iframeRef.current;
+      if (!iframe?.contentDocument?.body) return;
+      const btn = iframe.contentDocument.querySelector('.no-print') as HTMLElement | null;
+      if (btn) btn.style.display = 'none';
+      const h = iframe.contentDocument.documentElement.scrollHeight;
+      if (h > 100) setIframeHeight(Math.max(h, 1200));
+    } catch {
+      // cross-origin ou política de segurança — mantém altura padrão
+    }
+  }, []);
+
+  /* ── Fallback: remove loading após 4s mesmo se onLoad não disparar ── */
+  useEffect(() => {
+    const t = setTimeout(() => setIframeReady(true), 4000);
+    return () => clearTimeout(t);
   }, []);
 
   /* ── Interceptar CTRL+F ── */
