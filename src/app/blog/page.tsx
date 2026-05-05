@@ -58,19 +58,13 @@ export default function BlogPage() {
   const filterBarRef = useRef<HTMLElement>(null);
   const pendingScrollRef = useRef(false);
 
-  // Ao trocar categoria: se usuário rolou para baixo da barra de filtros, traz
-  // a visualização de volta ao topo da barra (suave). Se já está antes da barra,
-  // não faz nada para não atrapalhar quem ainda está lendo o hero.
+  // Ao trocar categoria, sempre rola até o topo da barra de filtros
+  // independente de onde o usuário esteja na página.
   // O scroll real acontece no useEffect abaixo, APÓS o re-render — garantindo
   // que o offsetTop e o scrollHeight reflitam o novo layout filtrado.
   const handleCategoryChange = (newCat: string) => {
     if (newCat === category) return;
-    if (typeof window !== 'undefined' && filterBarRef.current) {
-      const barTop = filterBarRef.current.offsetTop;
-      if (window.scrollY > barTop - 100) {
-        pendingScrollRef.current = true;
-      }
-    }
+    pendingScrollRef.current = true;
     setCategory(newCat);
   };
 
