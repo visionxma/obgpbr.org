@@ -1074,8 +1074,6 @@ p {
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── Base: prevent any horizontal overflow ── */
-html { overflow-x: hidden; }
-*, *::before, *::after { max-width: 100%; }
 img, video, iframe { max-width: 100%; height: auto; }
 
 /* ── Hero Trust Bar ── */

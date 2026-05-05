@@ -1070,7 +1070,6 @@ export default function InicioPage() {
                   display: "flex",
                   flexDirection: "column",
                   gap: 14,
-                  position: "relative",
                   overflow: "hidden",
                   zIndex: i + 1,
                   background: "white",
