@@ -234,7 +234,7 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
 
   return createPortal(
     <div style={{ position: 'fixed', inset: 0, zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: 'rgba(15,23,42,0.4)', backdropFilter: 'blur(4px)' }}>
-      <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 700, overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
+      <div style={{ background: '#fff', borderRadius: 24, width: '100%', maxWidth: 700, maxHeight: 'calc(100vh - 48px)', overflow: 'hidden', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' }}>
         
         {/* Header */}
         <div style={{ padding: '24px 32px', background: 'var(--site-primary)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -251,7 +251,7 @@ function ReviewModal({ osc, onClose, onApprove, onReject }: {
         </div>
 
         {/* Content */}
-        <div style={{ padding: '32px', flex: 1, overflowY: 'auto' }}>
+        <div style={{ padding: '28px 32px', flex: 1, overflowY: 'auto', minHeight: 0 }}>
           {!rel ? (
             <div style={{ textAlign: 'center', padding: 40, color: 'var(--site-text-tertiary)' }}>
               <FileText size={40} style={{ opacity: 0.3, margin: '0 auto 16px' }} />
