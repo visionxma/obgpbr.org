@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/react";
 import VisitorTracker from "@/components/VisitorTracker";
 import { ToastProvider } from "@/components/ui/Toast";
+import SecurityGuard from "./components/SecurityGuard";
 import "./globals.css";
 
 const siteUrl = "https://obgpbr.org";
@@ -115,6 +116,7 @@ export default function RootLayout({
         />
       </head>
       <body>
+        <SecurityGuard />
         <ToastProvider />
         <VisitorTracker />
         {children}
