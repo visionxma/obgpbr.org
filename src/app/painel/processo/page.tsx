@@ -523,21 +523,40 @@ export default function ProcessoPage() {
         setCnpjError(dataJson.error);
         // Não mostramos mais o alert aqui para não interromper o fluxo, o erro aparece na tela
       } else {
+        // Extrai representante legal do QSA priorizando Presidente > Administrador > Diretor > primeiro
+        const qsa: Array<{ nome_socio?: string; qualificacao_socio?: string }> = Array.isArray(dataJson.qsa) ? dataJson.qsa : [];
+        const findByRole = (term: string) =>
+          qsa.find(s => (s.qualificacao_socio || '').toLowerCase().includes(term));
+        const repSocio =
+          findByRole('presidente') ||
+          findByRole('administrador') ||
+          findByRole('diretor') ||
+          qsa[0];
+        const responsavel = (repSocio?.nome_socio || '').trim();
+
+        // Telefone: API retorna apenas dígitos em ddd_telefone_1 (ex: "98912345678")
+        const telefoneRaw: string = dataJson.ddd_telefone_1 || '';
+        const telefoneFmt = telefoneRaw ? maskTelefone(telefoneRaw) : '';
+
+        // Data de abertura: API retorna em formato ISO YYYY-MM-DD (compatível com input type="date")
+        const dataAbertura: string = dataJson.data_inicio_atividade || '';
+
         const newData = {
           ...entidadeData,
           cnpj: dataJson.cnpj,
           razao_social: dataJson.razao_social,
           nome_fantasia: dataJson.nome_fantasia || dataJson.razao_social,
           natureza_juridica: dataJson.natureza_juridica,
-          data_abertura_cnpj: dataJson.data_abertura,
+          data_abertura_cnpj: dataAbertura,
           logradouro: dataJson.logradouro,
           numero_endereco: dataJson.numero,
           bairro: dataJson.bairro,
           municipio: dataJson.municipio,
           estado: dataJson.uf,
           cep: dataJson.cep,
-          email_osc: dataJson.email,
-          telefone: dataJson.telefone,
+          email_osc: dataJson.email || '',
+          telefone: telefoneFmt,
+          responsavel,
         };
         setEntidadeData(newData);
         localStorage.setItem('obgp_guest_entidade', JSON.stringify(newData));
