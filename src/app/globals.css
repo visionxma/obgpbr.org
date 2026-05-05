@@ -620,10 +620,14 @@ p {
 .mobile-sticky-stack > .sticky-item:nth-child(7) { top: 132px; }
 .mobile-sticky-stack > .sticky-item:nth-child(8) { top: 138px; }
 
-/* Hover preserva o transform do scroll — sem translateY do glass-panel base */
+/* Hover preserva o transform do scroll — sem translateY de classes base */
 .mobile-sticky-stack > .sticky-item.glass-panel:hover {
   border-color: var(--site-border-hover);
   box-shadow: var(--site-shadow-lg);
+  transform: scale(var(--stack-scale, 1));
+}
+.mobile-sticky-stack > .sticky-item.legal-card-link:hover {
+  box-shadow: var(--site-shadow-md) !important;
   transform: scale(var(--stack-scale, 1));
 }
 

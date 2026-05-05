@@ -1,6 +1,5 @@
 import Image from "next/image";
 import PublicLayout from "../components/PublicLayout";
-import AnimatedCounter from "../components/AnimatedCounter";
 import {
   ArrowRight,
   HeartHandshake,
@@ -622,91 +621,6 @@ export default function InicioPage() {
       </section>
 
       {/* ══════════════════════════════════════════════
-          STATS ANIMADOS
-      ══════════════════════════════════════════════ */}
-      <section className="glass-section-blue" style={{ padding: "52px 0" }}>
-        <div className="container">
-          <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <span
-              className="section-label"
-              style={{ color: "var(--site-gold)", marginBottom: 8 }}
-            >
-              OBGP em números
-            </span>
-            <h2 style={{ color: "white" }}>
-              Estrutura pensada para{" "}
-              <span className="hero-accent-white">resultados</span>
-            </h2>
-          </div>
-          <div className="lp-stats-grid">
-            {[
-              {
-                num: 3,
-                suffix: "",
-                label: "Áreas de Atuação",
-                sub: "Educação, Saúde e Assistência Social",
-                special: false,
-              },
-              {
-                num: 8,
-                suffix: "",
-                label: "Serviços Especializados",
-                sub: "Ciclo completo de parcerias entre a administração pública e as organizações da sociedade civil",
-                special: false,
-              },
-              {
-                num: 100,
-                suffix: "%",
-                label: "Transparência Pública",
-                sub: "Portal de transparência ativo e público",
-                special: false,
-              },
-              {
-                num: 1,
-                suffix: "",
-                label: "Projeto Selo OSC",
-                sub: "Certificação institucional própria",
-                special: true,
-              },
-            ].map(({ num, suffix, label, sub, special }, i) => (
-              <div
-                key={label}
-                className={`lp-stats-cell stagger-${i + 1}`}
-                style={{
-                  borderBottom:
-                    i < 2 ? "1px solid rgba(255,255,255,0.06)" : "none",
-                }}
-              >
-                <div className="lp-stats-num">
-                  {special ? (
-                    <>
-                      Selo
-                      <span
-                        style={{
-                          display: "block",
-                          color: "var(--site-gold)",
-                          fontSize: "0.45em",
-                          fontWeight: 700,
-                          letterSpacing: ".08em",
-                          marginTop: 2,
-                        }}
-                      >
-                        OSC
-                      </span>
-                    </>
-                  ) : (
-                    <AnimatedCounter target={num} suffix={suffix} />
-                  )}
-                </div>
-                <div className="lp-stats-label">{label}</div>
-                <div className="lp-stats-sub">{sub}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════
           PILARES
       ══════════════════════════════════════════════ */}
       <section className="section-padding section-watermark">
@@ -802,7 +716,7 @@ export default function InicioPage() {
             <div className="section-line" />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+          <div className="mobile-sticky-stack">
             {[
               {
                 numero: "Lei nº 13.019/2014",
@@ -825,7 +739,7 @@ export default function InicioPage() {
                 href: "https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2024/decreto/d11948.htm",
                 destaque: false,
               },
-            ].map(({ numero, apelido, descricao, href, destaque }) => (
+            ].map(({ numero, apelido, descricao, href, destaque }, i) => (
               <a
                 key={numero}
                 href={href}
@@ -840,8 +754,9 @@ export default function InicioPage() {
                   textDecoration: "none",
                   transition: "box-shadow 0.2s, transform 0.2s",
                   boxShadow: "var(--site-shadow-xs)",
+                  zIndex: i + 1,
                 }}
-                className="legal-card-link"
+                className={`legal-card-link sticky-item stagger-${i + 1}`}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
