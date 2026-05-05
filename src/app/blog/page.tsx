@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import PublicLayout from '../components/PublicLayout';
 import { supabase } from '@/lib/supabase';
 import {
@@ -55,6 +55,19 @@ export default function BlogPage() {
   const [category, setCategory] = useState('Todas');
   const [loading, setLoading] = useState(true);
   const [searchFocused, setSearchFocused] = useState(false);
+  const filterBarRef = useRef<HTMLElement>(null);
+
+  // Ao trocar categoria: se usuário rolou para baixo da barra de filtros, traz
+  // a visualização de volta ao topo da barra (suave). Se já está antes da barra,
+  // não faz nada para não atrapalhar quem ainda está lendo o hero.
+  const handleCategoryChange = (newCat: string) => {
+    setCategory(newCat);
+    if (typeof window === 'undefined' || !filterBarRef.current) return;
+    const barTop = filterBarRef.current.offsetTop;
+    if (window.scrollY > barTop - 100) {
+      window.scrollTo({ top: Math.max(0, barTop - 88), behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     (async () => {
@@ -164,49 +177,98 @@ export default function BlogPage() {
       </section>
 
       {/* ═══ STICKY FILTER BAR ═══ */}
-      <section style={{
-        padding: '20px 0',
-        borderBottom: '1px solid var(--site-border)',
-        background: 'rgba(255, 255, 255, 0.85)',
-        position: 'sticky', top: 88, zIndex: 40,
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
-      }}>
-        <div className="container" style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4, scrollbarWidth: 'none' }}>
+      <section ref={filterBarRef} className="blog-filter-bar">
+        <div className="container blog-filter-row">
+          <div className="blog-filter-cats">
             {categories.map(cat => {
               const active = category === cat;
               return (
                 <button
                   key={cat}
-                  onClick={() => setCategory(cat)}
-                  style={{
-                    padding: '8px 20px', borderRadius: 999,
-                    border: active ? '1px solid transparent' : '1px solid var(--site-border)',
-                    cursor: 'pointer',
-                    fontSize: '0.85rem', fontWeight: active ? 700 : 500,
-                    whiteSpace: 'nowrap', transition: 'all .3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                    background: active
-                      ? 'linear-gradient(135deg, var(--site-primary) 0%, #1e40af 100%)'
-                      : '#fff',
-                    color: active ? '#fff' : 'var(--site-text-secondary)',
-                    boxShadow: active ? '0 4px 16px rgba(30,58,138,.25)' : '0 2px 5px rgba(0,0,0,0.02)',
-                    transform: active ? 'scale(1.05)' : 'scale(1)',
-                  }}
+                  onClick={() => handleCategoryChange(cat)}
+                  className={`blog-filter-btn${active ? ' active' : ''}`}
                 >
                   {cat}
                 </button>
               );
             })}
           </div>
-          <div style={{ 
-            fontSize: '.85rem', color: 'var(--site-text-tertiary)', fontWeight: 600,
-            background: 'var(--site-surface-blue)', padding: '6px 12px', borderRadius: 12
-          }}>
+          <div className="blog-filter-count">
             {filteredPosts.length} {filteredPosts.length === 1 ? 'artigo' : 'artigos'}
           </div>
         </div>
+        <style>{`
+          .blog-filter-bar {
+            padding: 14px 0;
+            border-bottom: 1px solid var(--site-border);
+            background: rgba(255, 255, 255, 0.85);
+            position: sticky;
+            top: 88px;
+            z-index: 40;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.02);
+          }
+          .blog-filter-row {
+            display: flex; align-items: center;
+            gap: 12px; justify-content: space-between;
+          }
+          .blog-filter-cats {
+            display: flex; gap: 8px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            min-width: 0;
+          }
+          .blog-filter-cats::-webkit-scrollbar { display: none; }
+          .blog-filter-btn {
+            padding: 7px 16px;
+            border-radius: 999px;
+            border: 1px solid var(--site-border);
+            cursor: pointer;
+            font-size: .82rem;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: #fff;
+            color: var(--site-text-secondary);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            flex-shrink: 0;
+            font-family: inherit;
+          }
+          .blog-filter-btn.active {
+            border-color: transparent;
+            background: linear-gradient(135deg, var(--site-primary) 0%, #1e40af 100%);
+            color: #fff;
+            font-weight: 700;
+            box-shadow: 0 4px 16px rgba(30,58,138,.25);
+            transform: scale(1.05);
+          }
+          .blog-filter-count {
+            flex-shrink: 0;
+            font-size: .82rem;
+            color: var(--site-text-tertiary);
+            font-weight: 600;
+            background: var(--site-surface-blue);
+            padding: 5px 11px;
+            border-radius: 10px;
+            white-space: nowrap;
+          }
+          @media (max-width: 640px) {
+            .blog-filter-bar { padding: 8px 0; }
+            .blog-filter-row { gap: 8px; }
+            .blog-filter-btn {
+              padding: 5px 12px;
+              font-size: .72rem;
+            }
+            .blog-filter-btn.active { transform: scale(1.03); }
+            .blog-filter-count {
+              font-size: .68rem;
+              padding: 4px 8px;
+              border-radius: 8px;
+            }
+          }
+        `}</style>
       </section>
 
       {/* ═══ CONTENT ═══ */}
