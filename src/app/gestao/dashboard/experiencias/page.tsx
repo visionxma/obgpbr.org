@@ -12,6 +12,7 @@ import {
   PublishToggle, ImageUploadField, ListRow, useNotice,
 } from '../_shared/AdminUI';
 import SimpleListManager from '../_shared/SimpleListManager';
+import ImportButton from '../_shared/ImportButton';
 
 interface Experience {
   id: string;
@@ -275,6 +276,22 @@ export default function ExperienciasAdmin() {
         saving={saving}
         saveLabel={editing ? 'Salvar Alterações' : 'Adicionar Experiência'}
       >
+        {/* Importação por arquivo */}
+        <div style={{ marginBottom: 18, padding: '12px 14px', background: 'var(--admin-surface)', borderRadius: 'var(--admin-radius-md)', border: '1px solid var(--admin-border)' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--admin-text-secondary)', marginBottom: 8 }}>
+            Importar de arquivo (opcional)
+          </div>
+          <ImportButton
+            tipo="experiencia"
+            label="Importar PDF/DOCX"
+            onParsed={(d) => {
+              if (typeof d.title === 'string' && d.title) setField('title', d.title);
+              if (typeof d.description === 'string' && d.description) setField('description', d.description);
+              if (typeof d.location === 'string' && d.location) setField('location', d.location);
+              if (typeof d.date === 'string' && d.date) setField('date', d.date);
+            }}
+          />
+        </div>
         {/* Identidade */}
         <Section title="Apresentação" hint="Como o projeto será exibido no portfólio">
           <Field label="Título do Projeto" full icon={Tag}>

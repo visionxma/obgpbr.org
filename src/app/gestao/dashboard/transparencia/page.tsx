@@ -19,6 +19,7 @@ import {
   SlidePanel, Section, Field, TextInput, TextArea, useNotice, ListRow,
 } from '../_shared/AdminUI';
 import SimpleListManager from '../_shared/SimpleListManager';
+import ImportButton from '../_shared/ImportButton';
 
 interface TransparencyRecord {
   id: string;
@@ -320,6 +321,23 @@ export default function TransparenciaAdmin() {
         saving={saving}
         saveLabel={editing ? 'Salvar Alterações' : 'Adicionar Registro'}
       >
+        {/* Importação por arquivo */}
+        <div style={{ marginBottom: 18, padding: '12px 14px', background: 'var(--admin-surface)', borderRadius: 'var(--admin-radius-md)', border: '1px solid var(--admin-border)' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--admin-text-secondary)', marginBottom: 8 }}>
+            Importar de arquivo (opcional)
+          </div>
+          <ImportButton
+            tipo="transparencia"
+            label="Importar PDF/DOCX"
+            onParsed={(d) => {
+              const fields: Array<keyof typeof EMPTY_FORM> = ['proponente', 'parlamentar', 'modalidade', 'objeto', 'orgao_concedente', 'num_instrumento', 'num_emenda', 'ano_emenda', 'valor'];
+              for (const k of fields) {
+                const v = d[k];
+                if (typeof v === 'string' && v) setField(k, v);
+              }
+            }}
+          />
+        </div>
         <Section title="Identificação" hint="Quem propôs e o que foi acordado">
           <Field label="Proponente" full icon={Building2}>
             <TextInput

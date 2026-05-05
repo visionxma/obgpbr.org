@@ -11,6 +11,7 @@ import {
   SlidePanel, Section, Field, TextInput, TextArea, SelectInput,
   PublishToggle, ImageUploadField, ListRow, useNotice,
 } from '../_shared/AdminUI';
+import ImportButton from '../_shared/ImportButton';
 
 interface BlogPost {
   id: string;
@@ -236,6 +237,24 @@ export default function BlogAdmin() {
         saving={saving}
         saveLabel={editing ? 'Salvar Alterações' : 'Adicionar Post'}
       >
+        {/* Importação por arquivo */}
+        <div style={{ marginBottom: 18, padding: '12px 14px', background: 'var(--admin-surface)', borderRadius: 'var(--admin-radius-md)', border: '1px solid var(--admin-border)' }}>
+          <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--admin-text-secondary)', marginBottom: 8 }}>
+            Importar de arquivo (opcional)
+          </div>
+          <ImportButton
+            tipo="blog"
+            label="Importar PDF/DOCX"
+            onParsed={(d) => {
+              if (typeof d.title === 'string' && d.title) setField('title', d.title);
+              if (typeof d.summary === 'string' && d.summary) setField('summary', d.summary);
+              if (typeof d.content === 'string' && d.content) setField('content', d.content);
+              if (typeof d.category === 'string' && d.category) setField('category', d.category);
+              if (typeof d.author === 'string' && d.author) setField('author', d.author);
+              if (typeof d.read_time === 'number' && d.read_time) setField('read_time', String(d.read_time));
+            }}
+          />
+        </div>
         {/* Identidade do post */}
         <Section title="Conteúdo" hint="Sobre o que é o artigo">
           <Field label="Título" full icon={Tag}>
