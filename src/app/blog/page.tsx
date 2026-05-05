@@ -37,11 +37,6 @@ function formatDateShort(dateStr: string | null) {
   });
 }
 
-function getInitials(name: string | null) {
-  if (!name) return 'OB';
-  return name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
-}
-
 const CAT_COLORS: Record<string, { bg: string; fg: string }> = {
   'MROSC': { bg: 'rgba(30,58,138,0.1)', fg: '#1e3a8a' },
   'Selo OSC': { bg: 'rgba(197,171,118,0.15)', fg: '#8B6914' },
@@ -311,7 +306,7 @@ function FeaturedPost({ post }: { post: BlogPost }) {
   return (
     <Link href={`/blog/${post.id}`} style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
       <article
-        className="blog-featured-card group"
+        className={`blog-featured-card group ${!post.image_url ? 'no-image' : ''}`}
         style={{
           display: 'grid',
           minHeight: 400,
@@ -324,69 +319,80 @@ function FeaturedPost({ post }: { post: BlogPost }) {
           position: 'relative',
         }}
       >
-        {/* Style applied via global css isn't ideal here, so inline styles for hover state are simulated using a container wrapper class if we had one, but we'll use standard inline tricks or just rely on Next.js Link wrapper */}
-        
-        {/* Image side */}
-        <div style={{ position: 'relative', overflow: 'hidden', minHeight: 300 }}>
-          {post.image_url ? (
+        {/* Image side — só renderiza se houver imagem */}
+        {post.image_url && (
+          <div style={{ position: 'relative', overflow: 'hidden', minHeight: 300 }}>
             <img
               src={post.image_url}
               alt={post.title || 'Artigo em destaque'}
-              style={{ 
-                width: '100%', height: '100%', objectFit: 'cover', 
+              style={{
+                width: '100%', height: '100%', objectFit: 'cover',
                 transition: 'transform .7s cubic-bezier(.23,1,.32,1)',
-                transform: 'scale(1.02)' // Base scale to allow zoom out/in
+                transform: 'scale(1.02)'
               }}
               className="featured-image"
             />
-          ) : (
+            {/* overlay sutil */}
             <div style={{
-              width: '100%', height: '100%',
-              background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 40%, #c5ab76 100%)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <BookOpen size={64} color="rgba(255,255,255,0.15)" />
-            </div>
-          )}
-          
-          {/* Subtle gradient overlay to ensure badge pops */}
-          <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.4) 100%)',
-            pointerEvents: 'none'
-          }} />
-
-          {/* Premium Destaque Badge */}
-          <div style={{
-            position: 'absolute', top: 24, left: 24,
-            display: 'flex', alignItems: 'center', gap: 6,
-            background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)',
-            padding: '8px 16px', borderRadius: 999,
-            boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
-          }}>
-            <Sparkles size={14} style={{ color: 'var(--site-gold-dark)' }} />
-            <span style={{ fontSize: '.75rem', fontWeight: 800, color: 'var(--site-primary)', letterSpacing: '.08em', textTransform: 'uppercase' }}>
-              Destaque Especial
-            </span>
-          </div>
-
-          {/* Read time floating pill */}
-          {post.read_time && (
+              position: 'absolute', inset: 0,
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.2) 0%, transparent 30%, transparent 70%, rgba(0,0,0,0.4) 100%)',
+              pointerEvents: 'none'
+            }} />
+            {/* Badge Destaque (sobre a imagem) */}
             <div style={{
-              position: 'absolute', bottom: 24, right: 24,
+              position: 'absolute', top: 24, left: 24,
               display: 'flex', alignItems: 'center', gap: 6,
-              background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)',
-              padding: '6px 14px', borderRadius: 999,
-              color: '#fff', fontSize: '.75rem', fontWeight: 600,
-              boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+              background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)',
+              padding: '8px 16px', borderRadius: 999,
+              boxShadow: '0 4px 15px rgba(0,0,0,0.15)',
             }}>
-              <Clock size={12} /> {post.read_time} min de leitura
+              <Sparkles size={14} style={{ color: 'var(--site-gold-dark)' }} />
+              <span style={{ fontSize: '.75rem', fontWeight: 800, color: 'var(--site-primary)', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+                Destaque Especial
+              </span>
             </div>
-          )}
-        </div>
+            {/* Read time pill */}
+            {post.read_time && (
+              <div style={{
+                position: 'absolute', bottom: 24, right: 24,
+                display: 'flex', alignItems: 'center', gap: 6,
+                background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(10px)',
+                padding: '6px 14px', borderRadius: 999,
+                color: '#fff', fontSize: '.75rem', fontWeight: 600,
+                boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
+              }}>
+                <Clock size={12} /> {post.read_time} min de leitura
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Text side */}
         <div style={{ padding: '48px 56px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          {/* Badge inline quando não há imagem */}
+          {!post.image_url && (
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6, width: 'fit-content',
+              background: 'var(--site-surface-warm)',
+              padding: '6px 14px', borderRadius: 999,
+              border: '1px solid var(--site-border)',
+              marginBottom: 18,
+            }}>
+              <Sparkles size={13} style={{ color: 'var(--site-gold-dark)' }} />
+              <span style={{ fontSize: '.7rem', fontWeight: 800, color: 'var(--site-primary)', letterSpacing: '.08em', textTransform: 'uppercase' }}>
+                Destaque Especial
+              </span>
+              {post.read_time && (
+                <>
+                  <span style={{ width: 1, height: 14, background: 'var(--site-border)', margin: '0 4px' }} />
+                  <Clock size={12} style={{ color: 'var(--site-text-tertiary)' }} />
+                  <span style={{ fontSize: '.7rem', color: 'var(--site-text-secondary)', fontWeight: 600 }}>
+                    {post.read_time} min
+                  </span>
+                </>
+              )}
+            </div>
+          )}
           {post.category && (
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: 6, width: 'fit-content',
@@ -418,26 +424,17 @@ function FeaturedPost({ post }: { post: BlogPost }) {
           
           {/* Author & Action */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, marginTop: 'auto', flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{
-                width: 48, height: 48, borderRadius: 16,
-                background: 'linear-gradient(135deg, var(--site-primary) 0%, #1e40af 100%)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#fff', fontSize: '.9rem', fontWeight: 800, letterSpacing: '.05em',
-                boxShadow: '0 4px 15px rgba(30,58,138,0.2)'
-              }}>
-                {getInitials(post.author)}
-              </div>
-              <div>
+            <div>
+              {post.author && (
                 <div style={{ fontSize: '.95rem', fontWeight: 700, color: 'var(--site-text-primary)', marginBottom: 2 }}>
-                  {post.author || 'Equipe OBGP'}
+                  {post.author}
                 </div>
-                {post.published_at && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '.8rem', color: 'var(--site-text-tertiary)', fontWeight: 500 }}>
-                    <Calendar size={12} /> {formatDate(post.published_at)}
-                  </div>
-                )}
-              </div>
+              )}
+              {post.published_at && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '.8rem', color: 'var(--site-text-tertiary)', fontWeight: 500 }}>
+                  <Calendar size={12} /> {formatDate(post.published_at)}
+                </div>
+              )}
             </div>
             <div className="btn-read-more" style={{
               display: 'flex', alignItems: 'center', gap: 8,
@@ -460,6 +457,9 @@ function FeaturedPost({ post }: { post: BlogPost }) {
         @media (min-width: 992px) {
           .blog-featured-card {
             grid-template-columns: 36% 64%;
+          }
+          .blog-featured-card.no-image {
+            grid-template-columns: 1fr;
           }
         }
         .blog-featured-card:hover {
