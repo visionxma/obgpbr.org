@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ChevronDown, ChevronUp, MapPin, Mail, Phone, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
@@ -21,6 +21,7 @@ interface RegulamentoData {
 }
 
 export default function RegulamentoExpandable() {
+  const topRef = useRef<HTMLElement>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [data, setData] = useState<RegulamentoData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -63,6 +64,7 @@ export default function RegulamentoExpandable() {
 
   return (
     <article
+      ref={topRef}
       style={{
         background: "#fff",
         border: "1px solid var(--site-border)",
@@ -169,7 +171,15 @@ export default function RegulamentoExpandable() {
       {/* Botão expandir/recolher */}
       <div style={{ textAlign: "center", marginTop: isExpanded ? 24 : -10, position: "relative", zIndex: 1 }}>
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
+          onClick={() => {
+            const next = !isExpanded;
+            setIsExpanded(next);
+            if (!next) {
+              setTimeout(() => {
+                topRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 50);
+            }
+          }}
           style={{
             display: "inline-flex", alignItems: "center", gap: 8,
             padding: "10px 24px",
