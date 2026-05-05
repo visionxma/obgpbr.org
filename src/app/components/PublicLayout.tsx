@@ -64,6 +64,65 @@ export default function PublicLayout({ children, navRightSlot }: { children: Rea
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
+  // Stacked Cards effect — fallback JS para browsers sem animation-timeline (Safari/Firefox).
+  // No Chrome/Edge 115+ a animação CSS scroll-driven cuida disso e o JS retorna cedo.
+  useEffect(() => {
+    const supportsTimeline =
+      typeof CSS !== 'undefined' &&
+      typeof CSS.supports === 'function' &&
+      CSS.supports('animation-timeline', 'view()');
+    if (supportsTimeline) return;
+
+    const groups = Array.from(document.querySelectorAll<HTMLElement>('.mobile-sticky-stack'));
+    if (groups.length === 0) return;
+
+    let rafId: number | null = null;
+
+    const update = () => {
+      rafId = null;
+      groups.forEach((group) => {
+        const items = Array.from(group.children) as HTMLElement[];
+        items.forEach((el, idx) => {
+          if (!el.classList.contains('sticky-item')) return;
+          const next = items[idx + 1];
+          if (!next || !next.classList.contains('sticky-item')) {
+            // Último card — sem efeito, fica em tamanho cheio
+            el.style.setProperty('--stack-scale', '1');
+            el.style.setProperty('--stack-opacity', '1');
+            el.style.setProperty('--stack-brightness', '1');
+            return;
+          }
+          const elRect = el.getBoundingClientRect();
+          const nextRect = next.getBoundingClientRect();
+          // Quanto deste card está coberto pelo próximo
+          const overlap = Math.max(0, elRect.bottom - nextRect.top);
+          const progress = Math.max(0, Math.min(1, overlap / Math.max(1, elRect.height)));
+          const scale = (1 - progress * 0.08).toFixed(3);
+          const opacity = (1 - progress * 0.30).toFixed(3);
+          const brightness = (1 - progress * 0.06).toFixed(3);
+          el.style.setProperty('--stack-scale', scale);
+          el.style.setProperty('--stack-opacity', opacity);
+          el.style.setProperty('--stack-brightness', brightness);
+        });
+      });
+    };
+
+    const onScroll = () => {
+      if (rafId !== null) return;
+      rafId = requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, [pathname]);
+
   return (
     <>
       {/* ═══ HEADER ═══ */}
