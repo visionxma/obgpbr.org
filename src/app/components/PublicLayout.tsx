@@ -226,12 +226,22 @@ export default function PublicLayout({ children, navRightSlot }: { children: Rea
                 <a href="mailto:contato.org.obgp@gmail.com" className="ftr-link">
                   <Mail size={13} /> contato.org.obgp@gmail.com
                 </a>
-                <a href="tel:+5598987100001" className="ftr-link">
+                <a
+                  href="https://wa.me/5598987100001"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ftr-link"
+                >
                   <Phone size={13} /> (98) 9 8710-0001
                 </a>
-                <span className="ftr-link" style={{ cursor: 'default' }}>
+                <a
+                  href="https://www.google.com/maps/search/?api=1&query=Avenida+L%2C+10D%2C+Quadra+32%2C+Morada+do+Sol%2C+Pa%C3%A7o+do+Lumiar%2C+MA%2C+65130-000"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ftr-link"
+                >
                   <MapPin size={13} /> Paço do Lumiar/MA
-                </span>
+                </a>
               </div>
             </div>
           </div>
