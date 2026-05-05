@@ -154,10 +154,10 @@ export default function Transparencia() {
   return (
     <PublicLayout>
       {/* ═══ HERO ═══ */}
-      <section className="glass-section-blue page-hero">
+      <section className="glass-section-blue page-hero" style={{ padding: '110px 0 40px' }}>
         <div className="container">
           <div className="hero-badge"><Shield size={13} /> PORTAL DE TRANSPARÊNCIA</div>
-          <h1 style={{ maxWidth: 620, margin: '0 auto 20px' }}>
+          <h1 style={{ maxWidth: 620, margin: '0 auto 14px' }}>
             Transparência{' '}
             <span className="hero-accent-white">pública</span>
           </h1>
@@ -166,7 +166,7 @@ export default function Transparencia() {
           </p>
 
           {/* Busca */}
-          <div style={{ maxWidth: 540, margin: '32px auto 0', position: 'relative' }}>
+          <div style={{ maxWidth: 540, margin: '22px auto 0', position: 'relative' }}>
             <Search size={17} style={{
               position: 'absolute', left: 20, top: '50%', transform: 'translateY(-50%)',
               color: 'rgba(255,255,255,0.45)', pointerEvents: 'none',
@@ -189,7 +189,7 @@ export default function Transparencia() {
           </div>
 
           {/* Abas */}
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 28 }}>
+          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 20 }}>
             {([
               { key: 'legislacao', label: 'Legislação Vigente', Icon: Landmark },
               { key: 'convenios', label: 'Contratos e Parcerias', Icon: FileText },
@@ -214,12 +214,12 @@ export default function Transparencia() {
             ))}
           </div>
 
-          <div className="hero-divider" />
+          <div className="hero-divider" style={{ margin: '18px auto 0' }} />
         </div>
       </section>
 
       {/* ── BARRA DE RESUMO INTELIGENTE ── */}
-      <section style={{ background: 'linear-gradient(135deg, #0D364F 0%, #134060 100%)', padding: '32px 0' }}>
+      <section style={{ background: 'linear-gradient(135deg, #0D364F 0%, #134060 100%)', padding: '22px 0' }}>
         <div className="container">
           <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'stretch' }}>
 
