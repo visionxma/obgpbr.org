@@ -1185,3 +1185,96 @@ img, video, iframe { max-width: 100%; height: auto; }
 @media (max-width: 480px) {
   article[style*="clamp(24px"] { padding: 20px 16px !important; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   /transparencia — Abas e barra de resumo (responsivos mobile)
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Abas (Legislação / Contratos / OSCs) ── */
+.transp-tabs {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.transp-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 22px;
+  border-radius: var(--site-radius-full);
+  font-size: 0.88rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap; /* evita que o label quebre dentro do pill */
+}
+@media (max-width: 480px) {
+  .transp-tabs { gap: 6px; margin-top: 14px; }
+  .transp-tab { padding: 8px 14px; font-size: 0.78rem; gap: 5px; }
+}
+@media (max-width: 360px) {
+  .transp-tab { padding: 7px 12px; font-size: 0.74rem; }
+}
+
+/* ── Barra de resumo (Contratos / OSCs / Conformidade) ── */
+.transp-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+}
+.transp-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 48px;
+}
+.transp-stat-item:not(:last-child) {
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+}
+.transp-stat-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.transp-stat-num {
+  font-size: 2.2rem;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.transp-stat-label {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-top: 5px;
+}
+
+/* Mobile: stack vertical, sem borda lateral, padding compacto */
+@media (max-width: 768px) {
+  .transp-stats { flex-direction: column; align-items: stretch; gap: 0; }
+  .transp-stat-item {
+    padding: 14px 4px;
+    gap: 14px;
+    justify-content: flex-start;
+  }
+  .transp-stat-item:not(:last-child) {
+    border-right: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.10);
+  }
+}
+@media (max-width: 480px) {
+  .transp-stat-item { padding: 12px 2px; gap: 12px; }
+  .transp-stat-icon { width: 44px; height: 44px; border-radius: 12px; }
+  .transp-stat-icon svg { width: 18px; height: 18px; }
+  .transp-stat-num { font-size: 1.65rem; }
+  .transp-stat-label { font-size: 0.62rem; letter-spacing: 0.1em; margin-top: 4px; }
+}

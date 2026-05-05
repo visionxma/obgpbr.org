@@ -203,7 +203,7 @@ export default function Transparencia() {
           </div>
 
           {/* Abas */}
-          <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 20 }}>
+          <div className="transp-tabs">
             {([
               { key: 'legislacao', label: 'Legislação Vigente', Icon: Landmark },
               { key: 'convenios', label: 'Contratos e Parcerias', Icon: FileText },
@@ -212,15 +212,12 @@ export default function Transparencia() {
               <button
                 key={key}
                 onClick={() => { setTab(key); setSearch(''); }}
+                className="transp-tab"
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 7,
-                  padding: '10px 22px',
                   border: tab === key ? '1px solid rgba(255,255,255,0.5)' : '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: 'var(--site-radius-full)',
                   background: tab === key ? 'rgba(255,255,255,0.18)' : 'rgba(255,255,255,0.06)',
                   color: tab === key ? '#fff' : 'rgba(255,255,255,0.65)',
-                  fontSize: '.88rem', fontWeight: tab === key ? 700 : 500, cursor: 'pointer',
-                  transition: 'all .2s',
+                  fontWeight: tab === key ? 700 : 500,
                 }}
               >
                 <Icon size={14} /> {label}
@@ -235,38 +232,38 @@ export default function Transparencia() {
       {/* ── BARRA DE RESUMO INTELIGENTE ── */}
       <section style={{ background: 'linear-gradient(135deg, #0D364F 0%, #134060 100%)', padding: '22px 0' }}>
         <div className="container">
-          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'stretch' }}>
+          <div className="transp-stats">
 
             {/* Contratos */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '0 48px', borderRight: '1px solid rgba(255,255,255,.12)' }}>
-              <div style={{ width: 54, height: 54, borderRadius: 16, background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,.8)', flexShrink: 0 }}>
+            <div className="transp-stat-item">
+              <div className="transp-stat-icon" style={{ background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.12)', color: 'rgba(255,255,255,.8)' }}>
                 <FileText size={22} />
               </div>
               <div>
-                <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#fff', lineHeight: 1, letterSpacing: '-0.02em' }}>{records.length}</div>
-                <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.12em', marginTop: 5 }}>Contratos e Parcerias</div>
+                <div className="transp-stat-num" style={{ color: '#fff' }}>{records.length}</div>
+                <div className="transp-stat-label">Contratos e Parcerias</div>
               </div>
             </div>
 
             {/* OSCs Certificadas */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '0 48px', borderRight: '1px solid rgba(255,255,255,.12)' }}>
-              <div style={{ width: 54, height: 54, borderRadius: 16, background: 'rgba(74,222,128,.1)', border: '1px solid rgba(74,222,128,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4ade80', flexShrink: 0 }}>
+            <div className="transp-stat-item">
+              <div className="transp-stat-icon" style={{ background: 'rgba(74,222,128,.1)', border: '1px solid rgba(74,222,128,.2)', color: '#4ade80' }}>
                 <Award size={22} />
               </div>
               <div>
-                <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#4ade80', lineHeight: 1, letterSpacing: '-0.02em' }}>{oscs.length}</div>
-                <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.12em', marginTop: 5 }}>OSCs Certificadas</div>
+                <div className="transp-stat-num" style={{ color: '#4ade80' }}>{oscs.length}</div>
+                <div className="transp-stat-label">OSCs Certificadas</div>
               </div>
             </div>
 
             {/* Conformidade */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '0 48px' }}>
-              <div style={{ width: 54, height: 54, borderRadius: 16, background: 'rgba(197,171,118,.12)', border: '1px solid rgba(197,171,118,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C5AB76', flexShrink: 0 }}>
+            <div className="transp-stat-item">
+              <div className="transp-stat-icon" style={{ background: 'rgba(197,171,118,.12)', border: '1px solid rgba(197,171,118,.25)', color: '#C5AB76' }}>
                 <CheckCircle2 size={22} />
               </div>
               <div>
-                <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#C5AB76', lineHeight: 1, letterSpacing: '-0.02em' }}>100%</div>
-                <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.12em', marginTop: 5 }}>Conformidade</div>
+                <div className="transp-stat-num" style={{ color: '#C5AB76' }}>100%</div>
+                <div className="transp-stat-label">Conformidade</div>
               </div>
             </div>
 
