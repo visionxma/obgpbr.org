@@ -56,18 +56,38 @@ export default function BlogPage() {
   const [loading, setLoading] = useState(true);
   const [searchFocused, setSearchFocused] = useState(false);
   const filterBarRef = useRef<HTMLElement>(null);
+  const pendingScrollRef = useRef(false);
 
   // Ao trocar categoria: se usuário rolou para baixo da barra de filtros, traz
   // a visualização de volta ao topo da barra (suave). Se já está antes da barra,
   // não faz nada para não atrapalhar quem ainda está lendo o hero.
+  // O scroll real acontece no useEffect abaixo, APÓS o re-render — garantindo
+  // que o offsetTop e o scrollHeight reflitam o novo layout filtrado.
   const handleCategoryChange = (newCat: string) => {
-    setCategory(newCat);
-    if (typeof window === 'undefined' || !filterBarRef.current) return;
-    const barTop = filterBarRef.current.offsetTop;
-    if (window.scrollY > barTop - 100) {
-      window.scrollTo({ top: Math.max(0, barTop - 88), behavior: 'smooth' });
+    if (newCat === category) return;
+    if (typeof window !== 'undefined' && filterBarRef.current) {
+      const barTop = filterBarRef.current.offsetTop;
+      if (window.scrollY > barTop - 100) {
+        pendingScrollRef.current = true;
+      }
     }
+    setCategory(newCat);
   };
+
+  useEffect(() => {
+    if (!pendingScrollRef.current) return;
+    pendingScrollRef.current = false;
+    // Aguarda o paint para que offsetTop / scrollHeight reflitam o layout filtrado.
+    const id = requestAnimationFrame(() => {
+      if (!filterBarRef.current) return;
+      const barTop = filterBarRef.current.offsetTop;
+      const maxScroll = Math.max(0,
+        document.documentElement.scrollHeight - window.innerHeight);
+      const target = Math.min(Math.max(0, barTop - 88), maxScroll);
+      window.scrollTo({ top: target, behavior: 'smooth' });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [category]);
 
   useEffect(() => {
     (async () => {
