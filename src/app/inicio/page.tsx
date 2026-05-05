@@ -1266,6 +1266,9 @@ export default function InicioPage() {
                   display: "flex",
                   gap: 18,
                   alignItems: "flex-start",
+                  zIndex: i + 1,
+                  background: "white",
+                  borderRadius: "var(--site-radius-xl)",
                 }}
               >
                 <div
