@@ -107,7 +107,7 @@ body {
   line-height: var(--leading-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
+  overflow-x: clip; /* clip preserva sticky em descendentes (hidden criava scroll container) */
   min-height: 100vh;
 }
 
@@ -418,7 +418,7 @@ p {
 ────────────────────────────────────────────────────────────── */
 .section-watermark {
   position: relative;
-  overflow: hidden;
+  overflow: clip; /* clip não cria scroll container — preserva position:sticky em descendentes */
 }
 .section-watermark > .container {
   position: relative;
@@ -560,7 +560,7 @@ p {
   display: grid;
   grid-template-columns: 1fr;
   gap: 32px;
-  align-items: center;
+  align-items: start; /* start em vez de center — preserva altura natural para sticky em filhos */
 }
 @media (min-width: 768px) {
   .row-alternate { grid-template-columns: 1fr 1fr; gap: 64px; }
