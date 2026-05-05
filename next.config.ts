@@ -54,6 +54,8 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   poweredByHeader: false,
 
+  serverExternalPackages: ['pdf-parse'],
+
   experimental: {
     serverActions: {
       bodySizeLimit: '10mb',

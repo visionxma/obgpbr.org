@@ -1,10 +1,11 @@
 'use client';
 
 import { supabase } from '@/lib/supabase';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   FileText, Plus, Trash2, ChevronUp, ChevronDown,
   Save, Loader2, GripVertical, Hash, Calendar, User, MapPin, Mail, Phone,
+  Upload, CheckCircle2, AlertCircle, X, Eye,
 } from 'lucide-react';
 import {
   AdminToast, Section, Field, TextInput, useNotice,
@@ -37,10 +38,18 @@ const EMPTY: RegulamentoForm = {
   footer_telefone: '',
 };
 
+type ImportState =
+  | { status: 'idle' }
+  | { status: 'loading'; fileName: string }
+  | { status: 'preview'; fileName: string; data: RegulamentoForm }
+  | { status: 'error'; message: string };
+
 export default function RegulamentoAdmin() {
   const [form, setForm] = useState<RegulamentoForm>(EMPTY);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [importState, setImportState] = useState<ImportState>({ status: 'idle' });
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { notice, setNotice } = useNotice();
 
   useEffect(() => { fetchData(); }, []);
@@ -104,6 +113,46 @@ export default function RegulamentoAdmin() {
     });
   }
 
+  async function handleImport(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    setImportState({ status: 'loading', fileName: file.name });
+
+    const fd = new FormData();
+    fd.append('file', file);
+
+    try {
+      const res = await fetch('/api/regulamento/import', { method: 'POST', body: fd });
+      const json = await res.json();
+      if (!res.ok) {
+        setImportState({ status: 'error', message: json.error || 'Erro desconhecido.' });
+        return;
+      }
+      const preview: RegulamentoForm = {
+        versao: json.versao || '',
+        versao_data: json.versao_data || '',
+        versao_descricao: json.versao_descricao || '',
+        versao_responsavel: json.versao_responsavel || '',
+        secoes: Array.isArray(json.secoes) ? json.secoes : [],
+        footer_endereco: json.footer_endereco || '',
+        footer_email: json.footer_email || '',
+        footer_telefone: json.footer_telefone || '',
+      };
+      setImportState({ status: 'preview', fileName: file.name, data: preview });
+    } catch {
+      setImportState({ status: 'error', message: 'Falha na conexão com o servidor.' });
+    }
+  }
+
+  function applyImport() {
+    if (importState.status !== 'preview') return;
+    setForm(importState.data);
+    setImportState({ status: 'idle' });
+    setNotice({ type: 'success', message: 'Conteúdo importado! Revise e clique em "Salvar Regulamento".' });
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -152,6 +201,184 @@ export default function RegulamentoAdmin() {
   return (
     <div>
       <AdminToast notice={notice} />
+
+      {/* ── Painel de Importação ── */}
+      <div style={{
+        marginBottom: 28,
+        border: '1px solid var(--admin-border)',
+        borderRadius: 'var(--admin-radius-lg)',
+        background: 'var(--admin-surface)',
+        overflow: 'hidden',
+      }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 20px',
+          borderBottom: importState.status !== 'idle' ? '1px solid var(--admin-border)' : 'none',
+          background: 'var(--admin-surface-elevated)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Upload size={16} style={{ color: 'var(--admin-primary)' }} />
+            <span style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--admin-text-primary)' }}>
+              Importar Documento
+            </span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--admin-text-tertiary)' }}>
+              PDF ou DOCX — o conteúdo será extraído e preenchido automaticamente pela IA
+            </span>
+          </div>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {importState.status !== 'idle' && importState.status !== 'loading' && (
+              <button
+                type="button"
+                onClick={() => setImportState({ status: 'idle' })}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'var(--admin-text-tertiary)', display: 'flex', padding: 4,
+                }}
+                title="Fechar"
+              >
+                <X size={16} />
+              </button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx"
+              style={{ display: 'none' }}
+              onChange={handleImport}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={importState.status === 'loading'}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6,
+                padding: '7px 14px', borderRadius: 'var(--admin-radius-md)',
+                border: '1px solid var(--admin-primary)',
+                background: 'transparent', color: 'var(--admin-primary)',
+                cursor: importState.status === 'loading' ? 'not-allowed' : 'pointer',
+                fontWeight: 600, fontSize: '0.82rem', fontFamily: 'inherit',
+                opacity: importState.status === 'loading' ? 0.6 : 1,
+              }}
+            >
+              {importState.status === 'loading'
+                ? <><Loader2 size={13} style={{ animation: 'spin 1s linear infinite' }} /> Analisando…</>
+                : <><Upload size={13} /> Selecionar arquivo</>
+              }
+            </button>
+          </div>
+        </div>
+
+        {/* Loading */}
+        {importState.status === 'loading' && (
+          <div style={{
+            padding: '20px 24px',
+            display: 'flex', alignItems: 'center', gap: 12,
+            color: 'var(--admin-text-secondary)', fontSize: '0.85rem',
+          }}>
+            <Loader2 size={18} style={{ animation: 'spin 1s linear infinite', color: 'var(--admin-primary)', flexShrink: 0 }} />
+            <div>
+              <div style={{ fontWeight: 600, color: 'var(--admin-text-primary)' }}>Extraindo e estruturando conteúdo com IA…</div>
+              <div style={{ fontSize: '0.78rem', marginTop: 2 }}>{importState.fileName}</div>
+            </div>
+          </div>
+        )}
+
+        {/* Error */}
+        {importState.status === 'error' && (
+          <div style={{
+            padding: '16px 20px',
+            display: 'flex', alignItems: 'center', gap: 10,
+            color: 'var(--admin-danger)', fontSize: '0.85rem',
+          }}>
+            <AlertCircle size={16} style={{ flexShrink: 0 }} />
+            {importState.message}
+          </div>
+        )}
+
+        {/* Preview */}
+        {importState.status === 'preview' && (
+          <div style={{ padding: '16px 20px' }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              marginBottom: 14, color: 'var(--admin-success)', fontSize: '0.85rem', fontWeight: 600,
+            }}>
+              <CheckCircle2 size={16} />
+              {importState.data.secoes.length} seções extraídas de "{importState.fileName}"
+            </div>
+
+            {/* Preview das seções */}
+            <div style={{
+              maxHeight: 220, overflowY: 'auto',
+              border: '1px solid var(--admin-border)',
+              borderRadius: 'var(--admin-radius-md)',
+              marginBottom: 14,
+            }}>
+              {importState.data.secoes.map((s, i) => (
+                <div key={i} style={{
+                  padding: '8px 14px',
+                  borderBottom: i < importState.data.secoes.length - 1 ? '1px solid var(--admin-border)' : 'none',
+                  display: 'flex', alignItems: 'center', gap: 8,
+                }}>
+                  <Eye size={13} style={{ color: 'var(--admin-text-tertiary)', flexShrink: 0 }} />
+                  <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--admin-text-primary)' }}>
+                    {s.titulo}
+                  </span>
+                  {s.conteudo && (
+                    <span style={{
+                      fontSize: '0.75rem', color: 'var(--admin-text-tertiary)',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                    }}>
+                      — {s.conteudo.replace(/<[^>]+>/g, '').slice(0, 80)}…
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Metadados encontrados */}
+            <div style={{
+              display: 'flex', flexWrap: 'wrap', gap: '4px 16px',
+              fontSize: '0.78rem', color: 'var(--admin-text-secondary)',
+              marginBottom: 14,
+            }}>
+              {importState.data.versao && <span>Versão: <strong>{importState.data.versao}</strong></span>}
+              {importState.data.versao_data && <span>Data: <strong>{new Date(importState.data.versao_data + 'T12:00:00').toLocaleDateString('pt-BR')}</strong></span>}
+              {importState.data.footer_email && <span>Email: <strong>{importState.data.footer_email}</strong></span>}
+              {importState.data.footer_telefone && <span>Tel: <strong>{importState.data.footer_telefone}</strong></span>}
+            </div>
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                type="button"
+                onClick={applyImport}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '8px 18px', borderRadius: 'var(--admin-radius-md)',
+                  background: 'var(--admin-primary)', color: '#fff',
+                  border: 'none', cursor: 'pointer',
+                  fontWeight: 700, fontSize: '0.85rem', fontFamily: 'inherit',
+                }}
+              >
+                <CheckCircle2 size={14} /> Aplicar ao Formulário
+              </button>
+              <button
+                type="button"
+                onClick={() => setImportState({ status: 'idle' })}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '8px 16px', borderRadius: 'var(--admin-radius-md)',
+                  background: 'transparent', color: 'var(--admin-text-secondary)',
+                  border: '1px solid var(--admin-border)', cursor: 'pointer',
+                  fontWeight: 600, fontSize: '0.85rem', fontFamily: 'inherit',
+                }}
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <form onSubmit={handleSave}>
         {/* Top save */}
