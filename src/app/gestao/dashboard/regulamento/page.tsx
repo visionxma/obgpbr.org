@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import {
   FileText, Plus, Trash2, ChevronUp, ChevronDown,
   Save, Loader2, GripVertical, Hash, Calendar, User, MapPin, Mail, Phone,
-  Upload, CheckCircle2, AlertCircle, X, Eye,
+  Upload, CheckCircle2, AlertCircle, X, Eye, Eraser,
 } from 'lucide-react';
 import {
   AdminToast, Section, Field, TextInput, useNotice,
@@ -153,6 +153,12 @@ export default function RegulamentoAdmin() {
     setNotice({ type: 'success', message: 'Conteúdo importado! Revise e clique em "Salvar Regulamento".' });
   }
 
+  function handleClear() {
+    if (!confirm('Tem certeza que deseja apagar todas as informações do formulário? Esta ação não pode ser desfeita.')) return;
+    setForm(EMPTY);
+    setNotice({ type: 'success', message: 'Formulário limpo. Clique em "Salvar Regulamento" para confirmar no banco de dados.' });
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -196,6 +202,15 @@ export default function RegulamentoAdmin() {
     border: 'none', cursor: saving ? 'not-allowed' : 'pointer',
     fontWeight: 700, fontSize: '0.88rem', fontFamily: 'inherit',
     opacity: saving ? 0.7 : 1, transition: 'opacity 0.2s',
+  };
+
+  const clearBtnStyle: React.CSSProperties = {
+    display: 'inline-flex', alignItems: 'center', gap: 8,
+    padding: '10px 18px', borderRadius: 'var(--admin-radius-md)',
+    background: 'transparent', color: 'var(--admin-danger)',
+    border: '1px solid rgba(239,68,68,0.35)', cursor: 'pointer',
+    fontWeight: 600, fontSize: '0.88rem', fontFamily: 'inherit',
+    transition: 'background 0.2s',
   };
 
   return (
@@ -382,7 +397,10 @@ export default function RegulamentoAdmin() {
 
       <form onSubmit={handleSave}>
         {/* Top save */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 28 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 10, marginBottom: 28 }}>
+          <button type="button" onClick={handleClear} style={clearBtnStyle}>
+            <Eraser size={15} /> Limpar Tudo
+          </button>
           <button type="submit" disabled={saving} style={saveBtnStyle}>
             {saving ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={16} />}
             {saving ? 'Salvando…' : 'Salvar Regulamento'}
@@ -593,7 +611,10 @@ export default function RegulamentoAdmin() {
         </Section>
 
         {/* Bottom save */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8, paddingBottom: 60 }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 10, marginTop: 8, paddingBottom: 60 }}>
+          <button type="button" onClick={handleClear} style={clearBtnStyle}>
+            <Eraser size={15} /> Limpar Tudo
+          </button>
           <button type="submit" disabled={saving} style={saveBtnStyle}>
             {saving ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={16} />}
             {saving ? 'Salvando…' : 'Salvar Regulamento'}
