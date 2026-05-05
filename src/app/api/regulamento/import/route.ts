@@ -221,7 +221,9 @@ export async function POST(request: NextRequest) {
       rawText = stripTags(htmlContent);
       secoes = parseSectionsFromHtml(htmlContent);
     } else {
-      const pdfParse = (await import('pdf-parse')).default;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const pdfParseModule = (await import('pdf-parse')) as any;
+      const pdfParse = pdfParseModule.default ?? pdfParseModule;
       const result = await pdfParse(buffer);
       rawText = result.text;
       secoes = parseSectionsFromText(rawText);
