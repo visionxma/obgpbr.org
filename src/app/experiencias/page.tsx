@@ -22,21 +22,25 @@ const CERTIFICACOES = [
     id: 'RACT N.º 044/2022 de 23/04/2020',
     instituicao: 'INSTITUTO CIDADANIA E NATUREZA',
     certidao: 'CERTIDÃO DE REGISTRO DE ATESTADO DE CAPACIDADE TÉCNICA N.º 0005/2026, VÁLIDA ATÉ 09/07/2026.',
+    url: null as string | null, // TODO: inserir URL do documento
   },
   {
     id: 'RCA N.º 113/2022 de 13/04/2022',
     instituicao: 'INSTITUTO NACIONAL DE TECNOLOGIA, EDUCAÇÃO, CULTURA E SAÚDE - INTECS',
     certidao: 'CERTIDÃO DE REGISTRO DE ATESTADO DE CAPACIDADE TÉCNICA N.º 0007/2026, VÁLIDA ATÉ 09/07/2026.',
+    url: null as string | null,
   },
   {
     id: 'RCA N.º 202400012 de 26/02/2024',
     instituicao: 'INSTITUTO VIDA E SAÚDE BRASIL - IVSBRASIL',
     certidao: 'CERTIDÃO DE REGISTRO DE ATESTADO DE CAPACIDADE TÉCNICA N.º 0008/2026, VÁLIDA ATÉ 09/07/2026.',
+    url: null as string | null,
   },
   {
     id: 'RCA N.º 0123/2026 de 22/04/2026',
     instituicao: 'INSTITUTO NACIONAL DE TECNOLOGIA, EDUCAÇÃO, CULTURA E SAÚDE - INTECS',
     certidao: 'CERTIDÃO DE REGISTRO DE ATESTADO DE CAPACIDADE TÉCNICA N.º 0022/2026, VÁLIDA ATÉ 22/10/2026.',
+    url: null as string | null,
   },
 ];
 
@@ -141,15 +145,33 @@ export default function ExperienciasPage() {
                     lineHeight: 1.7,
                     marginBottom: 4,
                   }}>
-                    <span style={{
-                      fontStyle: 'italic',
-                      textDecoration: 'underline',
-                      textUnderlineOffset: 3,
-                      fontWeight: 600,
-                      color: 'var(--site-primary)',
-                    }}>
-                      {cert.id}
-                    </span>
+                    {cert.url ? (
+                      <a
+                        href={cert.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          fontStyle: 'italic',
+                          textDecoration: 'underline',
+                          textUnderlineOffset: 3,
+                          fontWeight: 600,
+                          color: 'var(--site-primary)',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {cert.id}
+                      </a>
+                    ) : (
+                      <span style={{
+                        fontStyle: 'italic',
+                        textDecoration: 'underline',
+                        textUnderlineOffset: 3,
+                        fontWeight: 600,
+                        color: 'var(--site-primary)',
+                      }}>
+                        {cert.id}
+                      </span>
+                    )}
                     {', atestado fornecido pelo '}
                     <strong style={{ color: 'var(--site-text-primary)', textTransform: 'uppercase' }}>
                       {cert.instituicao}
