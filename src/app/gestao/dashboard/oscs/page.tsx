@@ -606,7 +606,8 @@ function OscsContent() {
                   const hasPendingPayment = osc.pagamentos.some(p => p.status !== 'pago');
                   return (
                     <tr key={osc.id}
-                      style={{ cursor: 'default', opacity: actionLoading && selected.has(osc.id) ? 0.5 : 1 }}>
+                      onClick={() => setReviewOscId(osc.id)}
+                      style={{ cursor: 'pointer', opacity: actionLoading && selected.has(osc.id) ? 0.5 : 1 }}>
                       <td onClick={e => e.stopPropagation()}>
                         <input type="checkbox" checked={selected.has(osc.id)} onChange={() => toggleSelect(osc.id)}
                           style={{ cursor: 'pointer', accentColor: 'var(--admin-primary)' }} />
