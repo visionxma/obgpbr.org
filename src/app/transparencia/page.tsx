@@ -219,36 +219,43 @@ export default function Transparencia() {
       </section>
 
       {/* ── BARRA DE RESUMO INTELIGENTE ── */}
-      <section style={{ background: '#fff', borderBottom: '1px solid var(--site-border)', padding: '20px 0' }}>
+      <section style={{ background: 'linear-gradient(135deg, #0D364F 0%, #134060 100%)', padding: '32px 0' }}>
         <div className="container">
-          <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap', justifyContent: 'center' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--site-surface-blue)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--site-primary)' }}>
-                <FileText size={20} />
+          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', alignItems: 'stretch' }}>
+
+            {/* Contratos */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '0 48px', borderRight: '1px solid rgba(255,255,255,.12)' }}>
+              <div style={{ width: 54, height: 54, borderRadius: 16, background: 'rgba(255,255,255,.08)', border: '1px solid rgba(255,255,255,.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,.8)', flexShrink: 0 }}>
+                <FileText size={22} />
               </div>
               <div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--site-primary)', lineHeight: 1 }}>{records.length}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--site-text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Registros</div>
+                <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#fff', lineHeight: 1, letterSpacing: '-0.02em' }}>{records.length}</div>
+                <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.12em', marginTop: 5 }}>Contratos e Parcerias</div>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(22,163,74,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16a34a' }}>
-                <Award size={20} />
+
+            {/* OSCs Certificadas */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '0 48px', borderRight: '1px solid rgba(255,255,255,.12)' }}>
+              <div style={{ width: 54, height: 54, borderRadius: 16, background: 'rgba(74,222,128,.1)', border: '1px solid rgba(74,222,128,.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4ade80', flexShrink: 0 }}>
+                <Award size={22} />
               </div>
               <div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#16a34a', lineHeight: 1 }}>{oscs.length}</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--site-text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>OSCs Ativas</div>
+                <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#4ade80', lineHeight: 1, letterSpacing: '-0.02em' }}>{oscs.length}</div>
+                <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.12em', marginTop: 5 }}>OSCs Certificadas</div>
               </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ width: 44, height: 44, borderRadius: 12, background: 'var(--site-surface-gold)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--site-gold-dark)' }}>
-                <CheckCircle2 size={20} />
+
+            {/* Conformidade */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '0 48px' }}>
+              <div style={{ width: 54, height: 54, borderRadius: 16, background: 'rgba(197,171,118,.12)', border: '1px solid rgba(197,171,118,.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C5AB76', flexShrink: 0 }}>
+                <CheckCircle2 size={22} />
               </div>
               <div>
-                <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--site-gold-dark)', lineHeight: 1 }}>100%</div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--site-text-tertiary)', fontWeight: 600, textTransform: 'uppercase' }}>Conformidade</div>
+                <div style={{ fontSize: '2.2rem', fontWeight: 900, color: '#C5AB76', lineHeight: 1, letterSpacing: '-0.02em' }}>100%</div>
+                <div style={{ fontSize: '0.68rem', color: 'rgba(255,255,255,.5)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.12em', marginTop: 5 }}>Conformidade</div>
               </div>
             </div>
+
           </div>
         </div>
       </section>
