@@ -58,10 +58,6 @@ export default function RegulamentoExpandable() {
 
   if (!data) return null;
 
-  const versaoDataFmt = data.versao_data
-    ? new Date(data.versao_data + "T12:00:00").toLocaleDateString("pt-BR")
-    : "";
-
   return (
     <article
       ref={topRef}
@@ -100,33 +96,6 @@ export default function RegulamentoExpandable() {
             />
           </section>
         ))}
-
-        {/* Tabela de versão */}
-        <section style={{ marginBottom: 32 }}>
-          <div style={{ overflowX: "auto", borderRadius: "var(--site-radius-md)", border: "1px solid var(--site-border)" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.9rem" }}>
-              <thead>
-                <tr style={{ background: "var(--site-surface-warm)" }}>
-                  {["Versão", "Data", "Descrição da Alteração", "Responsável"].map(h => (
-                    <th key={h} style={{
-                      padding: "10px 14px", textAlign: "left",
-                      fontWeight: 800, color: "var(--site-primary)",
-                      borderBottom: "1px solid var(--site-border)",
-                    }}>{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td style={{ padding: "12px 14px", verticalAlign: "top" }}>{data.versao}</td>
-                  <td style={{ padding: "12px 14px", verticalAlign: "top", whiteSpace: "nowrap" }}>{versaoDataFmt}</td>
-                  <td style={{ padding: "12px 14px", verticalAlign: "top" }}>{data.versao_descricao}</td>
-                  <td style={{ padding: "12px 14px", verticalAlign: "top" }}>{data.versao_responsavel}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </section>
 
         {/* Rodapé */}
         <footer style={{
