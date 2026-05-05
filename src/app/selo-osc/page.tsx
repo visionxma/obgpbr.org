@@ -24,7 +24,7 @@ export default function SeloOscPage() {
     <PublicLayout>
       {/* ═══ HERO ═══ */}
       <section className="glass-section-blue page-hero" style={{ overflow: 'hidden', position: 'relative' }}>
-        <div className="container" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto', gap: 32, alignItems: 'center' }}>
+        <div className="container selo-hero-grid">
           <div style={{ minWidth: 0, textAlign: 'center' }} className="selo-hero-text">
             <div className="hero-badge"><Award size={13} /> CERTIFICAÇÃO</div>
             <h1 className="h1-display" style={{ maxWidth: 640, margin: '0 auto 20px' }}>

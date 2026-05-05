@@ -600,8 +600,8 @@ p {
     background: #fff;
     box-shadow: 0 -20px 40px rgba(0,0,0,0.08);
     border-top: 1px solid rgba(0,0,0,0.05);
-    width: calc(100% + 24px); /* Expande para as laterais */
-    margin-left: -12px; /* Centraliza a expansão */
+    width: 100%;
+    margin-left: 0;
   }
   .glass-section-blue .sticky-item {
     background: var(--site-primary) !important;
@@ -1000,4 +1000,146 @@ p {
 .selo-hero-mascote { display: flex; justify-content: center; }
 @media (max-width: 880px) {
   .selo-hero-mascote { display: none; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVENESS — Comprehensive system
+   Breakpoints: 320 · 360 · 420 · 480 · 640 · 768 · 880
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Base: prevent any horizontal overflow ── */
+html { overflow-x: hidden; }
+*, *::before, *::after { max-width: 100%; }
+img, video, iframe { max-width: 100%; height: auto; }
+
+/* ── Hero Trust Bar ── */
+.hero-trust-bar {
+  display: flex; flex-wrap: wrap;
+  padding-top: 18px; padding-bottom: 22px;
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+.hero-trust-item {
+  flex: 1 1 120px; text-align: center; padding: 16px 12px;
+}
+@media (max-width: 600px) {
+  .hero-trust-item { border-right: none !important; flex: 1 1 calc(50% - 1px); }
+  .hero-trust-item:nth-child(odd) { border-right: 1px solid rgba(255,255,255,0.07) !important; }
+  .hero-trust-item:nth-child(1),
+  .hero-trust-item:nth-child(2) { border-bottom: 1px solid rgba(255,255,255,0.07); }
+}
+@media (max-width: 360px) {
+  .hero-trust-item { flex: 1 1 100%; border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .hero-trust-item:last-child { border-bottom: none; }
+}
+
+/* ── Hero CTAs: stack on very small phones ── */
+.hero-ctas { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+@media (max-width: 400px) {
+  .hero-ctas { flex-direction: column; align-items: stretch; width: 100%; max-width: 300px; margin: 0 auto; }
+  .hero-ctas .btn { width: 100%; justify-content: center; }
+}
+
+/* ── CTA banner row: stack on mobile ── */
+.cta-row { display: flex; align-items: center; gap: 24px; flex-wrap: wrap; }
+@media (max-width: 640px) {
+  .cta-row { flex-direction: column; text-align: center; align-items: center; gap: 16px; }
+  .cta-row > div { min-width: 0 !important; }
+  .cta-row .btn, .cta-row a.btn { width: 100%; justify-content: center; }
+}
+
+/* ── Selo OSC hero grid: 1 col on mobile ── */
+.selo-hero-grid { display: grid; gap: 32px; align-items: center; }
+@media (min-width: 881px) { .selo-hero-grid { grid-template-columns: minmax(0,1fr) auto; } }
+@media (max-width: 880px) { .selo-hero-grid { grid-template-columns: 1fr; } .selo-hero-grid .selo-hero-text { text-align: center; } }
+
+/* ── Section header: tighter spacing on mobile ── */
+@media (max-width: 640px) {
+  .section-header { margin-bottom: 36px; }
+  .section-header p { font-size: var(--text-base); }
+}
+
+/* ── Page hero: small phone adjustments ── */
+@media (max-width: 480px) {
+  .page-hero { padding: 110px 0 52px; }
+  .page-hero h1 { font-size: clamp(1.8rem, 8vw, 2.4rem) !important; }
+  .page-hero .hero-subtitle { font-size: 0.95rem !important; padding: 0 4px; }
+  .page-hero .hero-badge { font-size: 0.62rem; padding: 6px 14px; }
+}
+@media (max-width: 360px) {
+  .page-hero { padding: 96px 0 44px; }
+}
+
+/* ── LP Hero: phone adjustments ── */
+@media (max-width: 480px) {
+  .lp-hero { padding: 96px 0 48px; }
+  .lp-hero .hero-badge { font-size: 0.62rem; padding: 6px 14px; }
+}
+
+/* ── LP Stats Grid: borders on mobile 2-col layout ── */
+@media (max-width: 767px) {
+  .lp-stats-cell { border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.06) !important; }
+  .lp-stats-cell:nth-child(even) { border-left: 1px solid rgba(255,255,255,0.06); }
+  .lp-stats-cell:nth-last-child(-n+2) { border-bottom: none !important; }
+}
+
+/* ── Buttons: min tap target 44px ── */
+@media (max-width: 768px) {
+  .btn { min-height: 44px; }
+}
+
+/* ── Glass panel: no lift on touch devices ── */
+@media (hover: none) {
+  .glass-panel:hover { transform: none; box-shadow: var(--site-shadow-sm); border-color: var(--site-border); }
+  .btn-primary:hover, .btn-white:hover, .btn-gold:hover { transform: none; }
+  .legal-card-link:hover { transform: none; box-shadow: var(--site-shadow-xs) !important; }
+}
+
+/* ── Row alternate: fix image height on mobile ── */
+@media (max-width: 767px) {
+  .row-alternate { gap: 20px; }
+}
+
+/* ── Badges: smaller on very small screens ── */
+@media (max-width: 360px) {
+  .badge-gold { font-size: 0.6rem; padding: 5px 12px; }
+}
+
+/* ── Lead text: full width on mobile ── */
+@media (max-width: 640px) {
+  .lead { max-width: 100%; font-size: var(--text-base); }
+}
+
+/* ── Footer: full-width brand on mobile ── */
+@media (max-width: 767px) {
+  .ftr-brand { max-width: 100%; }
+  .ftr-logo { font-size: 1.6rem; }
+}
+
+/* ── Grid: force 1-col on tiny screens ── */
+@media (max-width: 320px) {
+  .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr !important; }
+}
+
+/* ── Ticker: smaller font on tiny phones ── */
+@media (max-width: 360px) {
+  .ticker-item-value { font-size: 0.62rem; }
+  .ticker-wrap { height: 36px; }
+  .ticker-item { height: 36px; padding: 0 14px; }
+  .ticker-sep { height: 36px; }
+}
+
+/* ── General inline-style containers: clamp padding on mobile ── */
+@media (max-width: 480px) {
+  .container { padding: 0 16px; }
+  .section-padding { padding: 28px 0; }
+}
+
+/* ── Selo OSC: diagnostico grid 1-col on narrow phones ── */
+@media (max-width: 380px) {
+  [style*="minmax(300px"] { grid-template-columns: 1fr !important; }
+}
+
+/* ── Regulamento card: tighter padding on mobile ── */
+@media (max-width: 480px) {
+  article[style*="clamp(24px"] { padding: 20px 16px !important; }
 }

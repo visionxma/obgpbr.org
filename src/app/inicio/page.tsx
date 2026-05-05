@@ -307,15 +307,7 @@ export default function InicioPage() {
               </div>
 
               {/* CTAs */}
-              <div
-                className="stagger-5"
-                style={{
-                  display: "flex",
-                  gap: 10,
-                  flexWrap: "wrap",
-                  justifyContent: "center",
-                }}
-              >
+              <div className="stagger-5 hero-ctas">
                 <a
                   href="/servicos"
                   className="btn btn-white"
@@ -358,16 +350,7 @@ export default function InicioPage() {
         {/* ── Trust bar — ancora no fundo da seção ── */}
         <div style={{ position: "relative", zIndex: 1 }}>
           <div className="container">
-            <div
-              style={{
-                display: "flex",
-                gap: 0,
-                paddingTop: 18,
-                paddingBottom: 22,
-                borderTop: "1px solid rgba(255,255,255,0.08)",
-                flexWrap: "wrap",
-              }}
-            >
+            <div className="hero-trust-bar">
               {[
                 {
                   num: "3",
@@ -392,10 +375,8 @@ export default function InicioPage() {
               ].map(({ num, label, sub }, i, arr) => (
                 <div
                   key={label}
+                  className="hero-trust-item"
                   style={{
-                    flex: "1 1 120px",
-                    textAlign: "center",
-                    padding: "16px 12px",
                     borderRight:
                       i < arr.length - 1
                         ? "1px solid rgba(255,255,255,0.07)"
@@ -1329,11 +1310,8 @@ export default function InicioPage() {
       >
         <div className="container">
           <div
+            className="cta-row"
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 24,
-              flexWrap: "wrap",
               padding: "clamp(24px,3vw,40px) clamp(20px,4vw,44px)",
               borderRadius: "var(--site-radius-xl)",
               background: "white",
