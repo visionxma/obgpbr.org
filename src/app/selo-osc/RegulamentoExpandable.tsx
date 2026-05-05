@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, MapPin, Mail, Phone, Loader2 } from "lucide-react";
+import { ChevronDown, ChevronUp, MapPin, Mail, Phone, Loader2, Clock } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface Secao {
@@ -18,6 +18,7 @@ interface RegulamentoData {
   footer_endereco: string | null;
   footer_email: string | null;
   footer_telefone: string | null;
+  updated_at: string | null;
 }
 
 export default function RegulamentoExpandable() {
@@ -58,6 +59,13 @@ export default function RegulamentoExpandable() {
 
   if (!data) return null;
 
+  const ultimaAtualizacao = data.updated_at
+    ? new Date(data.updated_at).toLocaleString("pt-BR", {
+        day: "2-digit", month: "long", year: "numeric",
+        hour: "2-digit", minute: "2-digit",
+      })
+    : null;
+
   return (
     <article
       ref={topRef}
@@ -73,6 +81,24 @@ export default function RegulamentoExpandable() {
         position: "relative",
       }}
     >
+      {/* Badge de última atualização */}
+      {ultimaAtualizacao && (
+        <div style={{
+          display: "inline-flex", alignItems: "center", gap: 7,
+          marginBottom: 24,
+          padding: "6px 14px",
+          borderRadius: "var(--site-radius-full)",
+          background: "var(--site-surface-warm, #f8f6f1)",
+          border: "1px solid var(--site-border)",
+          fontSize: "0.78rem", fontWeight: 600,
+          color: "var(--site-text-secondary)",
+          letterSpacing: "0.01em",
+        }}>
+          <Clock size={13} style={{ color: "var(--site-gold, #c5ab76)", flexShrink: 0 }} />
+          <span>Última atualização: <strong style={{ color: "var(--site-primary)", fontWeight: 700 }}>{ultimaAtualizacao}</strong></span>
+        </div>
+      )}
+
       <div
         style={{
           maxHeight: isExpanded ? "none" : "380px",
