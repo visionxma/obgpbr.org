@@ -420,19 +420,6 @@ p {
   position: relative;
   overflow: hidden;
 }
-.section-watermark::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  right: -3%;
-  transform: translateY(-50%);
-  width: clamp(260px, 36vw, 460px);
-  height: clamp(260px, 36vw, 460px);
-  background: url('/logo.png') center / contain no-repeat;
-  filter: brightness(0) opacity(0.032);
-  pointer-events: none;
-  z-index: 0;
-}
 .section-watermark > .container {
   position: relative;
   z-index: 1;
