@@ -171,7 +171,7 @@ const CHANNELS = [
     title: "Sede",
     info: "Av. L, nº 10 D, Qd. 32",
     sub: "Morada do Sol — Paço do Lumiar/MA",
-    href: null,
+    href: "https://www.google.com/maps/search/?api=1&query=Av.+L+10+D+Qd+32+Morada+do+Sol+Pa%C3%A7o+do+Lumiar+MA",
     color: "icon-box-gold",
   },
 ];
