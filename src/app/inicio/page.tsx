@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Fragment } from "react";
 import PublicLayout from "../components/PublicLayout";
 import AnimatedCounter from "../components/AnimatedCounter";
 import {
@@ -439,15 +438,12 @@ export default function InicioPage() {
       <div className="ticker-wrap" aria-hidden>
         <div className="ticker">
           {TICKER_DOUBLED.map(({ icon: Icon, label, featured }, i) => (
-            <Fragment key={i}>
-              {i > 0 && <span className="ticker-sep">◆</span>}
-              <span className={`ticker-item${featured ? " ticker-item--featured" : ""}`}>
-                <span className="ticker-item-icon">
-                  <Icon size={11} strokeWidth={2.5} />
-                </span>
-                <span className="ticker-item-value">{label}</span>
+            <span key={i} className={`ticker-item${featured ? " ticker-item--featured" : ""}`}>
+              <span className="ticker-item-icon">
+                <Icon size={12} strokeWidth={2} />
               </span>
-            </Fragment>
+              <span className="ticker-item-value">{label}</span>
+            </span>
           ))}
         </div>
       </div>

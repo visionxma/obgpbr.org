@@ -705,128 +705,103 @@ p {
   filter: drop-shadow(0 0 60px rgba(197, 171, 118, 0.8));
 }
 
-/* ── Ticker — faixa de credenciais institucionais ──────────────────────── */
+/* ── Ticker — estilo editorial / news bar ───────────────────────────────── */
 .ticker-wrap {
   width: 100%;
   overflow: hidden;
   position: relative;
-  padding: 18px 0;
+  padding: 0;
+  height: 42px;
   display: flex;
-  align-items: center;
-  background:
-    radial-gradient(ellipse 55% 120% at 20% 50%, rgba(197,171,118,0.06), transparent),
-    radial-gradient(ellipse 55% 120% at 80% 50%, rgba(197,171,118,0.04), transparent),
-    linear-gradient(180deg, #081728 0%, #0b1e30 50%, #081728 100%);
-  border-top: 1px solid rgba(197,171,118,0.35);
-  border-bottom: 1px solid rgba(197,171,118,0.12);
-  box-shadow:
-    0 -4px 24px rgba(0,0,0,0.35) inset,
-    0  4px 24px rgba(0,0,0,0.25) inset;
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 91%, transparent 100%);
-          mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 91%, transparent 100%);
-}
-/* linha dourada de assinatura no topo */
-.ticker-wrap::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 1.5px;
-  background: linear-gradient(to right,
-    transparent 0%,
-    rgba(197,171,118,0.6) 15%,
-    rgba(197,171,118,0.9) 50%,
-    rgba(197,171,118,0.6) 85%,
-    transparent 100%);
-  pointer-events: none;
+  align-items: stretch;
+  background: #0b1c2e;
+  border-top: 2px solid var(--site-gold);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+          mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
 }
 .ticker {
   display: flex;
   align-items: center;
   white-space: nowrap;
-  animation: marquee 70s linear infinite;
-  gap: 10px;
-  padding-right: 10px;
+  animation: marquee 65s linear infinite;
+  gap: 0;
+  padding-right: 0;
 }
 .ticker-wrap:hover .ticker {
   animation-play-state: paused;
 }
+/* cada item é só ícone + texto — sem pill, sem borda */
 .ticker-item {
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  padding: 7px 16px 7px 8px;
-  color: rgba(255,255,255,0.78);
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(197,171,118,0.14);
-  border-radius: 999px;
-  transition: transform .3s ease, background .3s ease, border-color .3s ease,
-              box-shadow .3s ease, color .3s ease;
-  -webkit-backdrop-filter: blur(6px);
-          backdrop-filter: blur(6px);
+  gap: 7px;
+  padding: 0 20px;
+  color: rgba(255,255,255,0.62);
+  background: transparent;
+  border: none;
+  border-radius: 0;
   flex-shrink: 0;
   cursor: default;
+  transition: color .2s ease;
+  height: 42px;
+  position: relative;
 }
 .ticker-item:hover {
-  background: rgba(197,171,118,0.09);
-  border-color: rgba(197,171,118,0.45);
-  color: rgba(255,255,255,0.97);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 22px rgba(197,171,118,0.14), 0 2px 6px rgba(0,0,0,0.4);
+  color: rgba(255,255,255,0.95);
+}
+/* linha vertical entre itens via pseudo-elemento */
+.ticker-item + .ticker-item::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 25%; bottom: 25%;
+  width: 1px;
+  background: rgba(255,255,255,0.10);
 }
 .ticker-item-icon {
   display: inline-flex;
-  width: 24px;
-  height: 24px;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  background: rgba(197,171,118,0.12);
-  color: rgba(197,171,118,0.8);
   flex-shrink: 0;
-  transition: background .3s ease, color .3s ease;
+  color: rgba(197,171,118,0.55);
+  transition: color .2s ease;
 }
 .ticker-item:hover .ticker-item-icon {
-  background: rgba(197,171,118,0.20);
   color: var(--site-gold);
 }
 .ticker-item-value {
-  font-size: 0.84rem;
+  font-size: 0.72rem;
   font-weight: 600;
   font-family: var(--font-heading);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.08em;
   line-height: 1;
   text-transform: uppercase;
 }
-/* separador diamante entre os itens */
+/* separador — agora é um ponto central discreto */
 .ticker-sep {
-  color: rgba(197,171,118,0.28);
-  font-size: 0.45rem;
+  display: inline-flex;
+  align-items: center;
+  height: 42px;
+  padding: 0 4px;
+  color: rgba(197,171,118,0.20);
+  font-size: 0.38rem;
   flex-shrink: 0;
   user-select: none;
-  margin: 0 2px;
 }
-/* featured — itens de alto peso institucional */
+/* featured — apenas cor diferente, sem caixa */
 .ticker-item--featured {
-  background: linear-gradient(135deg,
-    rgba(197,171,118,0.16) 0%,
-    rgba(197,171,118,0.05) 100%);
-  border-color: rgba(197,171,118,0.40);
-  box-shadow: 0 0 18px rgba(197,171,118,0.07), inset 0 1px 0 rgba(197,171,118,0.18);
+  color: rgba(255,255,255,0.90);
 }
 .ticker-item--featured .ticker-item-icon {
-  background: rgba(197,171,118,0.88);
-  color: #081728;
+  color: var(--site-gold);
 }
 .ticker-item--featured .ticker-item-value {
-  color: rgba(255,255,255,0.96);
+  color: #d4b96a;
   font-weight: 700;
 }
-.ticker-item--featured:hover {
-  background: linear-gradient(135deg,
-    rgba(197,171,118,0.26) 0%,
-    rgba(197,171,118,0.10) 100%);
-  border-color: rgba(197,171,118,0.65);
-  box-shadow: 0 8px 28px rgba(197,171,118,0.22), inset 0 1px 0 rgba(197,171,118,0.22);
+.ticker-item--featured:hover .ticker-item-value {
+  color: var(--site-gold);
 }
 @media (prefers-reduced-motion: reduce) {
   .ticker { animation: none; }
