@@ -796,17 +796,36 @@
   }
   .wizard-card { padding: 20px 16px; }
   .wizard-step-label { display: none; }
-  .wizard-step-item.active .wizard-step-label { 
-    display: block; 
-    position: absolute; 
-    bottom: -22px; 
-    left: 50%; 
+  .wizard-step-item.active .wizard-step-label {
+    display: block;
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
     transform: translateX(-50%);
     white-space: normal;
     font-size: 0.7rem;
     width: 120px;
   }
   .wizard-steps-row { margin-bottom: 24px; }
+}
+
+/* ── Header bar compacto em telas pequenas (oculta textos, ícone-only) ── */
+@media (max-width: 480px) {
+  .processo-header-bar {
+    padding: 10px 12px !important;
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+  }
+  .processo-header-bar h1 {
+    font-size: 0.95rem !important;
+  }
+  .processo-header-bar p {
+    font-size: 0.68rem !important;
+  }
+  .processo-btn-text { display: none !important; }
+  .processo-progress-label { display: none !important; }
+  .processo-header-actions button { padding: 8px 12px !important; }
+  .processo-header-actions > div:last-child { padding: 6px 10px !important; gap: 6px !important; }
 }
 
 .form-grid {
