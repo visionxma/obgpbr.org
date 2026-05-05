@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import PublicLayout from '../components/PublicLayout';
 import { supabase } from '@/lib/supabase';
-import { MapPin, Calendar, Loader2, Sparkles, Rocket, Award, Layers, ChevronRight, ArrowRight } from 'lucide-react';
+import { Loader2, Sparkles, Rocket, Award, Layers, ChevronRight, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 
 interface Experience {
@@ -17,64 +17,47 @@ interface Experience {
   created_at: string;
 }
 
-const CERTIFICACOES = [
-  {
-    id: 'RACT N.º 044/2022 de 23/04/2020',
-    instituicao: 'INSTITUTO CIDADANIA E NATUREZA',
-    certidao: 'CERTIDÃO DE REGISTRO DE ATESTADO DE CAPACIDADE TÉCNICA N.º 0005/2026, VÁLIDA ATÉ 09/07/2026.',
-    url: null as string | null, // TODO: inserir URL do documento
-  },
-  {
-    id: 'RCA N.º 113/2022 de 13/04/2022',
-    instituicao: 'INSTITUTO NACIONAL DE TECNOLOGIA, EDUCAÇÃO, CULTURA E SAÚDE - INTECS',
-    certidao: 'CERTIDÃO DE REGISTRO DE ATESTADO DE CAPACIDADE TÉCNICA N.º 0007/2026, VÁLIDA ATÉ 09/07/2026.',
-    url: null as string | null,
-  },
-  {
-    id: 'RCA N.º 202400012 de 26/02/2024',
-    instituicao: 'INSTITUTO VIDA E SAÚDE BRASIL - IVSBRASIL',
-    certidao: 'CERTIDÃO DE REGISTRO DE ATESTADO DE CAPACIDADE TÉCNICA N.º 0008/2026, VÁLIDA ATÉ 09/07/2026.',
-    url: null as string | null,
-  },
-  {
-    id: 'RCA N.º 0123/2026 de 22/04/2026',
-    instituicao: 'INSTITUTO NACIONAL DE TECNOLOGIA, EDUCAÇÃO, CULTURA E SAÚDE - INTECS',
-    certidao: 'CERTIDÃO DE REGISTRO DE ATESTADO DE CAPACIDADE TÉCNICA N.º 0022/2026, VÁLIDA ATÉ 22/10/2026.',
-    url: null as string | null,
-  },
-];
+interface Certificacao {
+  id: string;
+  numero: string;
+  instituicao: string;
+  certidao: string | null;
+  pdf_url: string | null;
+  ordem: number;
+}
 
-const STATS = [
-  { value: '+1.000', label: 'postos de trabalho gerados', color: 'icon-box-blue' },
-  { value: '+50',    label: 'projetos elaborados',        color: 'icon-box-green' },
-  { value: '+R$200M', label: 'em negócios viabilizados',  color: 'icon-box-gold' },
-];
+interface AreaTematica {
+  id: string;
+  nome: string;
+  ordem: number;
+}
 
-const AREAS_TEMATICAS = [
-  'Agricultura Familiar',
-  'Agricultura e Pesca',
-  'Assistência Social',
-  'Cultura',
-  'Criança e Adolescente',
-  'Direitos Humanos e Participação Popular',
-  'Economia Solidária',
-  'Esporte',
-  'Segurança Alimentar',
-  'Saúde',
-  'Trabalho e Emprego',
-];
+interface ExperienceStat {
+  id: string;
+  valor: string;
+  label: string;
+  ordem: number;
+}
 
 export default function ExperienciasPage() {
   const [items, setItems] = useState<Experience[]>([]);
+  const [certificacoes, setCertificacoes] = useState<Certificacao[]>([]);
+  const [areas, setAreas] = useState<AreaTematica[]>([]);
+  const [stats, setStats] = useState<ExperienceStat[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from('experiences').select('*')
-        .eq('is_published', true)
-        .order('created_at', { ascending: false });
-      setItems((data as Experience[]) || []);
+      const [expRes, certRes, areasRes, statsRes] = await Promise.all([
+        supabase.from('experiences').select('*').eq('is_published', true).order('created_at', { ascending: false }),
+        supabase.from('experience_certifications').select('*').eq('is_published', true).order('ordem', { ascending: true }),
+        supabase.from('experience_areas').select('*').eq('is_published', true).order('ordem', { ascending: true }),
+        supabase.from('experience_stats').select('*').eq('is_published', true).order('ordem', { ascending: true }),
+      ]);
+      setItems((expRes.data as Experience[]) || []);
+      setCertificacoes((certRes.data as Certificacao[]) || []);
+      setAreas((areasRes.data as AreaTematica[]) || []);
+      setStats((statsRes.data as ExperienceStat[]) || []);
       setLoading(false);
     })();
   }, []);
@@ -122,8 +105,9 @@ export default function ExperienciasPage() {
           </p>
 
           {/* Certificações */}
+          {certificacoes.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 40 }}>
-            {CERTIFICACOES.map((cert, i) => (
+            {certificacoes.map((cert, i) => (
               <div
                 key={cert.id}
                 className={`glass-panel stagger-${i + 1}`}
@@ -145,9 +129,9 @@ export default function ExperienciasPage() {
                     lineHeight: 1.7,
                     marginBottom: 4,
                   }}>
-                    {cert.url ? (
+                    {cert.pdf_url ? (
                       <a
-                        href={cert.url}
+                        href={cert.pdf_url}
                         target="_blank"
                         rel="noopener noreferrer"
                         style={{
@@ -159,7 +143,7 @@ export default function ExperienciasPage() {
                           cursor: 'pointer',
                         }}
                       >
-                        {cert.id}
+                        {cert.numero}
                       </a>
                     ) : (
                       <span style={{
@@ -169,22 +153,20 @@ export default function ExperienciasPage() {
                         fontWeight: 600,
                         color: 'var(--site-primary)',
                       }}>
-                        {cert.id}
+                        {cert.numero}
                       </span>
                     )}
                     {', atestado fornecido pelo '}
                     <strong style={{ color: 'var(--site-text-primary)', textTransform: 'uppercase' }}>
                       {cert.instituicao}
                     </strong>
-                    {', com '}
-                    <strong style={{ color: 'var(--site-text-primary)', textTransform: 'uppercase' }}>
-                      {cert.certidao}
-                    </strong>
+                    {cert.certidao && <>, com <strong style={{ color: 'var(--site-text-primary)', textTransform: 'uppercase' }}>{cert.certidao}</strong></>}
                   </p>
                 </div>
               </div>
             ))}
           </div>
+          )}
 
           {/* Estatísticas */}
           <div className="glass-panel" style={{
@@ -198,8 +180,8 @@ export default function ExperienciasPage() {
               gap: 24,
               marginBottom: 28,
             }}>
-              {STATS.map(({ value, label, color }) => (
-                <div key={label} style={{ textAlign: 'center' }}>
+              {stats.map((s) => (
+                <div key={s.id} style={{ textAlign: 'center' }}>
                   <div style={{
                     fontFamily: 'var(--font-heading)',
                     fontSize: 'clamp(1.8rem, 3.5vw, 2.4rem)',
@@ -208,14 +190,14 @@ export default function ExperienciasPage() {
                     lineHeight: 1.1,
                     marginBottom: 6,
                   }}>
-                    {value}
+                    {s.valor}
                   </div>
                   <div style={{
                     fontSize: 'var(--text-sm)',
                     color: 'var(--site-text-secondary)',
                     lineHeight: 1.4,
                   }}>
-                    {label}
+                    {s.label}
                   </div>
                 </div>
               ))}
@@ -257,8 +239,8 @@ export default function ExperienciasPage() {
               flexWrap: 'wrap',
               gap: 10,
             }}>
-              {AREAS_TEMATICAS.map((area) => (
-                <span key={area} style={{
+              {areas.map((a) => (
+                <span key={a.id} style={{
                   display: 'inline-flex',
                   alignItems: 'center',
                   padding: '6px 14px',
@@ -270,7 +252,7 @@ export default function ExperienciasPage() {
                   fontWeight: 500,
                   whiteSpace: 'nowrap',
                 }}>
-                  {area}
+                  {a.nome}
                 </span>
               ))}
             </div>

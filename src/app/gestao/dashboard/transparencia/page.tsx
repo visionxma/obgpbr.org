@@ -18,6 +18,7 @@ import {
   AdminToast, AdminToolbar, AdminEmpty, AdminSkeletonGrid,
   SlidePanel, Section, Field, TextInput, TextArea, useNotice, ListRow,
 } from '../_shared/AdminUI';
+import SimpleListManager from '../_shared/SimpleListManager';
 
 interface TransparencyRecord {
   id: string;
@@ -51,7 +52,10 @@ const EMPTY_FORM = {
   pdf_url: '',
 };
 
+type Tab = 'registros' | 'legislacao';
+
 export default function TransparenciaAdmin() {
+  const [tab, setTab] = useState<Tab>('registros');
   const [records, setRecords] = useState<TransparencyRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [dbError, setDbError] = useState<string | null>(null);
@@ -175,6 +179,50 @@ export default function TransparenciaAdmin() {
     <div>
       <AdminToast notice={notice} />
 
+      {/* Abas */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 18, borderBottom: '1px solid var(--admin-border)', overflowX: 'auto' }}>
+        {([
+          { id: 'registros', label: 'Registros (Contratos e Parcerias)' },
+          { id: 'legislacao', label: 'Legislação Vigente' },
+        ] as const).map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            style={{
+              padding: '10px 16px',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: tab === t.id ? '2px solid var(--admin-primary)' : '2px solid transparent',
+              color: tab === t.id ? 'var(--admin-primary)' : 'var(--admin-text-secondary)',
+              fontSize: '0.85rem',
+              fontWeight: tab === t.id ? 700 : 500,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              marginBottom: -1,
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'legislacao' && (
+        <SimpleListManager
+          table="transparency_legislation"
+          title="Legislação Vigente"
+          description="Leis e decretos exibidos na aba 'Legislação Vigente' da página pública de Transparência."
+          setNotice={setNotice}
+          fields={[
+            { key: 'numero', label: 'Número da norma', placeholder: 'Ex.: Lei nº 13.019/2014', required: true },
+            { key: 'apelido', label: 'Apelido', placeholder: 'Ex.: MROSC — Marco Regulatório das OSCs' },
+            { key: 'descricao', label: 'Descrição', type: 'textarea', placeholder: 'O que a lei estabelece…' },
+            { key: 'href', label: 'Link oficial', type: 'url', placeholder: 'https://www.planalto.gov.br/…' },
+            { key: 'destaque', label: 'Destaque', type: 'boolean', placeholder: 'Marca a lei como destaque (borda dourada)' },
+          ]}
+        />
+      )}
+
+      {tab !== 'registros' ? null : <>
       <AdminToolbar
         search={search}
         onSearch={setSearch}
@@ -260,6 +308,7 @@ export default function TransparenciaAdmin() {
           ))}
         </div>
       )}
+      </>}
 
       <SlidePanel
         open={showEditor}

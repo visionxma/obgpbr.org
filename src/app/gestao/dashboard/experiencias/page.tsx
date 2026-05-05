@@ -11,6 +11,7 @@ import {
   SlidePanel, Section, Field, TextInput, TextArea,
   PublishToggle, ImageUploadField, ListRow, useNotice,
 } from '../_shared/AdminUI';
+import SimpleListManager from '../_shared/SimpleListManager';
 
 interface Experience {
   id: string;
@@ -32,7 +33,10 @@ const EMPTY_FORM = {
   is_published: true,
 };
 
+type Tab = 'projetos' | 'certificacoes' | 'areas' | 'stats';
+
 export default function ExperienciasAdmin() {
+  const [tab, setTab] = useState<Tab>('projetos');
   const [items, setItems] = useState<Experience[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -129,6 +133,76 @@ export default function ExperienciasAdmin() {
     <div>
       <AdminToast notice={notice} />
 
+      {/* Abas */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 18, borderBottom: '1px solid var(--admin-border)', overflowX: 'auto' }}>
+        {([
+          { id: 'projetos', label: 'Projetos publicados' },
+          { id: 'certificacoes', label: 'Certificações Técnicas' },
+          { id: 'areas', label: 'Áreas Temáticas' },
+          { id: 'stats', label: 'Estatísticas' },
+        ] as const).map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            style={{
+              padding: '10px 16px',
+              background: 'transparent',
+              border: 'none',
+              borderBottom: tab === t.id ? '2px solid var(--admin-primary)' : '2px solid transparent',
+              color: tab === t.id ? 'var(--admin-primary)' : 'var(--admin-text-secondary)',
+              fontSize: '0.85rem',
+              fontWeight: tab === t.id ? 700 : 500,
+              cursor: 'pointer',
+              whiteSpace: 'nowrap',
+              marginBottom: -1,
+            }}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      {tab === 'certificacoes' && (
+        <SimpleListManager
+          table="experience_certifications"
+          title="Certificações Técnicas (RACT/RCA)"
+          description="Documentos registrados em Conselho de Classe Profissional. Cole a URL do PDF para o título virar um link."
+          setNotice={setNotice}
+          fields={[
+            { key: 'numero', label: 'Número/Identificação', placeholder: 'Ex.: RACT N.º 044/2022 de 23/04/2020', required: true },
+            { key: 'instituicao', label: 'Instituição', placeholder: 'Ex.: INSTITUTO CIDADANIA E NATUREZA', required: true },
+            { key: 'certidao', label: 'Certidão', type: 'textarea', placeholder: 'Ex.: CERTIDÃO DE REGISTRO N.º 0005/2026, VÁLIDA ATÉ 09/07/2026.' },
+            { key: 'pdf_url', label: 'URL do documento', type: 'url', placeholder: 'https://…', hint: 'Link público do PDF para tornar o título clicável' },
+          ]}
+        />
+      )}
+
+      {tab === 'areas' && (
+        <SimpleListManager
+          table="experience_areas"
+          title="Áreas Temáticas"
+          description="Tags de áreas de atuação exibidas na seção 'Áreas Temáticas de Atuação' do site público."
+          setNotice={setNotice}
+          fields={[
+            { key: 'nome', label: 'Nome da área', placeholder: 'Ex.: Assistência Social', required: true },
+          ]}
+        />
+      )}
+
+      {tab === 'stats' && (
+        <SimpleListManager
+          table="experience_stats"
+          title="Estatísticas"
+          description="Números de impacto exibidos no painel de qualificação técnica."
+          setNotice={setNotice}
+          fields={[
+            { key: 'valor', label: 'Valor', placeholder: 'Ex.: +1.000', required: true },
+            { key: 'label', label: 'Descrição', placeholder: 'Ex.: postos de trabalho gerados', required: true },
+          ]}
+        />
+      )}
+
+      {tab !== 'projetos' ? null : <>
       <AdminToolbar
         search={search}
         onSearch={setSearch}
@@ -189,6 +263,7 @@ export default function ExperienciasAdmin() {
           ))}
         </div>
       )}
+      </>}
 
       <SlidePanel
         open={showEditor}
