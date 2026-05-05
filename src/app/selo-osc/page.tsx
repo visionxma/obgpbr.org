@@ -1,6 +1,7 @@
 import PublicLayout from '../components/PublicLayout';
 import { ShieldCheck, Scale, TrendingUp, FileCheck, Users, Award, ArrowRight, BookOpen, FileText, Download, Mail, Phone, MapPin, ChevronDown, Eye } from 'lucide-react';
 import RegulamentoExpandable from './RegulamentoExpandable';
+import MascoteInterativo from './MascoteInterativo';
 import Link from 'next/link';
 
 export const metadata = { title: 'Selo OSC Gestão de Parcerias | OBGP' };
@@ -36,14 +37,7 @@ export default function SeloOscPage() {
             <div className="hero-divider" />
           </div>
           <div className="selo-hero-mascote" aria-hidden="true">
-            <img
-              src="/img/mascote-selo.webp"
-              alt=""
-              width={320}
-              height={320}
-              className="mascote mascote-float"
-              style={{ width: 'clamp(220px, 26vw, 340px)', height: 'auto' }}
-            />
+            <MascoteInterativo imgStyle={{ width: 'clamp(220px, 26vw, 340px)', height: 'auto' }} />
           </div>
         </div>
 
@@ -284,15 +278,7 @@ export default function SeloOscPage() {
       {/* ═══ CTA ═══ */}
       <section className="glass-section-blue" style={{ padding: '80px 0', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
         <div className="container" style={{ position: 'relative' }}>
-          <img
-            src="/img/mascote-selo.webp"
-            alt=""
-            aria-hidden="true"
-            width={180}
-            height={180}
-            className="mascote mascote-float"
-            style={{ width: 'clamp(120px, 16vw, 180px)', height: 'auto', margin: '0 auto 18px' }}
-          />
+          <MascoteInterativo imgStyle={{ width: 'clamp(120px, 16vw, 180px)', height: 'auto', margin: '0 auto 18px' }} />
           <h2 style={{ color: 'white', marginBottom: 16 }}>
             Quer{' '}<span className="hero-accent-white">certificar</span>{' '}sua organização?
           </h2>
