@@ -1120,25 +1120,25 @@ export default function ProcessoPage() {
                 </span>
               </div>
 
-              <div className="processo-nav-btns" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 24, paddingBottom: 24, borderBottom: '1px solid var(--site-border)' }}>
+              <div className="processo-nav-btns" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 16, paddingBottom: 16, borderBottom: '1px solid var(--site-border)' }}>
                 <button
                   onClick={handleBack}
                   className="btn"
                   title={step === 1 ? 'Voltar para a consulta de CNPJ' : 'Voltar para a etapa anterior'}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 20px', fontSize: '0.85rem', background: 'var(--site-surface-warm)', color: 'var(--site-text-primary)', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', fontWeight: 700 }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', fontSize: '0.78rem', background: 'var(--site-surface-warm)', color: 'var(--site-text-primary)', border: '1px solid var(--site-border)', borderRadius: 'var(--site-radius-md)', cursor: 'pointer', fontWeight: 700 }}
                 >
-                  <ChevronLeft size={16} /> Voltar
+                  <ChevronLeft size={14} /> Voltar
                 </button>
                 {step < 7 ? (
-                  <button onClick={handleNext} disabled={saving} className="btn btn-gold" style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', fontSize: '0.9rem', fontWeight: 700, opacity: saving ? 0.7 : 1 }}>
+                  <button onClick={handleNext} disabled={saving} className="btn btn-gold" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 18px', fontSize: '0.82rem', fontWeight: 700, opacity: saving ? 0.7 : 1 }}>
                     {saving ? (
-                      <><Loader2 size={16} className="spin-anim" /> Salvando...</>
+                      <><Loader2 size={14} className="spin-anim" /> Salvando...</>
                     ) : (
-                      <>Salvar e Avançar <ChevronRight size={16} /></>
+                      <>Salvar e Avançar <ChevronRight size={14} /></>
                     )}
                   </button>
                 ) : (
-                  <span style={{ fontSize: '0.8rem', color: 'var(--site-text-secondary)', fontWeight: 600, fontStyle: 'italic' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--site-text-secondary)', fontWeight: 600, fontStyle: 'italic' }}>
                     Etapa final — finalize abaixo
                   </span>
                 )}

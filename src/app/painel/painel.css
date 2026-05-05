@@ -837,16 +837,27 @@
 
 @media (max-width: 480px) {
   .form-grid { padding: 16px; grid-template-columns: 1fr; }
-  .panel-btn-primary, .panel-btn-ghost, .btn-gold {
+  .panel-btn-primary, .panel-btn-ghost {
     width: 100%;
     min-width: 0 !important;
   }
+  /* Nav do processo: lado a lado em mobile, Voltar à esquerda + Salvar à direita */
   .processo-nav-btns {
-    flex-direction: column-reverse;
-    gap: 12px;
+    flex-direction: row !important;
+    gap: 8px !important;
+    margin-bottom: 14px !important;
+    padding-bottom: 14px !important;
   }
   .processo-nav-btns button {
-    width: 100%;
+    width: auto !important;
+    padding: 7px 12px !important;
+    font-size: 0.74rem !important;
+    gap: 5px !important;
+    flex: 0 1 auto !important;
+  }
+  /* Salvar (último) ganha um pouco mais de espaço se sobrar */
+  .processo-nav-btns > button:last-child {
+    flex: 0 1 auto !important;
   }
 }
 
