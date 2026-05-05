@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ChevronDown, ChevronUp, MapPin, Mail, Phone, Loader2, Clock } from "lucide-react";
+import { ChevronDown, ChevronUp, MapPin, Mail, Phone, Loader2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 
 interface Secao {
@@ -81,24 +81,6 @@ export default function RegulamentoExpandable() {
         position: "relative",
       }}
     >
-      {/* Badge de última atualização */}
-      {ultimaAtualizacao && (
-        <div style={{
-          display: "inline-flex", alignItems: "center", gap: 7,
-          marginBottom: 24,
-          padding: "6px 14px",
-          borderRadius: "var(--site-radius-full)",
-          background: "var(--site-surface-warm, #f8f6f1)",
-          border: "1px solid var(--site-border)",
-          fontSize: "0.78rem", fontWeight: 600,
-          color: "var(--site-text-secondary)",
-          letterSpacing: "0.01em",
-        }}>
-          <Clock size={13} style={{ color: "var(--site-gold, #c5ab76)", flexShrink: 0 }} />
-          <span>Última atualização: <strong style={{ color: "var(--site-primary)", fontWeight: 700 }}>{ultimaAtualizacao}</strong></span>
-        </div>
-      )}
-
       <div
         style={{
           maxHeight: isExpanded ? "none" : "380px",
@@ -151,6 +133,11 @@ export default function RegulamentoExpandable() {
               </span>
             )}
           </div>
+          {ultimaAtualizacao && (
+            <p style={{ marginTop: 16, fontSize: "0.75rem", color: "var(--site-text-tertiary)", fontWeight: 400 }}>
+              Atualizado em {ultimaAtualizacao}
+            </p>
+          )}
         </footer>
 
         {/* Fade out */}
