@@ -168,8 +168,9 @@ export default function BlogPage() {
         padding: '20px 0',
         borderBottom: '1px solid var(--site-border)',
         background: 'rgba(255, 255, 255, 0.85)',
-        position: 'sticky', top: 0, zIndex: 40,
+        position: 'sticky', top: 88, zIndex: 40,
         backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
         boxShadow: '0 4px 20px rgba(0,0,0,0.02)'
       }}>
         <div className="container" style={{ display: 'flex', gap: 16, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'space-between' }}>
