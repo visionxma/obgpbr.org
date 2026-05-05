@@ -64,15 +64,10 @@ export default function PublicLayout({ children, navRightSlot }: { children: Rea
     return () => { document.body.style.overflow = ''; };
   }, [menuOpen]);
 
-  // Stacked Cards effect — fallback JS para browsers sem animation-timeline (Safari/Firefox).
-  // No Chrome/Edge 115+ a animação CSS scroll-driven cuida disso e o JS retorna cedo.
+  // Stacked Cards effect — JS unificado para todos os navegadores (desktop + mobile).
+  // Calcula overlap de cada card com o próximo e atualiza CSS variables a cada frame.
+  // Garante consistência visual independente de suporte a animation-timeline.
   useEffect(() => {
-    const supportsTimeline =
-      typeof CSS !== 'undefined' &&
-      typeof CSS.supports === 'function' &&
-      CSS.supports('animation-timeline', 'view()');
-    if (supportsTimeline) return;
-
     const groups = Array.from(document.querySelectorAll<HTMLElement>('.mobile-sticky-stack'));
     if (groups.length === 0) return;
 
@@ -81,12 +76,12 @@ export default function PublicLayout({ children, navRightSlot }: { children: Rea
     const update = () => {
       rafId = null;
       groups.forEach((group) => {
-        const items = Array.from(group.children) as HTMLElement[];
+        const items = (Array.from(group.children) as HTMLElement[])
+          .filter((el) => el.classList.contains('sticky-item'));
+
         items.forEach((el, idx) => {
-          if (!el.classList.contains('sticky-item')) return;
           const next = items[idx + 1];
-          if (!next || !next.classList.contains('sticky-item')) {
-            // Último card — sem efeito, fica em tamanho cheio
+          if (!next) {
             el.style.setProperty('--stack-scale', '1');
             el.style.setProperty('--stack-opacity', '1');
             el.style.setProperty('--stack-brightness', '1');
@@ -94,12 +89,16 @@ export default function PublicLayout({ children, navRightSlot }: { children: Rea
           }
           const elRect = el.getBoundingClientRect();
           const nextRect = next.getBoundingClientRect();
-          // Quanto deste card está coberto pelo próximo
+          // Fração do card coberta pelo próximo
           const overlap = Math.max(0, elRect.bottom - nextRect.top);
           const progress = Math.max(0, Math.min(1, overlap / Math.max(1, elRect.height)));
-          const scale = (1 - progress * 0.08).toFixed(3);
-          const opacity = (1 - progress * 0.30).toFixed(3);
-          const brightness = (1 - progress * 0.06).toFixed(3);
+          // Easing suave (easeOutCubic) para transição mais fluida
+          const eased = 1 - Math.pow(1 - progress, 3);
+          // Profundidade adicional para cards mais ao fundo
+          const depthFactor = Math.min(idx * 0.015, 0.06);
+          const scale = (1 - eased * 0.10 - depthFactor * eased).toFixed(3);
+          const opacity = (1 - eased * 0.45).toFixed(3);
+          const brightness = (1 - eased * 0.10).toFixed(3);
           el.style.setProperty('--stack-scale', scale);
           el.style.setProperty('--stack-opacity', opacity);
           el.style.setProperty('--stack-brightness', brightness);

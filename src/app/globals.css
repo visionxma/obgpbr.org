@@ -627,23 +627,6 @@ p {
   transform: scale(var(--stack-scale, 1));
 }
 
-/* Scroll-Driven Animation — cards reduzem suavemente ao "sair" do viewport,
-   criando profundidade real. Suporte: Chrome 115+, Edge 115+. Fallback: sem scale. */
-@supports (animation-timeline: view()) {
-  .mobile-sticky-stack > .sticky-item {
-    animation: stackedCardDepth linear forwards;
-    animation-timeline: view();
-    animation-range: exit 5% exit 70%;
-  }
-  @keyframes stackedCardDepth {
-    to {
-      transform: scale(0.94);
-      opacity: 0.78;
-      filter: brightness(0.96);
-    }
-  }
-}
-
 /* Mobile: header é mais baixo (62px float, 76px fixed) — ajusta tops */
 @media (max-width: 768px) {
   .mobile-sticky-stack { gap: 32px; }
@@ -655,16 +638,6 @@ p {
   .mobile-sticky-stack > .sticky-item:nth-child(6) { top: 106px; }
   .mobile-sticky-stack > .sticky-item:nth-child(7) { top: 112px; }
   .mobile-sticky-stack > .sticky-item:nth-child(8) { top: 118px; }
-  /* Mobile depth animation um pouco mais forte para amplificar a sensação */
-  @supports (animation-timeline: view()) {
-    @keyframes stackedCardDepth {
-      to {
-        transform: scale(0.92);
-        opacity: 0.7;
-        filter: brightness(0.94);
-      }
-    }
-  }
 }
 
 /* Acessibilidade: respeita prefers-reduced-motion */
