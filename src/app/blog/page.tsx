@@ -71,16 +71,18 @@ export default function BlogPage() {
   useEffect(() => {
     if (!pendingScrollRef.current) return;
     pendingScrollRef.current = false;
-    // Aguarda o paint para que offsetTop / scrollHeight reflitam o layout filtrado.
-    const id = requestAnimationFrame(() => {
-      if (!filterBarRef.current) return;
-      const barTop = filterBarRef.current.offsetTop;
-      const maxScroll = Math.max(0,
-        document.documentElement.scrollHeight - window.innerHeight);
-      const target = Math.min(Math.max(0, barTop - 88), maxScroll);
-      window.scrollTo({ top: target, behavior: 'smooth' });
+    // Dois rAFs aninhados garantem que o reflow pós-filtro tenha sido aplicado
+    // antes de calcular a posição (layout só fica estável após o segundo frame).
+    let raf2 = 0;
+    const raf1 = requestAnimationFrame(() => {
+      raf2 = requestAnimationFrame(() => {
+        filterBarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
     });
-    return () => cancelAnimationFrame(id);
+    return () => {
+      cancelAnimationFrame(raf1);
+      if (raf2) cancelAnimationFrame(raf2);
+    };
   }, [category]);
 
   useEffect(() => {
@@ -218,6 +220,7 @@ export default function BlogPage() {
             background: rgba(255, 255, 255, 0.85);
             position: sticky;
             top: 88px;
+            scroll-margin-top: 100px;
             z-index: 40;
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
