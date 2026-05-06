@@ -56,6 +56,7 @@ export default function BlogPage() {
   const [loading, setLoading] = useState(true);
   const [searchFocused, setSearchFocused] = useState(false);
   const filterBarRef = useRef<HTMLElement>(null);
+  const filterAnchorRef = useRef<HTMLDivElement>(null);
   const pendingScrollRef = useRef(false);
 
   // Ao trocar categoria, sempre rola até o topo da barra de filtros
@@ -76,7 +77,21 @@ export default function BlogPage() {
     let raf2 = 0;
     const raf1 = requestAnimationFrame(() => {
       raf2 = requestAnimationFrame(() => {
-        filterBarRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Âncora não-sticky: scrollIntoView funciona de forma previsível.
+        // Se anchor existe, usa ele; senão, calcula posição via offsetTop traversal.
+        const anchor = filterAnchorRef.current;
+        if (anchor) {
+          anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          return;
+        }
+        // Fallback: cálculo manual com offsetTop traversal (ignora sticky)
+        let el: HTMLElement | null = filterBarRef.current;
+        let absTop = 0;
+        while (el) {
+          absTop += el.offsetTop;
+          el = el.offsetParent as HTMLElement | null;
+        }
+        window.scrollTo({ top: Math.max(0, absTop - 100), behavior: 'smooth' });
       });
     });
     return () => {
@@ -191,6 +206,9 @@ export default function BlogPage() {
           </div>
         </div>
       </section>
+
+      {/* Âncora invisível — alvo de scroll robusto (não é sticky, sem ambiguidade) */}
+      <div ref={filterAnchorRef} aria-hidden="true" style={{ height: 0, scrollMarginTop: 100 }} />
 
       {/* ═══ STICKY FILTER BAR ═══ */}
       <section ref={filterBarRef} className="blog-filter-bar">
